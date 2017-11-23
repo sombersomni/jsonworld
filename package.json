@@ -1,0 +1,33 @@
+{
+  "name": "biolum",
+  "version": "1.0.0",
+  "description": "a music visualizer thats out of this world",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/somberSomni/Bioluminescence.git"
+  },
+  "keywords": [
+    "music",
+    "3d",
+    "animation"
+  ],
+  "author": "Somber Somni",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/somberSomni/Bioluminescence/issues"
+  },
+  "homepage": "https://github.com/somberSomni/Bioluminescence#readme",
+  "dependencies": {
+    "compression": "^1.7.1",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.12.1"
+  }
+}
