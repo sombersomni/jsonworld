@@ -6,11 +6,17 @@
 	  <meta name="viewport" content="width=device-width">
 	  <title>Bioluminescence</title>
 	  <link href="css\main.css" type="text/css" rel="stylesheet" >
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.5/dat.gui.min.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/stats.js/r11/Stats.js"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/2.2.0/anime.min.js"></script>
 	  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js"></script>
 	</head>
 	<body>
 		<div class="container">
-			<button id="start"> start </button>
+			<div id="menu">
+				<button id="start" class="show"> start </button>	
+				<span id="progress"></span>
+			</div>
 			<canvas id="visualizer"></canvas>
 		</div>
 		<script src="js\main.js"></script>
