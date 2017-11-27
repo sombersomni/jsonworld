@@ -258,6 +258,21 @@ process.umask = function() { return 0; };
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+if (process.env.NODE_ENV === 'production') {
+  module.exports = __webpack_require__(15);
+} else {
+  module.exports = __webpack_require__(16);
+}
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
 
 
 /**
@@ -294,21 +309,6 @@ emptyFunction.thatReturnsArgument = function (arg) {
 };
 
 module.exports = emptyFunction;
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-/* WEBPACK VAR INJECTION */(function(process) {
-
-if (process.env.NODE_ENV === 'production') {
-  module.exports = __webpack_require__(15);
-} else {
-  module.exports = __webpack_require__(16);
-}
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ }),
 /* 3 */
@@ -506,7 +506,7 @@ module.exports = invariant;
 
 
 
-var emptyFunction = __webpack_require__(1);
+var emptyFunction = __webpack_require__(2);
 
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -682,7 +682,7 @@ module.exports = ExecutionEnvironment;
  * @typechecks
  */
 
-var emptyFunction = __webpack_require__(1);
+var emptyFunction = __webpack_require__(2);
 
 /**
  * Upstream version of event listener. Does not take into account specific
@@ -940,7 +940,7 @@ module.exports = focusNode;
 "use strict";
 
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -963,6 +963,10 @@ var config = {
 	"bpm": 120,
 	"genres": ["progressive house", "house", "tech house"],
 	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
+	"preloader": {
+		type: "dodecahedron",
+		size: 5
+	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
 	//fill this array with sounds that will compliment each object. this is where your sound options should go
 	{
@@ -980,8 +984,11 @@ var config = {
 	"worldObjects": [
 	//fill this array with objects that will compliment each sound. this is where your object options should go
 	{
-		"id": 1
-
+		"id": 1, // id can be a string or number, but make sure its unique
+		"type": "lego", //can call primitive shapes like box or premade objects like lego
+		"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
+		"size": [5, 2, 3], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
+		"position": [20, 0, -20] // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
 	}]
 };
 
@@ -990,7 +997,7 @@ var Main = function Main() {
 		"div",
 		{ className: "container" },
 		_react2.default.createElement(_Menu2.default, { logo: config.logo, sounds: config.sounds }),
-		_react2.default.createElement(_World2.default, null)
+		_react2.default.createElement(_World2.default, { preloader: config.preloader, objs: config.worldObjects })
 	);
 };
 var docRoot = document.querySelector("#root");
@@ -1009,7 +1016,7 @@ _reactDom2.default.render(_react2.default.createElement(Main, null), docRoot);
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-var m=__webpack_require__(3),n=__webpack_require__(4),p=__webpack_require__(1);
+var m=__webpack_require__(3),n=__webpack_require__(4),p=__webpack_require__(2);
 function q(a){for(var b=arguments.length-1,e="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)e+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(e+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}
 var r={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}};function t(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||r}t.prototype.isReactComponent={};t.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?q("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};t.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};
 function u(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||r}function v(){}v.prototype=t.prototype;var w=u.prototype=new v;w.constructor=u;m(w,t.prototype);w.isPureReactComponent=!0;function x(a,b,e){this.props=a;this.context=b;this.refs=n;this.updater=e||r}var y=x.prototype=new v;y.constructor=x;m(y,t.prototype);y.unstable_isAsyncReactComponent=!0;y.render=function(){return this.props.children};
@@ -1049,7 +1056,7 @@ var _assign = __webpack_require__(3);
 var invariant = __webpack_require__(5);
 var emptyObject = __webpack_require__(4);
 var warning = __webpack_require__(6);
-var emptyFunction = __webpack_require__(1);
+var emptyFunction = __webpack_require__(2);
 var checkPropTypes = __webpack_require__(7);
 
 // TODO: this is special because it gets imported during build.
@@ -2457,7 +2464,7 @@ if (process.env.NODE_ENV === 'production') {
 /*
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
-var aa=__webpack_require__(2),m=__webpack_require__(8),A=__webpack_require__(3),B=__webpack_require__(1),ca=__webpack_require__(9),da=__webpack_require__(10),ea=__webpack_require__(11),ha=__webpack_require__(12),ia=__webpack_require__(13),C=__webpack_require__(4);
+var aa=__webpack_require__(1),m=__webpack_require__(8),A=__webpack_require__(3),B=__webpack_require__(2),ca=__webpack_require__(9),da=__webpack_require__(10),ea=__webpack_require__(11),ha=__webpack_require__(12),ia=__webpack_require__(13),C=__webpack_require__(4);
 function D(a){for(var b=arguments.length-1,c="Minified React error #"+a+"; visit http://facebook.github.io/react/docs/error-decoder.html?invariant\x3d"+a,d=0;d<b;d++)c+="\x26args[]\x3d"+encodeURIComponent(arguments[d+1]);b=Error(c+" for the full message or use the non-minified dev environment for full errors and additional helpful warnings.");b.name="Invariant Violation";b.framesToPop=1;throw b;}aa?void 0:D("227");
 var la={children:!0,dangerouslySetInnerHTML:!0,defaultValue:!0,defaultChecked:!0,innerHTML:!0,suppressContentEditableWarning:!0,suppressHydrationWarning:!0,style:!0};function qa(a,b){return(a&b)===b}
 var ra={MUST_USE_PROPERTY:1,HAS_BOOLEAN_VALUE:4,HAS_NUMERIC_VALUE:8,HAS_POSITIVE_NUMERIC_VALUE:24,HAS_OVERLOADED_BOOLEAN_VALUE:32,HAS_STRING_BOOLEAN_VALUE:64,injectDOMPropertyConfig:function(a){var b=ra,c=a.Properties||{},d=a.DOMAttributeNamespaces||{},e=a.DOMAttributeNames||{};a=a.DOMMutationMethods||{};for(var f in c){sa.hasOwnProperty(f)?D("48",f):void 0;var g=f.toLowerCase(),k=c[f];g={attributeName:g,attributeNamespace:null,propertyName:f,mutationMethod:null,mustUseProperty:qa(k,b.MUST_USE_PROPERTY),
@@ -2751,12 +2758,12 @@ if (process.env.NODE_ENV !== "production") {
   (function() {
 'use strict';
 
-var React = __webpack_require__(2);
+var React = __webpack_require__(1);
 var invariant = __webpack_require__(5);
 var warning = __webpack_require__(6);
 var ExecutionEnvironment = __webpack_require__(8);
 var _assign = __webpack_require__(3);
-var emptyFunction$1 = __webpack_require__(1);
+var emptyFunction$1 = __webpack_require__(2);
 var EventListener = __webpack_require__(9);
 var getActiveElement = __webpack_require__(10);
 var shallowEqual = __webpack_require__(11);
@@ -18308,15 +18315,15 @@ Object.defineProperty(exports, "__esModule", {
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
-var _Logo = __webpack_require__(29);
+var _Logo = __webpack_require__(28);
 
 var _Logo2 = _interopRequireDefault(_Logo);
 
-var _Progress = __webpack_require__(28);
+var _Progress = __webpack_require__(29);
 
 var _Progress2 = _interopRequireDefault(_Progress);
 
@@ -18472,7 +18479,30 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
+
+var _react2 = _interopRequireDefault(_react);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = function (props) {
+	var src = props.src;
+
+	return _react2.default.createElement("img", { src: src });
+}; //Logo Component
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+	value: true
+});
+
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -18504,29 +18534,6 @@ exports.default = function (props) {
 };
 
 /***/ }),
-/* 29 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _react = __webpack_require__(2);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function (props) {
-	var src = props.src;
-
-	return _react2.default.createElement("img", { src: src });
-}; //Logo Component
-
-/***/ }),
 /* 30 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -18537,9 +18544,11 @@ Object.defineProperty(exports, "__esModule", {
 	value: true
 });
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _react = __webpack_require__(2);
+var _react = __webpack_require__(1);
 
 var _react2 = _interopRequireDefault(_react);
 
@@ -18568,6 +18577,7 @@ var World = function (_Component) {
 
 		_this.initWorld = _this.initWorld.bind(_this);
 		_this.preloadTextures = _this.preloadTextures.bind(_this);
+		_this.createGeometry = _this.createGeometry.bind(_this);
 		return _this;
 	}
 
@@ -18585,13 +18595,43 @@ var World = function (_Component) {
 			this.initWorld();
 		}
 	}, {
+		key: "createGeometry",
+		value: function createGeometry(options) {
+			console.log(_typeof(options.size));
+			switch (options.type) {
+				case "dodecahedron":
+					//creates dodecahedron geometry.
+					if (typeof options.size === "number") {
+						//uses a single number for sizing
+						return new THREE.DodecahedronGeometry(options.size);
+					} else if (options.size instanceof Array && options.size.length > 1 && options.size.length <= 3) {
+						//uses the first value which should be width
+						return new THREE.DodecahedronGeometry(options.size[0]);
+					} else {
+
+						console.log("size options are not valid for " + options.type);
+					}
+				default:
+			}
+		}
+	}, {
 		key: "initWorld",
 		value: function initWorld() {
+			var _this2 = this;
+
 			//set up the world
 			var texturesLoaded = this.preloadTextures();
 			console.log(texturesLoaded);
+			var preloader = this.props.preloader;
+
+			if (preloader instanceof Object && (typeof preloader === "undefined" ? "undefined" : _typeof(preloader)) === "object" && preloader.hasOwnProperty("type")) {
+				var geo = this.createGeometry(preloader);
+				console.log(geo);
+			}
 			texturesLoaded.then(function (data) {
-				console.log(data);
+				//console.log( data );
+				var geo = _this2.createGeometry(_this2.props.objs[0]);
+				//console.log( geo );
 			});
 			/*
      clock = new THREE.Clock();

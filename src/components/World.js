@@ -6,21 +6,49 @@ import * as THREE from "three";
 class World extends Component {
 	constructor ( props ) {
 		super( props );
+
 		//bound functions
 		this.initWorld = this.initWorld.bind( this );
 		this.preloadTextures = this.preloadTextures.bind( this );
+		this.createGeometry = this.createGeometry.bind( this );
 	}
 	componentDidMount () {
 		var canvas = document.getElementById( "world" ), camera, clock, gui, scene, stats, renderer;
 
 		this.initWorld();
 	}
+	createGeometry ( options ) {
+		console.log( typeof options.size );
+		switch( options.type ) {
+			case "dodecahedron" :
+				//creates dodecahedron geometry.
+				if ( typeof options.size === "number" ) {
+					//uses a single number for sizing
+					return new THREE.DodecahedronGeometry( options.size );
+				} 
+				else if ( options.size instanceof Array && options.size.length > 1 && options.size.length <= 3 ) {
+					//uses the first value which should be width
+					return new THREE.DodecahedronGeometry( options.size[0] );
+				} else {
+
+					console.log( "size options are not valid for " + options.type );
+				}
+			default:
+		}
+	}
 	initWorld () {
 		//set up the world
 		const texturesLoaded = this.preloadTextures();
 		console.log( texturesLoaded );
+		var { preloader } = this.props;
+		if ( preloader instanceof Object && typeof preloader === "object" && preloader.hasOwnProperty( "type" ) ) {
+			var geo = this.createGeometry( preloader );
+			console.log( geo );
+		}
 		texturesLoaded.then( data => {
-			console.log( data );
+			//console.log( data );
+			var geo = this.createGeometry( this.props.objs[0] );
+			//console.log( geo );
 		} );
 			/*
 			  clock = new THREE.Clock();
