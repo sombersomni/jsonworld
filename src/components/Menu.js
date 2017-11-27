@@ -1,10 +1,11 @@
-import React from "react";
+import React, { Component } from "react";
+import Logo from "./Logo.js";
 import Progress from "./Progress.js";
 
-export default class Menu extends React.Component {
-	constructor (props) {
+class Menu extends Component {
+	constructor ( props ) {
 		super( props );
-		console.log( props );
+		console.log( this.props );
 
 		//initial state
 		this.state = {
@@ -100,9 +101,10 @@ export default class Menu extends React.Component {
 	render () {
 		return (
 			<div id = "menu">
-				< Logo />
 				<Progress classType = { this.state.classType } message = { this.state.message } onclick = { this.handleClick } />
 			</div>
 		);
 	}
 }
+
+export default Menu;

@@ -1,7 +1,6 @@
 import React from "react";
 
 export default ( props ) => {
-	console.log(props);
 	const { classType, message, onclick } = props;
 	return ( 
 		<div>
