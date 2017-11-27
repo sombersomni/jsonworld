@@ -28,31 +28,16 @@ var audioContext, audioController, analyzer, canvas = document.getElementById( "
     source, stats, renderer;
 
 	initWorld();
-	setupGUI();
-	createStats();
 
 	startButton.addEventListener( "click", handleClick );
 
 //three js functions
-
-function setupGUI () {
-  gui = new dat.GUI();
-  gui.add( camera.rotation, "x", 1, 10);
-}
 
 function createBox (w, h, d, s, material) {
   //w for width, h for height, d for dimension, s for segments, material for mesh material
   var geo = new THREE.BoxGeometry( w, h, d, s, s );
   var mesh = new THREE.Mesh( geo, material );
   return mesh;
-}
-
-function createStats() {
-  stats = new Stats();
-  stats.domElement.style.position = 'absolute';
-  stats.domElement.style.top = '0px';
-  stats.domElement.style.right = '0px';
-  document.body.appendChild( stats.domElement );
 }
 
 function logoDisappear ( obj, time ) {
@@ -80,7 +65,6 @@ function draw () {
   logoDisappear( artistLogo, time );
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
-  stats.update();
   renderer.render( scene, camera );
 }
 
