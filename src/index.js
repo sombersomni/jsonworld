@@ -17,6 +17,7 @@ const config = {
 	"preloader": {
 		"type": "dodecahedron",
 		"material": "wireframe",
+		"animation": "spin_v1",
 		"size": 5
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
@@ -49,10 +50,22 @@ const config = {
 };
 
 const dummy = {
-	"preload": {
+	"preloadApp": {
 		start: false
 	}
 };
+
+const reducer = ( state = {}, action ) => {
+	switch( action.type ) {
+		case "START_APP":
+			var newState = Object.assign( {}, state, { preloadApp: { start : action.start } } );
+			return newState;
+		default:
+			return state;
+	}
+};
+
+const store = createStore( reducer, dummy );
 
 const Main = () => {
 	return (
@@ -62,17 +75,6 @@ const Main = () => {
 		</div>
 	);
 }
-const reducer = ( state = {}, action ) => {
-	switch( action.type ) {
-		case "START_APP":
-			var newState = Object.assign( state, { preload: { start : action.start } } );
-			return newState;
-		default:
-			return state;
-	}
-};
-
-const store = createStore( reducer, dummy );
 
 const docRoot = document.querySelector( "#root" );
 ReactDOM.render( <Provider store = { store } > 

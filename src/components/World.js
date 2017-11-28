@@ -4,8 +4,7 @@ import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as THREE from "three";
 
-const mapStateToWorld = ( state, ownProps ) => {
-	console.log( state );
+let mapStateToWorld = ( state, ownProps ) => {
 	return state;
 }
 
@@ -14,8 +13,8 @@ class World extends Component {
 		super( props );
 		
 		this.state = {
-			windowHeight: undefined,
-			windowWidth: undefined,
+			windowHeight: window.innerHeight,
+			windowWidth: window.innerWidth
 		}
 
 		this.scene = new THREE.Scene();
@@ -29,25 +28,56 @@ class World extends Component {
 		this.initWorld = this.initWorld.bind( this );
 		this.preloadTextures = this.preloadTextures.bind( this );
 		this.createGeometry = this.createGeometry.bind( this );
+		this.createPreloader = this.createPreloader.bind( this );
+		this.onWindowResize = this.onWindowResize.bind( this );
+		this.onMouseMove = this.onMouseMove.bind( this );
 	}
 	componentDidMount () {
+		window.addEventListener( "resize" , this.onWindowResize, false );
 		this.canvas = document.getElementById( "world" );
-		this.setState( Object.assign( this.state, { windowHeight: window.innerHeight, windowWidth: window.innerWidth } ) );
-
+		this.canvas.addEventListener( "mousemove", ( e ) => {
+			this.onMouseMove( e );
+		},  false );
 		this.initWorld();
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );
+		//makes sure it doesn't equal current props and goes when true
+		if ( nextProps.preloadApp.start !== this.props.preloadApp.start && nextProps.preloadApp.start ) {
+			var logo = this.scene.getObjectByName( "logo" );
+			this.scene.remove( logo );
+			this.createPreloader( nextProps.preloader );
+			var preloader = this.scene.getObjectByName( "preloader" );
+			anime( {
+				targets: preloader.rotation,
+				y: Math.PI * 2,
+				direction: "alternate",
+				duration: 1000,
+				loop: true
+			} );
+		}
+	}
+	render () {
+		return (
+			<div>
+				<canvas id="world" ></canvas>
+			</div>
+		);
+	}
+	draw () {
+		requestAnimationFrame( this.draw );
+		this.renderer.render( this.scene, this.camera );
 	}
 	createCamera ( options ) {
 		//setup camera options
 		let camera; 
+		console.log( this.state.windowHeight, this.state.windowWidth );
 		const newOptions = {
-			aspect: options.aspectRatio !== undefined && typeof options.aspectRatio === "number" ? options.aspectRatio : ( this.state.windowWidth / this.state.windowHeight ),
-			far: options.far !== undefined && typeof options.far === "number" ? options.far : 2000,
-			fov: options.fov !== undefined && typeof options.fov === "number" ? options.fov : 50,
-			near: options.near !== undefined && typeof options.near === "number" ? options.near : 0.1,
-			position: options.position !== undefined && options.position instanceof Array && options.position.length === 3 ? options.position : [ 0, 0, 100 ]
+			aspect: options.aspectRatio && typeof options.aspectRatio === "number" ? options.aspectRatio : ( this.state.windowWidth / this.state.windowHeight ),
+			far: options.far && typeof options.far === "number" ? options.far : 2000,
+			fov: options.fov && typeof options.fov === "number" ? options.fov : 50,
+			near: options.near && typeof options.near === "number" ? options.near : 0.1,
+			position: options.position && options.position instanceof Array && options.position.length === 3 ? options.position : [ 0, 0, 100 ]
 		};
 		if( options.type === "orthographic" ) {
 			camera = new THREE.OrthographicCamera();
@@ -55,11 +85,27 @@ class World extends Component {
 			camera = new THREE.PerspectiveCamera( newOptions.fov, newOptions.aspect, newOptions.near, newOptions.far );
 		}
 
-		camera.position.x = newOptions.position[0];
-		camera.position.y = newOptions.position[1];
-		camera.position.z = newOptions.position[2];
-
+		camera.position.set( newOptions.position[0], newOptions.position[1], newOptions.position[2] );
 		return camera;
+	}
+	createPreloader ( preloader ) {
+		//creates preloader based on config options
+		if ( preloader instanceof Object && typeof preloader === "object" && preloader.hasOwnProperty( "type" ) ) {
+			var geo = this.createGeometry( preloader );
+			var material = this.createMaterial ( { type: preloader.material ? preloader.material : "default", 
+				color: preloader.color ? preloader.color : "default" } );
+			var preloaderMesh = new THREE.Mesh( geo, material );
+			//center current object
+			preloaderMesh.position.x -= Math.floor( ( preloaderMesh.geometry.parameters.radius * preloaderMesh.scale.x ) / 2 );
+			preloaderMesh.position.y += 25;
+			preloaderMesh.scale.set( 2, 2, 2 );
+			//proloaderMesh.position.x -= proloaderMesh.wi
+			preloaderMesh.name = "preloader";
+			this.scene.add( preloaderMesh );
+			return;
+		} else {
+			console.log( "there is no preloader" );
+		}
 	}
 	createGeometry ( options ) {
 		//goes through every geometry type plus custom ones
@@ -76,6 +122,23 @@ class World extends Component {
 				} else {
 
 					console.log( "size options are not valid for " + options.type );
+					return;
+				}
+			case "plane" :
+				//creates plane geometry
+				var segments = options.segments ? options.segments : 1;
+				if ( typeof options.size === "number" ) {
+					//uses a single number for sizing
+					var size = options.size;
+					return new THREE.PlaneGeometry( size, size, segments );
+				} 
+				else if ( options.size instanceof Array && options.size.length > 1 && options.size.length <= 3 ) {
+					//uses the first value which should be width
+					return new THREE.PlaneGeometry( options.size[0], options.size[1], segments );
+				} else {
+
+					console.log( "size options are not valid for " + options.type );
+					return;
 				}
 			default:
 		}
@@ -94,6 +157,7 @@ class World extends Component {
 		var renderer = new THREE.WebGLRenderer( { canvas: this.canvas } );
 		renderer.setPixelRatio( window.devicePixelRatio );
 		renderer.setSize( this.state.windowWidth, this.state.windowWidth, true );
+		renderer.setClearColor( 0xf266cc );
 		return renderer;
 	}
 	initWorld () {
@@ -102,71 +166,47 @@ class World extends Component {
 		//starts the world timer
 		this.clock = new THREE.Clock();
 		this.renderer = this.createRenderer();
-
+		this.scene.background = 0xf266cc;
 		//preloads all textures
 		const texturesLoaded = this.preloadTextures();
-
-		var { preloader } = this.props;
-		if ( preloader instanceof Object && typeof preloader === "object" && preloader.hasOwnProperty( "type" ) ) {
-			var geo = this.createGeometry( preloader );
-			var material = this.createMaterial ( { type: preloader.material !== undefined ? preloader.material : "default", 
-				color: preloader.color !== undefined ? preloader.color : "default" } );
-			var preloaderMesh = new THREE.Mesh( geo, material );
-			//center current object
-			preloaderMesh.position.x -= Math.floor( ( preloaderMesh.geometry.parameters.radius * preloaderMesh.scale.x ) / 2 );
-			preloaderMesh.position.y += 25;
-			preloaderMesh.scale.y /= 2;
-			//proloaderMesh.position.x -= proloaderMesh.wi
-			preloaderMesh.name = "preloader";
-			this.scene.add( preloaderMesh );
-		} else {
-			console.log( "there is no preloader" );
-		}
 		texturesLoaded.then( data => {
-			//console.log( data );
-			//var geo = this.createGeometry( this.props.objs[0] );
-			//if menu button is clicked, load preloader;
-			var preloader = this.scene.getObjectByName( "preloader" );
-			anime( {
-				targets: preloader.rotation,
-				y: Math.PI * 2,
-				direction: "alternate",
-				duration: 1000,
-				loop: true
-			} );
-			requestAnimationFrame( this.draw );
-			//console.log( geo );
+			//texture data is colected here
+			console.log( data );
+			if ( data.name.toLowerCase() === "logo_texture" ) {
+				var material = new THREE.SpriteMaterial( { map: data, transparent: true, fog: this.fog ? true : false } );
+				var sprite = new THREE.Sprite( material );
+				sprite.name = "logo";
+				sprite.position.set( 0, 20, 0);
+				sprite.scale.set( 2000 / 40, 842 / 40, 0 );
+				console.log( sprite );
+				this.scene.add( sprite );
+				this.camera.aspect = window.innerWidth / window.innerHeight;
+			    this.camera.updateProjectionMatrix();
+
+			    this.renderer.setSize( window.innerWidth, window.innerHeight );
+				requestAnimationFrame( this.draw );
+			}
 		} );
-			/*
-			  var width = window.innerWidth,
-			      height = window.innerHeight;
-			  scene.background = new THREE.Color( 0xff0022 );
-			  //scene.fog = new THREE.FogExp2( 0x220000, .02 );
-			  
-			  //logo
-			  var logoTexture = new THREE.TextureLoader().load( "imgs/logo.png", function ( texture ) {
-			    return texture;
-			  } );
-			  */
+	}
+	onMouseMove ( e ) {
+		console.log( e.clientX );
+	}
+	onWindowResize () {
+
+	    this.camera.aspect = window.innerWidth / window.innerHeight;
+	    this.camera.updateProjectionMatrix();
+
+	    this.renderer.setSize( window.innerWidth, window.innerHeight );
+
 	}
 	preloadTextures() {
 		//wait for textures to load before starting anything
 		return new Promise( (res, rej) => {
 			new THREE.TextureLoader().load( "imgs/logo.png", texture => {
+				texture.name = "logo_texture";
 			    res( texture );
 			} );
 		} );
-	}
-	draw () {
-		requestAnimationFrame( this.draw );
-		this.renderer.render( this.scene, this.camera );
-	}
-	render () {
-		return (
-			<div>
-				<canvas id="world" ></canvas>
-			</div>
-		);
 	}
 }
 

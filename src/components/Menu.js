@@ -4,7 +4,6 @@ import Logo from "./Logo.js";
 import Progress from "./Progress.js";
 
 const mapStateToMenu = ( state, ownProps ) => {
-	console.log( state, ownProps );
 	return state;
 }
 
@@ -28,7 +27,7 @@ class Menu extends Component {
 	audioFetcher ( sound ) {
 		//a promise wrapper that takes care of fetching audio data
 		return new Promise( ( res, rej ) => {
-			const name = sound.name !== undefined ? sound.name : this.seperateSoundName( sound.url );
+			const name = sound.name ? sound.name : this.seperateSoundName( sound.url );
 			fetch( sound.url ).then( response => {
 				if( response.ok ){
 					//if response works, returns a array of sound information

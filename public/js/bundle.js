@@ -1975,6 +1975,7 @@ var config = {
 	"preloader": {
 		"type": "dodecahedron",
 		"material": "wireframe",
+		"animation": "spin_v1",
 		"size": 5
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
@@ -2004,10 +2005,25 @@ var config = {
 };
 
 var dummy = {
-	"preload": {
+	"preloadApp": {
 		start: false
 	}
 };
+
+var reducer = function reducer() {
+	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	var action = arguments[1];
+
+	switch (action.type) {
+		case "START_APP":
+			var newState = Object.assign({}, state, { preloadApp: { start: action.start } });
+			return newState;
+		default:
+			return state;
+	}
+};
+
+var store = (0, _redux.createStore)(reducer, dummy);
 
 var Main = function Main() {
 	return _react2.default.createElement(
@@ -2017,20 +2033,6 @@ var Main = function Main() {
 		_react2.default.createElement(_World2.default, { camera: config.camera, preloader: config.preloader, objs: config.worldObjects })
 	);
 };
-var reducer = function reducer() {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	var action = arguments[1];
-
-	switch (action.type) {
-		case "START_APP":
-			var newState = Object.assign(state, { preload: { start: action.start } });
-			return newState;
-		default:
-			return state;
-	}
-};
-
-var store = (0, _redux.createStore)(reducer, dummy);
 
 var docRoot = document.querySelector("#root");
 _reactDom2.default.render(_react2.default.createElement(
@@ -21260,7 +21262,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var mapStateToMenu = function mapStateToMenu(state, ownProps) {
-	console.log(state, ownProps);
 	return state;
 };
 
@@ -21294,7 +21295,7 @@ var Menu = function (_Component) {
 
 			//a promise wrapper that takes care of fetching audio data
 			return new Promise(function (res, rej) {
-				var name = sound.name !== undefined ? sound.name : _this2.seperateSoundName(sound.url);
+				var name = sound.name ? sound.name : _this2.seperateSoundName(sound.url);
 				fetch(sound.url).then(function (response) {
 					if (response.ok) {
 						//if response works, returns a array of sound information
@@ -21503,7 +21504,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 var mapStateToWorld = function mapStateToWorld(state, ownProps) {
-	console.log(state);
 	return state;
 };
 
@@ -21516,8 +21516,8 @@ var World = function (_Component) {
 		var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
 
 		_this.state = {
-			windowHeight: undefined,
-			windowWidth: undefined
+			windowHeight: window.innerHeight,
+			windowWidth: window.innerWidth
 		};
 
 		_this.scene = new THREE.Scene();
@@ -21531,33 +21531,70 @@ var World = function (_Component) {
 		_this.initWorld = _this.initWorld.bind(_this);
 		_this.preloadTextures = _this.preloadTextures.bind(_this);
 		_this.createGeometry = _this.createGeometry.bind(_this);
+		_this.createPreloader = _this.createPreloader.bind(_this);
+		_this.onWindowResize = _this.onWindowResize.bind(_this);
+		_this.onMouseMove = _this.onMouseMove.bind(_this);
 		return _this;
 	}
 
 	_createClass(World, [{
 		key: "componentDidMount",
 		value: function componentDidMount() {
-			this.canvas = document.getElementById("world");
-			this.setState(Object.assign(this.state, { windowHeight: window.innerHeight, windowWidth: window.innerWidth }));
+			var _this2 = this;
 
+			window.addEventListener("resize", this.onWindowResize, false);
+			this.canvas = document.getElementById("world");
+			this.canvas.addEventListener("mousemove", function (e) {
+				_this2.onMouseMove(e);
+			}, false);
 			this.initWorld();
 		}
 	}, {
 		key: "componentWillReceiveProps",
 		value: function componentWillReceiveProps(nextProps) {
 			console.log(nextProps);
+			//makes sure it doesn't equal current props and goes when true
+			if (nextProps.preloadApp.start !== this.props.preloadApp.start && nextProps.preloadApp.start) {
+				var logo = this.scene.getObjectByName("logo");
+				this.scene.remove(logo);
+				this.createPreloader(nextProps.preloader);
+				var preloader = this.scene.getObjectByName("preloader");
+				(0, _animejs2.default)({
+					targets: preloader.rotation,
+					y: Math.PI * 2,
+					direction: "alternate",
+					duration: 1000,
+					loop: true
+				});
+			}
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			return _react2.default.createElement(
+				"div",
+				null,
+				_react2.default.createElement("canvas", { id: "world" })
+			);
+		}
+	}, {
+		key: "draw",
+		value: function draw() {
+			requestAnimationFrame(this.draw);
+			this.renderer.render(this.scene, this.camera);
 		}
 	}, {
 		key: "createCamera",
 		value: function createCamera(options) {
 			//setup camera options
 			var camera = void 0;
+			console.log(this.state.windowHeight, this.state.windowWidth);
 			var newOptions = {
-				aspect: options.aspectRatio !== undefined && typeof options.aspectRatio === "number" ? options.aspectRatio : this.state.windowWidth / this.state.windowHeight,
-				far: options.far !== undefined && typeof options.far === "number" ? options.far : 2000,
-				fov: options.fov !== undefined && typeof options.fov === "number" ? options.fov : 50,
-				near: options.near !== undefined && typeof options.near === "number" ? options.near : 0.1,
-				position: options.position !== undefined && options.position instanceof Array && options.position.length === 3 ? options.position : [0, 0, 100]
+				aspect: options.aspectRatio && typeof options.aspectRatio === "number" ? options.aspectRatio : this.state.windowWidth / this.state.windowHeight,
+				far: options.far && typeof options.far === "number" ? options.far : 2000,
+				fov: options.fov && typeof options.fov === "number" ? options.fov : 50,
+				near: options.near && typeof options.near === "number" ? options.near : 0.1,
+				position: options.position && options.position instanceof Array && options.position.length === 3 ? options.position : [0, 0, 100]
 			};
 			if (options.type === "orthographic") {
 				camera = new THREE.OrthographicCamera();
@@ -21565,11 +21602,29 @@ var World = function (_Component) {
 				camera = new THREE.PerspectiveCamera(newOptions.fov, newOptions.aspect, newOptions.near, newOptions.far);
 			}
 
-			camera.position.x = newOptions.position[0];
-			camera.position.y = newOptions.position[1];
-			camera.position.z = newOptions.position[2];
-
+			camera.position.set(newOptions.position[0], newOptions.position[1], newOptions.position[2]);
 			return camera;
+		}
+	}, {
+		key: "createPreloader",
+		value: function createPreloader(preloader) {
+			//creates preloader based on config options
+			if (preloader instanceof Object && (typeof preloader === "undefined" ? "undefined" : _typeof(preloader)) === "object" && preloader.hasOwnProperty("type")) {
+				var geo = this.createGeometry(preloader);
+				var material = this.createMaterial({ type: preloader.material ? preloader.material : "default",
+					color: preloader.color ? preloader.color : "default" });
+				var preloaderMesh = new THREE.Mesh(geo, material);
+				//center current object
+				preloaderMesh.position.x -= Math.floor(preloaderMesh.geometry.parameters.radius * preloaderMesh.scale.x / 2);
+				preloaderMesh.position.y += 25;
+				preloaderMesh.scale.set(2, 2, 2);
+				//proloaderMesh.position.x -= proloaderMesh.wi
+				preloaderMesh.name = "preloader";
+				this.scene.add(preloaderMesh);
+				return;
+			} else {
+				console.log("there is no preloader");
+			}
 		}
 	}, {
 		key: "createGeometry",
@@ -21587,6 +21642,22 @@ var World = function (_Component) {
 					} else {
 
 						console.log("size options are not valid for " + options.type);
+						return;
+					}
+				case "plane":
+					//creates plane geometry
+					var segments = options.segments ? options.segments : 1;
+					if (typeof options.size === "number") {
+						//uses a single number for sizing
+						var size = options.size;
+						return new THREE.PlaneGeometry(size, size, segments);
+					} else if (options.size instanceof Array && options.size.length > 1 && options.size.length <= 3) {
+						//uses the first value which should be width
+						return new THREE.PlaneGeometry(options.size[0], options.size[1], segments);
+					} else {
+
+						console.log("size options are not valid for " + options.type);
+						return;
 					}
 				default:
 			}
@@ -21609,65 +21680,54 @@ var World = function (_Component) {
 			var renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
 			renderer.setPixelRatio(window.devicePixelRatio);
 			renderer.setSize(this.state.windowWidth, this.state.windowWidth, true);
+			renderer.setClearColor(0xf266cc);
 			return renderer;
 		}
 	}, {
 		key: "initWorld",
 		value: function initWorld() {
-			var _this2 = this;
+			var _this3 = this;
 
 			//set up the world
 			this.camera = this.createCamera(this.props.camera);
 			//starts the world timer
 			this.clock = new THREE.Clock();
 			this.renderer = this.createRenderer();
-
+			this.scene.background = 0xf266cc;
 			//preloads all textures
 			var texturesLoaded = this.preloadTextures();
-
-			var preloader = this.props.preloader;
-
-			if (preloader instanceof Object && (typeof preloader === "undefined" ? "undefined" : _typeof(preloader)) === "object" && preloader.hasOwnProperty("type")) {
-				var geo = this.createGeometry(preloader);
-				var material = this.createMaterial({ type: preloader.material !== undefined ? preloader.material : "default",
-					color: preloader.color !== undefined ? preloader.color : "default" });
-				var preloaderMesh = new THREE.Mesh(geo, material);
-				//center current object
-				preloaderMesh.position.x -= Math.floor(preloaderMesh.geometry.parameters.radius * preloaderMesh.scale.x / 2);
-				preloaderMesh.position.y += 25;
-				preloaderMesh.scale.y /= 2;
-				//proloaderMesh.position.x -= proloaderMesh.wi
-				preloaderMesh.name = "preloader";
-				this.scene.add(preloaderMesh);
-			} else {
-				console.log("there is no preloader");
-			}
 			texturesLoaded.then(function (data) {
-				//console.log( data );
-				//var geo = this.createGeometry( this.props.objs[0] );
-				//if menu button is clicked, load preloader;
-				var preloader = _this2.scene.getObjectByName("preloader");
-				(0, _animejs2.default)({
-					targets: preloader.rotation,
-					y: Math.PI * 2,
-					direction: "alternate",
-					duration: 1000,
-					loop: true
-				});
-				requestAnimationFrame(_this2.draw);
-				//console.log( geo );
+				//texture data is colected here
+				console.log(data);
+				if (data.name.toLowerCase() === "logo_texture") {
+					var material = new THREE.SpriteMaterial({ map: data, transparent: true, fog: _this3.fog ? true : false });
+					var sprite = new THREE.Sprite(material);
+					sprite.name = "logo";
+					sprite.position.set(0, 20, 0);
+					sprite.scale.set(2000 / 40, 842 / 40, 0);
+					console.log(sprite);
+					_this3.scene.add(sprite);
+					_this3.camera.aspect = window.innerWidth / window.innerHeight;
+					_this3.camera.updateProjectionMatrix();
+
+					_this3.renderer.setSize(window.innerWidth, window.innerHeight);
+					requestAnimationFrame(_this3.draw);
+				}
 			});
-			/*
-     var width = window.innerWidth,
-         height = window.innerHeight;
-     scene.background = new THREE.Color( 0xff0022 );
-     //scene.fog = new THREE.FogExp2( 0x220000, .02 );
-     
-     //logo
-     var logoTexture = new THREE.TextureLoader().load( "imgs/logo.png", function ( texture ) {
-       return texture;
-     } );
-     */
+		}
+	}, {
+		key: "onMouseMove",
+		value: function onMouseMove(e) {
+			console.log(e.clientX);
+		}
+	}, {
+		key: "onWindowResize",
+		value: function onWindowResize() {
+
+			this.camera.aspect = window.innerWidth / window.innerHeight;
+			this.camera.updateProjectionMatrix();
+
+			this.renderer.setSize(window.innerWidth, window.innerHeight);
 		}
 	}, {
 		key: "preloadTextures",
@@ -21675,24 +21735,10 @@ var World = function (_Component) {
 			//wait for textures to load before starting anything
 			return new Promise(function (res, rej) {
 				new THREE.TextureLoader().load("imgs/logo.png", function (texture) {
+					texture.name = "logo_texture";
 					res(texture);
 				});
 			});
-		}
-	}, {
-		key: "draw",
-		value: function draw() {
-			requestAnimationFrame(this.draw);
-			this.renderer.render(this.scene, this.camera);
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			return _react2.default.createElement(
-				"div",
-				null,
-				_react2.default.createElement("canvas", { id: "world" })
-			);
 		}
 	}]);
 
