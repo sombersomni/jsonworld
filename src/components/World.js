@@ -1,12 +1,18 @@
 //World Component
-
+import anime from "animejs";
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import * as THREE from "three";
+
+const mapStateToWorld = ( state, ownProps ) => {
+	console.log( state );
+	return state;
+}
 
 class World extends Component {
 	constructor ( props ) {
 		super( props );
-
+		
 		this.state = {
 			windowHeight: undefined,
 			windowWidth: undefined,
@@ -19,6 +25,7 @@ class World extends Component {
 		this.renderer = undefined;
 
 		//bound functions
+		this.draw = this.draw.bind( this );
 		this.initWorld = this.initWorld.bind( this );
 		this.preloadTextures = this.preloadTextures.bind( this );
 		this.createGeometry = this.createGeometry.bind( this );
@@ -29,7 +36,11 @@ class World extends Component {
 
 		this.initWorld();
 	}
+	componentWillReceiveProps( nextProps ) {
+		console.log( nextProps );
+	}
 	createCamera ( options ) {
+		//setup camera options
 		let camera; 
 		const newOptions = {
 			aspect: options.aspectRatio !== undefined && typeof options.aspectRatio === "number" ? options.aspectRatio : ( this.state.windowWidth / this.state.windowHeight ),
@@ -51,7 +62,7 @@ class World extends Component {
 		return camera;
 	}
 	createGeometry ( options ) {
-		console.log( typeof options.size );
+		//goes through every geometry type plus custom ones
 		switch( options.type ) {
 			case "dodecahedron" :
 				//creates dodecahedron geometry.
@@ -114,7 +125,16 @@ class World extends Component {
 		texturesLoaded.then( data => {
 			//console.log( data );
 			//var geo = this.createGeometry( this.props.objs[0] );
-			this.renderer.render( this.scene, this.camera );
+			//if menu button is clicked, load preloader;
+			var preloader = this.scene.getObjectByName( "preloader" );
+			anime( {
+				targets: preloader.rotation,
+				y: Math.PI * 2,
+				direction: "alternate",
+				duration: 1000,
+				loop: true
+			} );
+			requestAnimationFrame( this.draw );
 			//console.log( geo );
 		} );
 			/*
@@ -137,6 +157,10 @@ class World extends Component {
 			} );
 		} );
 	}
+	draw () {
+		requestAnimationFrame( this.draw );
+		this.renderer.render( this.scene, this.camera );
+	}
 	render () {
 		return (
 			<div>
@@ -146,4 +170,6 @@ class World extends Component {
 	}
 }
 
-export default World;
+const ReduxWorld = connect( mapStateToWorld )( World );
+
+export default ReduxWorld;

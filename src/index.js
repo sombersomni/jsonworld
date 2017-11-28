@@ -1,8 +1,10 @@
 //index
 import React from "react";
 import ReactDOM from "react-dom";
-import Menu from "./components/Menu.js";
-import World from "./components/World.js";
+import { createStore } from "redux";
+import { Provider } from "react-redux";
+import ReduxMenu from "./components/Menu.js";
+import ReduxWorld from "./components/World.js";
 
 const config = {
 	"bpm": 120,
@@ -13,9 +15,9 @@ const config = {
 	"genres": [ "progressive house", "house", "tech house" ],
 	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
 	"preloader": {
-		type: "dodecahedron",
-		material: "wireframe",
-		size: 5
+		"type": "dodecahedron",
+		"material": "wireframe",
+		"size": 5
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
 		//fill this array with sounds that will compliment each object. this is where your sound options should go
@@ -46,13 +48,33 @@ const config = {
 	]
 };
 
+const dummy = {
+	"preload": {
+		start: false
+	}
+};
+
 const Main = () => {
 	return (
 		<div className = "container">
-			<Menu logo = { config.logo } sounds = { config.sounds } />
-			<World camera = { config.camera } preloader = { config.preloader } objs = { config.worldObjects } />
+			<ReduxMenu logo = { config.logo } sounds = { config.sounds } />
+			<ReduxWorld camera = { config.camera } preloader = { config.preloader } objs = { config.worldObjects } />
 		</div>
 	);
 }
+const reducer = ( state = {}, action ) => {
+	switch( action.type ) {
+		case "START_APP":
+			var newState = Object.assign( state, { preload: { start : action.start } } );
+			return newState;
+		default:
+			return state;
+	}
+};
+
+const store = createStore( reducer, dummy );
+
 const docRoot = document.querySelector( "#root" );
-ReactDOM.render( <Main />, docRoot );
+ReactDOM.render( <Provider store = { store } > 
+					<Main />
+				</Provider>, docRoot );

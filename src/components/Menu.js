@@ -1,11 +1,16 @@
 import React, { Component } from "react";
+import { connect } from "react-redux";
 import Logo from "./Logo.js";
 import Progress from "./Progress.js";
+
+const mapStateToMenu = ( state, ownProps ) => {
+	console.log( state, ownProps );
+	return state;
+}
 
 class Menu extends Component {
 	constructor ( props ) {
 		super( props );
-		console.log( this.props );
 
 		//initial state
 		this.state = {
@@ -70,6 +75,7 @@ class Menu extends Component {
 	}
 	handleClick() {
 		console.log( "clicked" );
+		this.props.dispatch( { type: "START_APP", start: true } );
 		this.setState( { classType: "hide", message: "downloading sounds. please wait" } );
 		this.initializeAudio( this.props.sounds );
 	}
@@ -107,4 +113,5 @@ class Menu extends Component {
 	}
 }
 
-export default Menu;
+const ReduxMenu = connect( mapStateToMenu )( Menu );
+export default ReduxMenu;
