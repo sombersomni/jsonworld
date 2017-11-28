@@ -961,10 +961,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 //index
 var config = {
 	"bpm": 120,
+	"camera": {
+		"type": "perspective",
+		"aspectRatio": 16 / 9
+	},
 	"genres": ["progressive house", "house", "tech house"],
 	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
 	"preloader": {
 		type: "dodecahedron",
+		material: "wireframe",
 		size: 5
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
@@ -986,6 +991,7 @@ var config = {
 	{
 		"id": 1, // id can be a string or number, but make sure its unique
 		"type": "lego", //can call primitive shapes like box or premade objects like lego
+		"color": 0xFF7618, //you can use hex values, rgba(0,0,0,0) or strings such as "red"
 		"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
 		"size": [5, 2, 3], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
 		"position": [20, 0, -20] // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
@@ -997,7 +1003,7 @@ var Main = function Main() {
 		"div",
 		{ className: "container" },
 		_react2.default.createElement(_Menu2.default, { logo: config.logo, sounds: config.sounds }),
-		_react2.default.createElement(_World2.default, { preloader: config.preloader, objs: config.worldObjects })
+		_react2.default.createElement(_World2.default, { camera: config.camera, preloader: config.preloader, objs: config.worldObjects })
 	);
 };
 var docRoot = document.querySelector("#root");
@@ -18572,9 +18578,20 @@ var World = function (_Component) {
 	function World(props) {
 		_classCallCheck(this, World);
 
-		//bound functions
 		var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
 
+		_this.state = {
+			windowHeight: undefined,
+			windowWidth: undefined
+		};
+
+		_this.scene = new THREE.Scene();
+		_this.camera = undefined;
+		_this.canvas = undefined;
+		_this.clock = undefined;
+		_this.renderer = undefined;
+
+		//bound functions
 		_this.initWorld = _this.initWorld.bind(_this);
 		_this.preloadTextures = _this.preloadTextures.bind(_this);
 		_this.createGeometry = _this.createGeometry.bind(_this);
@@ -18584,15 +18601,33 @@ var World = function (_Component) {
 	_createClass(World, [{
 		key: "componentDidMount",
 		value: function componentDidMount() {
-			var canvas = document.getElementById("world"),
-			    camera,
-			    clock,
-			    gui,
-			    scene,
-			    stats,
-			    renderer;
+			this.canvas = document.getElementById("world");
+			this.setState(Object.assign(this.state, { windowHeight: window.innerHeight, windowWidth: window.innerWidth }));
 
 			this.initWorld();
+		}
+	}, {
+		key: "createCamera",
+		value: function createCamera(options) {
+			var camera = void 0;
+			var newOptions = {
+				aspect: options.aspectRatio !== undefined && typeof options.aspectRatio === "number" ? options.aspectRatio : this.state.windowWidth / this.state.windowHeight,
+				far: options.far !== undefined && typeof options.far === "number" ? options.far : 2000,
+				fov: options.fov !== undefined && typeof options.fov === "number" ? options.fov : 50,
+				near: options.near !== undefined && typeof options.near === "number" ? options.near : 0.1,
+				position: options.position !== undefined && options.position instanceof Array && options.position.length === 3 ? options.position : [0, 0, 100]
+			};
+			if (options.type === "orthographic") {
+				camera = new THREE.OrthographicCamera();
+			} else {
+				camera = new THREE.PerspectiveCamera(newOptions.fov, newOptions.aspect, newOptions.near, newOptions.far);
+			}
+
+			camera.position.x = newOptions.position[0];
+			camera.position.y = newOptions.position[1];
+			camera.position.z = newOptions.position[2];
+
+			return camera;
 		}
 	}, {
 		key: "createGeometry",
@@ -18615,57 +18650,72 @@ var World = function (_Component) {
 			}
 		}
 	}, {
+		key: "createMaterial",
+		value: function createMaterial(options) {
+			var color = options.color === "default" ? 0xffffff : options.color;
+			switch (options.type) {
+				case "wireframe":
+					return new THREE.MeshBasicMaterial({ transparent: true, wireframe: true });
+				default:
+					return new THREE.MeshBasicMaterial({ color: color });
+
+			}
+		}
+	}, {
+		key: "createRenderer",
+		value: function createRenderer() {
+			var renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(this.state.windowWidth, this.state.windowWidth, true);
+			return renderer;
+		}
+	}, {
 		key: "initWorld",
 		value: function initWorld() {
 			var _this2 = this;
 
 			//set up the world
+			this.camera = this.createCamera(this.props.camera);
+			//starts the world timer
+			this.clock = new THREE.Clock();
+			this.renderer = this.createRenderer();
+
+			//preloads all textures
 			var texturesLoaded = this.preloadTextures();
-			console.log(texturesLoaded);
+
 			var preloader = this.props.preloader;
 
 			if (preloader instanceof Object && (typeof preloader === "undefined" ? "undefined" : _typeof(preloader)) === "object" && preloader.hasOwnProperty("type")) {
 				var geo = this.createGeometry(preloader);
-				console.log(geo);
+				var material = this.createMaterial({ type: preloader.material !== undefined ? preloader.material : "default",
+					color: preloader.color !== undefined ? preloader.color : "default" });
+				var preloaderMesh = new THREE.Mesh(geo, material);
+				//center current object
+				preloaderMesh.position.x -= Math.floor(preloaderMesh.geometry.parameters.radius * preloaderMesh.scale.x / 2);
+				preloaderMesh.position.y += 25;
+				preloaderMesh.scale.y /= 2;
+				//proloaderMesh.position.x -= proloaderMesh.wi
+				preloaderMesh.name = "preloader";
+				this.scene.add(preloaderMesh);
+			} else {
+				console.log("there is no preloader");
 			}
 			texturesLoaded.then(function (data) {
 				//console.log( data );
-				var geo = _this2.createGeometry(_this2.props.objs[0]);
+				//var geo = this.createGeometry( this.props.objs[0] );
+				_this2.renderer.render(_this2.scene, _this2.camera);
 				//console.log( geo );
 			});
 			/*
-     clock = new THREE.Clock();
      var width = window.innerWidth,
          height = window.innerHeight;
-     scene = new THREE.Scene();
      scene.background = new THREE.Color( 0xff0022 );
      //scene.fog = new THREE.FogExp2( 0x220000, .02 );
-     camera = new THREE.PerspectiveCamera( 100, width/height, 1, 1000 );
-     camera.position.z = 100;
-     renderer = new THREE.WebGLRenderer( { canvas: canvas } );
-     renderer.setPixelRatio( window.devicePixelRatio );
-     renderer.setSize( width, height );
      
      //logo
      var logoTexture = new THREE.TextureLoader().load( "imgs/logo.png", function ( texture ) {
        return texture;
      } );
-     console.log( logoTexture );
-     var planeGeo = new THREE.PlaneGeometry( 100, 100, 4, 4 );
-     var legoMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: true });
-     var logoMaterial = new THREE.MeshBasicMaterial( { transparent: true, map: logoTexture } );
-     var logo = new THREE.Mesh( planeGeo, logoMaterial );
-     logo.name = "logo";
-     //test object
-     var cube = createBox( 10, 10, 10, 1, legoMaterial );
-     cube.name = "cube";
-     cube.position.z = 30;
-     //scene
-     scene.add( cube );
-     scene.add( logo );
-     //renderer
-     camera.lookAt( logo.position );
-     renderer.render( scene, camera );
      */
 		}
 	}, {

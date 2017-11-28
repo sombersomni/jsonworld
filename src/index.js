@@ -6,10 +6,15 @@ import World from "./components/World.js";
 
 const config = {
 	"bpm": 120,
+	"camera": { 
+		"type": "perspective",
+		"aspectRatio": 16/9
+	},
 	"genres": [ "progressive house", "house", "tech house" ],
 	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
 	"preloader": {
 		type: "dodecahedron",
+		material: "wireframe",
 		size: 5
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
@@ -33,6 +38,7 @@ const config = {
 		{
 			"id": 1, // id can be a string or number, but make sure its unique
 			"type": "lego", //can call primitive shapes like box or premade objects like lego
+			"color": 0xFF7618, //you can use hex values, rgba(0,0,0,0) or strings such as "red"
 			"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
 			"size": [ 5, 2, 3 ], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
 			"position": [ 20, 0, -20 ] // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
@@ -44,7 +50,7 @@ const Main = () => {
 	return (
 		<div className = "container">
 			<Menu logo = { config.logo } sounds = { config.sounds } />
-			<World preloader = { config.preloader } objs = { config.worldObjects } />
+			<World camera = { config.camera } preloader = { config.preloader } objs = { config.worldObjects } />
 		</div>
 	);
 }
