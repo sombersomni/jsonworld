@@ -50,8 +50,11 @@ const config = {
 };
 
 const dummy = {
-	"preloadApp": {
+	preloadApp: {
 		start: false
+	},
+	audio: {
+		controllers: []
 	}
 };
 
@@ -60,6 +63,9 @@ const reducer = ( state = {}, action ) => {
 		case "START_APP":
 			var newState = Object.assign( {}, state, { preloadApp: { start : action.start } } );
 			return newState;
+        case "SEND_AUDIO_CONTROLLERS":
+            var newState = Object.assign( {}, state, { audio: { controllers: action.payload } } );
+            return newState;
 		default:
 			return state;
 	}

@@ -22,12 +22,13 @@ body {
 	border-radius: 10px;
     color: #ffffff;
     cursor: pointer;
+    height: 25px;
     left: 50%;
-    padding: 10px 30px;
     position: relative;
     text-align: center;
     text-decoration: none;
     transform: translateX(-50%);
+    width: 50px;
 }
 
 .container {
@@ -67,4 +68,8 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: 1;
+}
+
+@keyframes stretchDisappear {
+    0% { width: ; }
 }

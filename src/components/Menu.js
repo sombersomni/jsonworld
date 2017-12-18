@@ -88,6 +88,7 @@ class Menu extends Component {
 		Promise.all( promiseArr ).then( controlArr => {
 			//array full of audio controllers
 			this.setState( Object.assign( this.state, { message: "building world. please wait" } ) );
+			this.props.dispatch( { type: "SEND_AUDIO_CONTROLLERS", payload: controlArr } );
 			console.log( controlArr );
 		} ).catch( err => {
 			this.setState( Object.assign( this.state, { message: err.message } ) );
