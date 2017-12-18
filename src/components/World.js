@@ -2,30 +2,10 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import * as THREE from "three";
+
+import Progress from "./Progress.js";
+import AudioController from "../AudioController.js";
 import WorldController from "../WorldController.js";
-
-var dummyOptions = {
-    camera: {
-        type: "perspective",
-        fov: 90,
-        near: 1,
-        far: 2000
-    },
-    preloader: {
-        type: "sphere",
-        material: "normal",
-        count: 3,
-        size: 20,
-        animation: {
-            type: "spin_basic",
-            speed: 5
-        }
-    }
-};
-
-let mapStateToWorld = ( state, ownProps ) => {
-	return state;
-}
 
 class World extends Component {
 	constructor ( props ) {
@@ -35,7 +15,7 @@ class World extends Component {
 
 	}
 	componentDidMount () {
-		this.world = new WorldController( dummyOptions );
+		this.world = new WorldController( this.props.config );
 		this.world.start();
 		console.log( this.world );
 		window.addEventListener( "resize" , this.onWindowResize, false );
@@ -67,11 +47,12 @@ class World extends Component {
 		return (
 			<div>
 				<canvas id="world" ></canvas>
+				<Progress message = { "dummy message" } />
 			</div>
 		);
 	}
 	onMouseMove ( e ) {
-		console.log( e.clientX );
+		//console.log( e.clientX );
 	}
 	onWindowResize () {
 
@@ -92,6 +73,4 @@ class World extends Component {
 	}
 }
 
-const ReduxWorld = connect( mapStateToWorld )( World );
-
-export default ReduxWorld;
+export default World;

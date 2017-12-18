@@ -1,43 +1,50 @@
 import * as THREE from "three";
 import anime from "animejs";
 
+import initializeAudio from "./AudioController.js";
+
 function WorldController (options) {
     this.preloader = options.preloader;
+    this.sounds = options.sounds;
     //packages for storing
+    this.audioControllers = [];
     this.cameras = [];
     this.scenes = [];
     //
+
     this.canvas = this.getCanvas();
     this.camera = this.setupCamera( options );
     this.clock = new THREE.Clock();
+    this.audioControllers = undefined;
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer( options );
+
 
     this.runScene = this.runScene.bind( this );
 }
 
 var framework = {
     initPreloader: function ( options ) {
-        var g = this.createGeometry( options );
-        var m = this.createMaterial( options.material, options.color );
-        var mesh = new THREE.Mesh( g, m );
+        let g = this.createGeometry( options );
+        let m = this.createMaterial( options.material, options.color );
+        let mesh = new THREE.Mesh( g, m );
         this.setupMesh(g, m);
         mesh.name = "root";
-        var wrapper = new THREE.Group();
+        let wrapper = new THREE.Group();
         mesh.anime = this.createAnime( mesh, options.animation );
         wrapper.add( mesh );
         wrapper.name = "preloader";
         this.scene.add( wrapper );
     },
-    createAnime: function ( mesh, options = {} ) {
-        var type = options.type !== undefined ? options.type : "spin_basic",
-            speed = options.speed !== undefined ? options.speed : 1;
+    createAnime: function ( mesh, t = "spin_basic" ) {
+        var type = t !== undefined ? t : "spin_basic",
+            speed = 1;
         switch( type ) {
             case "atom":
                 return function ( time ) {
                     //creates a simple animation that looks like an atom
-                    var mesh = this;
-                    var count = 2,
+                    let mesh = this;
+                    const count = 2,
                         radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2;
                     if ( mesh.children.length >= count ) {
 
@@ -59,8 +66,8 @@ var framework = {
                 }
             case "erratic" :
                 return function ( time ) {
-                    var mesh = this;
-                    var growthRate = 1.25,
+                    let mesh = this;
+                    const growthRate = 1.25,
                         length = mesh.geometry.vertices.length,
                         radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2,
                         rand = Math.round( Math.random() * length - 1 );
@@ -70,8 +77,8 @@ var framework = {
                         mesh.geometry.currentVector = mesh.geometry.vertices[ mesh.geometry.currentVectorIndex ];
                     }
                     if( mesh.geometry.currentVectorIndex && mesh.geometry.currentVector ) {
-                        var cIndex = mesh.geometry.currentVectorIndex;
-                        var x = mesh.geometry.currentVector.x,
+                        const cIndex = mesh.geometry.currentVectorIndex;
+                        const x = mesh.geometry.currentVector.x,
                             y = mesh.geometry.currentVector.y,
                             z = mesh.geometry.currentVector.z;
                         if( Math.abs( x ) < radius * 2 && Math.abs( y ) < radius * 2 && Math.abs( z ) < radius * 2 ) {
@@ -83,6 +90,13 @@ var framework = {
                     mesh.rotation.y += .01;
                     mesh.geometry.verticesNeedUpdate = true;
                 }
+            case "fade":
+                return anime( {
+                    targets: mesh.material,
+                    opacity: 0,
+                    duration: 1000 / speed,
+                    loop: 1
+                } );
             case "shapeshift":
                 return function ( time ) {
                     var meshes = this;
@@ -167,7 +181,7 @@ var framework = {
         material = material !== undefined ? material : "wireframe";
         switch( material ) {
             case "normal" :
-                return new THREE.MeshNormalMaterial( { flatShading: true, side: THREE.DoubleSide } );
+                return new THREE.MeshNormalMaterial( { flatShading: true, side: THREE.DoubleSide, transparent: true, opacity: .5 } );
             case "wireframe" :
                 return new THREE.MeshNormalMaterial( { transparent: true, wireframe: true } );
             default:
@@ -177,9 +191,9 @@ var framework = {
     },
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
-        var canvas = document.querySelector( "canvas" );
+        const canvas = document.querySelector( "canvas" );
         if( canvas === null || canvas === undefined ) {
-            var newCanvas = document.createElement( "canvas" );
+            let newCanvas = document.createElement( "canvas" );
             newCanvas.setAttribute( "id", id );
             document.body.appendChild( newCanvas );
             return newCanvas;
@@ -189,11 +203,11 @@ var framework = {
     },
     setupCamera: function ( options = {} ) {
         //camera setup * need to add cinematic option later
-        var opt = options.camera || options;
-        var camera;
-        var width = opt.width !== undefined ? opt.width : window.innerWidth,
+        const opt = options.camera || options;
+        let camera;
+        const width = opt.width !== undefined ? opt.width : window.innerWidth,
             height = opt.height !== undefined ? opt.height : window.innerHeight;
-        var aspectRatio = width/ height,
+        const aspectRatio = width/ height,
             fov = opt.fov !== undefined ? opt.fov : 60,
             far = opt.far !== undefined ? opt.far : 1000,
             type = opt.type !== undefined ? opt.type : "perspective",
@@ -226,9 +240,9 @@ var framework = {
 
     },
     setupRenderer: function ( options = {} ) {
-        var opt = options.renderer || options;
-        var renderer = new THREE.WebGLRenderer( { canvas : this.canvas } );
-        var color = opt.color !== undefined ? opt.color : 0x0022CC,
+        const opt = options.renderer || options;
+        let renderer = new THREE.WebGLRenderer( { canvas : this.canvas } );
+        const color = opt.color !== undefined ? opt.color : 0x0022CC,
             width = opt.width !== undefined ? opt.width : window.innerWidth,
             height = opt.height !== undefined ? opt.height : window.innerHeight;
         renderer.setSize( width, height );
@@ -238,11 +252,25 @@ var framework = {
         return renderer;
     },
     start: function () {
+        const audioPromise = initializeAudio( this.sounds );
         this.scene.name = "menu";
-        var menuScene = this.scene;
+        const menuScene = this.scene;
         this.scenes.push( menuScene );
         this.initPreloader( this.preloader );
         requestAnimationFrame( this.runScene );
+
+        audioPromise.then( ( controllers ) => {
+           this.audioControllers = controllers;
+           const fadeTime = 10000;
+           //add a delay
+
+            var preloader = this.scene.getObjectByName( "preloader" );
+            preloader.children[0].anime = this.createAnime( preloader.children[0], "fade" );
+            setTimeout( () => {
+                this.scenes.push( new THREE.Scene() );
+                this.scene = this.scenes[1];
+            }, fadeTime );
+        } );
 
     },
     runAnimations: function ( time ) {
@@ -251,6 +279,8 @@ var framework = {
                 obj.children.forEach( ( m ) => {
                     if( typeof m.anime === "function" ) {
                         m.anime( time, m.name );
+                    } else {
+                        m.material.needsUpdate = true;
                     }
                 } );
             }
@@ -260,6 +290,9 @@ var framework = {
         requestAnimationFrame( this.runScene );
         var time = this.clock.getDelta();
         var elaspedTime = this.clock.getElapsedTime();
+        if ( Math.round( elaspedTime ) % 20 === 0 ) {
+            console.log( this.audioControllers );
+        }
         this.runAnimations( elaspedTime );
         this.camera.aspect = window.innerWidth/ window.innerHeight;
         this.camera.updateProjectionMatrix();

@@ -3,23 +3,25 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { createStore } from "redux";
 import { Provider } from "react-redux";
-import ReduxMenu from "./components/Menu.js";
-import ReduxWorld from "./components/World.js";
+import World from "./components/World.js";
 
 const config = {
 	"bpm": 120,
-	"camera": { 
-		"type": "perspective",
-		"aspectRatio": 16/9
-	},
-	"genres": [ "progressive house", "house", "tech house" ],
+	"genres": "house",
 	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
-	"preloader": {
-		"type": "dodecahedron",
-		"material": "wireframe",
-		"animation": "spin_v1",
-		"size": 5
-	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
+    "camera": {
+        "type": "perspective",
+        "fov": 90,
+        "near": 1,
+        "far": 2000
+    },
+    "preloader": {
+        "type": "sphere",
+        "material": "normal",
+        "count": 3,
+        "size": 20,
+        "animation": "spin_basic"
+    }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
 		//fill this array with sounds that will compliment each object. this is where your sound options should go
 		{
@@ -76,8 +78,7 @@ const store = createStore( reducer, dummy );
 const Main = () => {
 	return (
 		<div className = "container">
-			<ReduxMenu logo = { config.logo } sounds = { config.sounds } />
-			<ReduxWorld camera = { config.camera } preloader = { config.preloader } objs = { config.worldObjects } />
+			<World  config = { config } />
 		</div>
 	);
 }

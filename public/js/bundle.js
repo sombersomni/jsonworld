@@ -1953,30 +1953,28 @@ var _redux = __webpack_require__(19);
 
 var _reactRedux = __webpack_require__(11);
 
-var _Menu = __webpack_require__(69);
-
-var _Menu2 = _interopRequireDefault(_Menu);
-
 var _World = __webpack_require__(72);
 
 var _World2 = _interopRequireDefault(_World);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-//index
 var config = {
 	"bpm": 120,
+	"genres": "house",
+	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
 	"camera": {
 		"type": "perspective",
-		"aspectRatio": 16 / 9
+		"fov": 90,
+		"near": 1,
+		"far": 2000
 	},
-	"genres": ["progressive house", "house", "tech house"],
-	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
 	"preloader": {
-		"type": "dodecahedron",
-		"material": "wireframe",
-		"animation": "spin_v1",
-		"size": 5
+		"type": "sphere",
+		"material": "normal",
+		"count": 3,
+		"size": 20,
+		"animation": "spin_basic"
 	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
 	//fill this array with sounds that will compliment each object. this is where your sound options should go
@@ -2002,7 +2000,8 @@ var config = {
 		"size": [5, 2, 3], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
 		"position": [20, 0, -20] // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
 	}]
-};
+}; //index
+
 
 var dummy = {
 	preloadApp: {
@@ -2035,8 +2034,7 @@ var Main = function Main() {
 	return _react2.default.createElement(
 		"div",
 		{ className: "container" },
-		_react2.default.createElement(_Menu2.default, { logo: config.logo, sounds: config.sounds }),
-		_react2.default.createElement(_World2.default, { camera: config.camera, preloader: config.preloader, objs: config.worldObjects })
+		_react2.default.createElement(_World2.default, { config: config })
 	);
 };
 
@@ -21233,202 +21231,8 @@ function verifySubselectors(mapStateToProps, mapDispatchToProps, mergeProps, dis
 }
 
 /***/ }),
-/* 69 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _react = __webpack_require__(1);
-
-var _react2 = _interopRequireDefault(_react);
-
-var _reactRedux = __webpack_require__(11);
-
-var _Logo = __webpack_require__(70);
-
-var _Logo2 = _interopRequireDefault(_Logo);
-
-var _Progress = __webpack_require__(71);
-
-var _Progress2 = _interopRequireDefault(_Progress);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var mapStateToMenu = function mapStateToMenu(state, ownProps) {
-	return state;
-};
-
-var Menu = function (_Component) {
-	_inherits(Menu, _Component);
-
-	function Menu(props) {
-		_classCallCheck(this, Menu);
-
-		//initial state
-		var _this = _possibleConstructorReturn(this, (Menu.__proto__ || Object.getPrototypeOf(Menu)).call(this, props));
-
-		_this.state = {
-			classType: "show",
-			message: ""
-		};
-
-		//binding all functions to avoid side-effects
-		_this.audioFetcher = _this.audioFetcher.bind(_this);
-		_this.createController = _this.createController.bind(_this);
-		_this.initializeAudio = _this.initializeAudio.bind(_this);
-		_this.seperateSoundName = _this.seperateSoundName.bind(_this);
-		_this.handleClick = _this.handleClick.bind(_this);
-		return _this;
-	}
-
-	_createClass(Menu, [{
-		key: "audioFetcher",
-		value: function audioFetcher(sound) {
-			var _this2 = this;
-
-			//a promise wrapper that takes care of fetching audio data
-			return new Promise(function (res, rej) {
-				var name = sound.name ? sound.name : _this2.seperateSoundName(sound.url);
-				fetch(sound.url).then(function (response) {
-					if (response.ok) {
-						//if response works, returns a array of sound information
-						return response.arrayBuffer();
-					} else {
-						//stops the promise from even continuing
-						rej({ message: name + " failed to download" });
-					}
-				}).then(function (buffer) {
-					//create the audio context here and start decoding buffer
-					var ctx = new AudioContext();
-					ctx.decodeAudioData(buffer, function (data) {
-						// assign the controller with each attribute 
-						var audio = _this2.createController(ctx, name, sound.sampleSize, data);
-						res(audio);
-					});
-				});
-			});
-		}
-	}, {
-		key: "createController",
-		value: function createController(ctx, name, fftSize, data) {
-			// packs a controller object with it's specific data
-			this.setState(Object.assign(this.state, { message: name + " completed" }));
-			var analyser = ctx.createAnalyser();
-			var gain = ctx.createGain();
-			var source = ctx.createBufferSource();
-			source.buffer = data;
-			analyser.fftSize = fftSize;
-			var timeData = new Uint8Array(analyser.fftSize);
-			var frequencyData = new Uint8Array(analyser.frequencyBinCount);
-			source.connect(gain);
-			gain.connect(ctx.destination);
-
-			var audioController = {
-				name: name,
-				ctx: ctx,
-				source: source,
-				analyser: analyser,
-				gain: gain,
-				timeData: timeData,
-				frequencyData: frequencyData
-			};
-
-			return audioController;
-		}
-	}, {
-		key: "handleClick",
-		value: function handleClick() {
-			console.log("clicked");
-			this.props.dispatch({ type: "START_APP", start: true });
-			this.setState({ classType: "hide", message: "downloading sounds. please wait" });
-			this.initializeAudio(this.props.sounds);
-		}
-	}, {
-		key: "initializeAudio",
-		value: function initializeAudio(sounds) {
-			var _this3 = this;
-
-			//loops through promises and waits til all sounds are loaded
-			var promiseArr = [];
-			for (var x = 0; x < sounds.length; x++) {
-				var p = this.audioFetcher(sounds[x]);
-				promiseArr.push(p);
-			}
-			Promise.all(promiseArr).then(function (controlArr) {
-				//array full of audio controllers
-				_this3.setState(Object.assign(_this3.state, { message: "building world. please wait" }));
-				_this3.props.dispatch({ type: "SEND_AUDIO_CONTROLLERS", payload: controlArr });
-				console.log(controlArr);
-			}).catch(function (err) {
-				_this3.setState(Object.assign(_this3.state, { message: err.message }));
-			});
-		}
-	}, {
-		key: "seperateSoundName",
-		value: function seperateSoundName(path) {
-			//if for some reason the name isn't in config, grabs it out the url path
-			var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
-			var matchedString = path.match(pattern);
-			var remappedArr = matchedString[0].split("_").map(function (each) {
-				return each.toLowerCase();
-			});
-			var newString = remappedArr.join(" ");
-			return newString;
-		}
-	}, {
-		key: "render",
-		value: function render() {
-			return _react2.default.createElement(
-				"div",
-				{ id: "menu" },
-				_react2.default.createElement(_Progress2.default, { classType: this.state.classType, message: this.state.message, onclick: this.handleClick })
-			);
-		}
-	}]);
-
-	return Menu;
-}(_react.Component);
-
-var ReduxMenu = (0, _reactRedux.connect)(mapStateToMenu)(Menu);
-exports.default = ReduxMenu;
-
-/***/ }),
-/* 70 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-
-var _react = __webpack_require__(1);
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-exports.default = function (props) {
-	var src = props.src;
-
-	return _react2.default.createElement("img", { src: src });
-}; //Logo Component
-
-/***/ }),
+/* 69 */,
+/* 70 */,
 /* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -21493,6 +21297,14 @@ var _three = __webpack_require__(74);
 
 var THREE = _interopRequireWildcard(_three);
 
+var _Progress = __webpack_require__(71);
+
+var _Progress2 = _interopRequireDefault(_Progress);
+
+var _AudioController = __webpack_require__(76);
+
+var _AudioController2 = _interopRequireDefault(_AudioController);
+
 var _WorldController = __webpack_require__(75);
 
 var _WorldController2 = _interopRequireDefault(_WorldController);
@@ -21507,29 +21319,6 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } //World Component
 
-
-var dummyOptions = {
-	camera: {
-		type: "perspective",
-		fov: 90,
-		near: 1,
-		far: 2000
-	},
-	preloader: {
-		type: "sphere",
-		material: "normal",
-		count: 3,
-		size: 20,
-		animation: {
-			type: "spin_basic",
-			speed: 5
-		}
-	}
-};
-
-var mapStateToWorld = function mapStateToWorld(state, ownProps) {
-	return state;
-};
 
 var World = function (_Component) {
 	_inherits(World, _Component);
@@ -21549,7 +21338,7 @@ var World = function (_Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			this.world = new _WorldController2.default(dummyOptions);
+			this.world = new _WorldController2.default(this.props.config);
 			this.world.start();
 			console.log(this.world);
 			window.addEventListener("resize", this.onWindowResize, false);
@@ -21585,13 +21374,14 @@ var World = function (_Component) {
 			return _react2.default.createElement(
 				"div",
 				null,
-				_react2.default.createElement("canvas", { id: "world" })
+				_react2.default.createElement("canvas", { id: "world" }),
+				_react2.default.createElement(_Progress2.default, { message: "dummy message" })
 			);
 		}
 	}, {
 		key: "onMouseMove",
 		value: function onMouseMove(e) {
-			console.log(e.clientX);
+			//console.log( e.clientX );
 		}
 	}, {
 		key: "onWindowResize",
@@ -21618,9 +21408,7 @@ var World = function (_Component) {
 	return World;
 }(_react.Component);
 
-var ReduxWorld = (0, _reactRedux.connect)(mapStateToWorld)(World);
-
-exports.default = ReduxWorld;
+exports.default = World;
 
 /***/ }),
 /* 73 */
@@ -66745,19 +66533,27 @@ var _animejs = __webpack_require__(73);
 
 var _animejs2 = _interopRequireDefault(_animejs);
 
+var _AudioController = __webpack_require__(76);
+
+var _AudioController2 = _interopRequireDefault(_AudioController);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function WorldController(options) {
     this.preloader = options.preloader;
+    this.sounds = options.sounds;
     //packages for storing
+    this.audioControllers = [];
     this.cameras = [];
     this.scenes = [];
     //
+
     this.canvas = this.getCanvas();
     this.camera = this.setupCamera(options);
     this.clock = new THREE.Clock();
+    this.audioControllers = undefined;
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer(options);
 
@@ -66778,10 +66574,10 @@ var framework = {
         this.scene.add(wrapper);
     },
     createAnime: function createAnime(mesh) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var t = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "spin_basic";
 
-        var type = options.type !== undefined ? options.type : "spin_basic",
-            speed = options.speed !== undefined ? options.speed : 1;
+        var type = t !== undefined ? t : "spin_basic",
+            speed = 1;
         switch (type) {
             case "atom":
                 return function (time) {
@@ -66831,6 +66627,13 @@ var framework = {
                     mesh.rotation.y += .01;
                     mesh.geometry.verticesNeedUpdate = true;
                 };
+            case "fade":
+                return (0, _animejs2.default)({
+                    targets: mesh.material,
+                    opacity: 0,
+                    duration: 1000 / speed,
+                    loop: 1
+                });
             case "shapeshift":
                 return function (time) {
                     var meshes = this;
@@ -66918,7 +66721,7 @@ var framework = {
         material = material !== undefined ? material : "wireframe";
         switch (material) {
             case "normal":
-                return new THREE.MeshNormalMaterial({ flatShading: true, side: THREE.DoubleSide });
+                return new THREE.MeshNormalMaterial({ flatShading: true, side: THREE.DoubleSide, transparent: true, opacity: .5 });
             case "wireframe":
                 return new THREE.MeshNormalMaterial({ transparent: true, wireframe: true });
             default:
@@ -66945,7 +66748,7 @@ var framework = {
 
         //camera setup * need to add cinematic option later
         var opt = options.camera || options;
-        var camera;
+        var camera = void 0;
         var width = opt.width !== undefined ? opt.width : window.innerWidth,
             height = opt.height !== undefined ? opt.height : window.innerHeight;
         var aspectRatio = width / height,
@@ -66993,11 +66796,27 @@ var framework = {
         return renderer;
     },
     start: function start() {
+        var _this = this;
+
+        var audioPromise = (0, _AudioController2.default)(this.sounds);
         this.scene.name = "menu";
         var menuScene = this.scene;
         this.scenes.push(menuScene);
         this.initPreloader(this.preloader);
         requestAnimationFrame(this.runScene);
+
+        audioPromise.then(function (controllers) {
+            _this.audioControllers = controllers;
+            var fadeTime = 10000;
+            //add a delay
+
+            var preloader = _this.scene.getObjectByName("preloader");
+            preloader.children[0].anime = _this.createAnime(preloader.children[0], "fade");
+            setTimeout(function () {
+                _this.scenes.push(new THREE.Scene());
+                _this.scene = _this.scenes[1];
+            }, fadeTime);
+        });
     },
     runAnimations: function runAnimations(time) {
         this.scene.children.forEach(function (obj) {
@@ -67005,6 +66824,8 @@ var framework = {
                 obj.children.forEach(function (m) {
                     if (typeof m.anime === "function") {
                         m.anime(time, m.name);
+                    } else {
+                        m.material.needsUpdate = true;
                     }
                 });
             }
@@ -67014,6 +66835,9 @@ var framework = {
         requestAnimationFrame(this.runScene);
         var time = this.clock.getDelta();
         var elaspedTime = this.clock.getElapsedTime();
+        if (Math.round(elaspedTime) % 20 === 0) {
+            console.log(this.audioControllers);
+        }
         this.runAnimations(elaspedTime);
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
@@ -67023,6 +66847,92 @@ var framework = {
 Object.assign(WorldController.prototype, framework);
 
 exports.default = WorldController;
+
+/***/ }),
+/* 76 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+function audioFetcher(sound) {
+    //a promise wrapper that takes care of fetching audio data
+    return new Promise(function (res, rej) {
+        var name = sound.name ? sound.name : seperateSoundName(sound.url);
+        fetch(sound.url).then(function (response) {
+            if (response.ok) {
+                //if response works, returns a array of sound information
+                return response.arrayBuffer();
+            } else {
+                //stops the promise from even continuing
+                rej({ message: name + " failed to download" });
+            }
+        }).then(function (buffer) {
+            //create the audio context here and start decoding buffer
+            var ctx = new AudioContext();
+            ctx.decodeAudioData(buffer, function (data) {
+                // assign the controller with each attribute
+                var audio = createController(ctx, name, sound.sampleSize, data);
+                res(audio);
+            });
+        });
+    });
+}
+function createController(ctx, name, fftSize, data) {
+    // packs a controller object with it's specific data
+    var analyser = ctx.createAnalyser();
+    var gain = ctx.createGain();
+    var source = ctx.createBufferSource();
+    source.buffer = data;
+    analyser.fftSize = fftSize;
+    var timeData = new Uint8Array(analyser.fftSize);
+    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(gain);
+    gain.connect(ctx.destination);
+
+    var audioController = {
+        name: name,
+        ctx: ctx,
+        source: source,
+        analyser: analyser,
+        gain: gain,
+        timeData: timeData,
+        frequencyData: frequencyData
+    };
+
+    return audioController;
+}
+function initializeAudio() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    //loops through promises and waits til all sounds are loaded
+    var sounds = options !== undefined ? options : [];
+    var promiseArr = [];
+    if (sounds.length !== 0) {
+        for (var x = 0; x < sounds.length; x++) {
+            var p = audioFetcher(sounds[x]);
+            promiseArr.push(p);
+        }
+    } else {
+        console.warn("there are no sounds to download. check your configuration");
+    }
+    return Promise.all(promiseArr);
+}
+function seperateSoundName(path) {
+    //if for some reason the name isn't in config, grabs it out the url path
+    var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
+    var matchedString = path.match(pattern);
+    var remappedArr = matchedString[0].split("_").map(function (each) {
+        return each.toLowerCase();
+    });
+    var newString = remappedArr.join(" ");
+    return newString;
+}
+
+exports.default = initializeAudio;
 
 /***/ })
 /******/ ]);
