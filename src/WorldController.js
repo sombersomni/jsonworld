@@ -1,23 +1,23 @@
 import * as THREE from "three";
-import anime from "animejs";
 
 import animationChoices from "./animationChoices.js";
-
-import initializeAudio from "./AudioController.js";
+import geometryChoices from "./geometryChoices.js";
+import initializeAudio from "./audioInitializer.js";
 
 function WorldController (options) {
     this.preloader = options.preloader;
     this.sounds = options.sounds;
+    this.worldObjects = options.worldObjects;
     //packages for storing
     this.audioControllers = [];
     this.cameras = [];
     this.scenes = [];
+    this.audioControllers = [];
     //
 
     this.canvas = this.getCanvas();
     this.camera = this.setupCamera( options );
     this.clock = new THREE.Clock();
-    this.audioControllers = undefined;
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer( options );
 
@@ -26,68 +26,14 @@ function WorldController (options) {
 }
 
 var framework = {
-    initPreloader: function ( options ) {
-        let g = this.createGeometry( options );
-        let m = this.createMaterial( options.material, options.color );
-        let mesh = new THREE.Mesh( g, m );
-        this.setupMesh(g, m);
-        mesh.name = "root";
-        let wrapper = new THREE.Group();
-        mesh.anime = this.createAnime( mesh, options.animation );
-        wrapper.add( mesh );
-        wrapper.name = "preloader";
-        this.scene.add( wrapper );
-    },
     createAnime: animationChoices,
-    createGeometry: function ( options = {} ) {
-        //goes through every geometry type plus custom ones
-        var segments = options.segments ? options.segments : 2,
-            type = options.type !== undefined ? options.type : "default";
-        var size;
-        if ( typeof options.size === "number" ) {
-            //uses a single number for sizing
-            size = options.size;
-        } else if ( options.size instanceof Array ) {
-            console.log( "this is an array for size" );
-        }
-        else {
-            console.log( "size options are not valid for " + options.type );
-            return;
-        }
-        //CHOICES
-        switch( type ) {
-            case "box":
-                if( typeof options.size === "number" ) {
-                    return new THREE.BoxGeometry( size, size, size );
-                } else {
-                    return new THREE.BoxGeometry( size[0], size[1], size[2] );
-                }
-            case "cylinder" :
-                return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
-            case "dodecahedron" :
-                //creates dodecahedron geometry.
-                return new THREE.DodecahedronGeometry( size );
-            case "plane" :
-                //creates plane geometry
-                if ( typeof options.size === "number" ) {
-                    //uses a single number for sizing
-                    var size = options.size;
-                    return new THREE.PlaneGeometry( size, size, segments );
-                } else {
-                    //uses the first value which should be width
-                    return new THREE.PlaneGeometry( size[0], size[1], segments );
-                }
-            case "sphere":
-                return new THREE.SphereGeometry( size ? size : 1 );
-            default:
-        }
-    },
+    createGeometry: geometryChoices,
     createMaterial: function ( material, color = 0xffffff ) {
         color = color !== undefined ? color : 0xffffff;
         material = material !== undefined ? material : "wireframe";
         switch( material ) {
             case "normal" :
-                return new THREE.MeshNormalMaterial( { flatShading: true, side: THREE.DoubleSide, transparent: true, opacity: .5 } );
+                return new THREE.MeshNormalMaterial( { flatShading: true, side: THREE.DoubleSide, transparent: true } );
             case "wireframe" :
                 return new THREE.MeshNormalMaterial( { transparent: true, wireframe: true } );
             default:
@@ -142,8 +88,28 @@ var framework = {
 
         return camera;
     },
-    setupMesh: function (g, m) {
-
+    setupMesh: function ( options, sI ) {
+        let g = this.createGeometry( options );
+        let m = this.createMaterial( options.material, options.color );
+        let mesh = new THREE.Mesh( g, m );
+        mesh.name = this.scenes.length === 1 ? "preloader" : "";
+        mesh.anime = this.createAnime( mesh, options.animation );
+        console.log( )
+        this.scenes[ sI ].add( mesh );
+    },
+    setupScene: function( options = {}, audioControllers ) {
+        this.scenes.push( new THREE.Scene() );
+        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
+        if( this.scenes.length === 1 ) {
+            this.scene = this.scenes[0];
+        }
+        if( options instanceof  Array ) {
+            options.forEach( ( o ) => {
+                this.setupMesh( o, 1 );
+            } );
+        } else {
+            this.setupMesh( options, this.scenes.length - 1 );
+        }
     },
     setupRenderer: function ( options = {} ) {
         const opt = options.renderer || options;
@@ -159,36 +125,34 @@ var framework = {
     },
     start: function () {
         const audioPromise = initializeAudio( this.sounds );
-        this.scene.name = "menu";
-        const menuScene = this.scene;
-        this.scenes.push( menuScene );
-        this.initPreloader( this.preloader );
+        this.setupScene( this.preloader );
         requestAnimationFrame( this.runScene );
 
         audioPromise.then( ( controllers ) => {
            this.audioControllers = controllers;
+           this.setupScene( this.worldObjects, controllers );
+
            const fadeTime = 10000;
            //add a delay
 
             var preloader = this.scene.getObjectByName( "preloader" );
-            preloader.children[0].anime = this.createAnime( preloader.children[0], "fade" );
+            console.log( preloader );
+            preloader.anime = this.createAnime( preloader, "fade" );
             setTimeout( () => {
-                this.scenes.push( new THREE.Scene() );
                 this.scene = this.scenes[1];
+                console.log( this.scene );
             }, fadeTime );
         } );
 
     },
     runAnimations: function ( time ) {
-        this.scene.children.forEach( ( obj ) => {
-            if( obj.type.toLowerCase() === "group" ) {
-                obj.children.forEach( ( m ) => {
-                    if( typeof m.anime === "function" ) {
-                        m.anime( time, m.name );
-                    } else {
-                        m.material.needsUpdate = true;
-                    }
-                } );
+        this.scene.children.forEach( ( m ) => {
+            if( m.type.toLowerCase() === "mesh" ) {
+                if( typeof m.anime === "function" ) {
+                    m.anime( time, m.name );
+                } else {
+                    m.material.needsUpdate = true;
+                }
             }
         });
     },
@@ -196,9 +160,6 @@ var framework = {
         requestAnimationFrame( this.runScene );
         var time = this.clock.getDelta();
         var elaspedTime = this.clock.getElapsedTime();
-        if ( Math.round( elaspedTime ) % 20 === 0 ) {
-            console.log( this.audioControllers );
-        }
         this.runAnimations( elaspedTime );
         this.camera.aspect = window.innerWidth/ window.innerHeight;
         this.camera.updateProjectionMatrix();

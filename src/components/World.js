@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import * as THREE from "three";
 
 import Progress from "./Progress.js";
-import AudioController from "../AudioController.js";
 import WorldController from "../WorldController.js";
 
 class World extends Component {

@@ -1,7 +1,13 @@
 function audioFetcher ( sound ) {
         //a promise wrapper that takes care of fetching audio data
         return new Promise( ( res, rej ) => {
-            const name = sound.name ? sound.name : seperateSoundName( sound.url );
+            const name = sound.name !== undefined ? sound.name : seperateSoundName( sound.url );
+            let id;
+            if ( sound.id !== undefined ) {
+                id = sound.id;
+            } else {
+                rej( { message: "objects can't map to sounds without id. Check your configuration file" } );
+            }
             fetch( sound.url ).then( response => {
                 if( response.ok ){
                     //if response works, returns a array of sound information
@@ -15,13 +21,13 @@ function audioFetcher ( sound ) {
                 const ctx = new AudioContext();
                 ctx.decodeAudioData( buffer, data => {
                     // assign the controller with each attribute
-                    let audio = createController( ctx, name, sound.sampleSize, data );
+                    let audio = createController( ctx, id, name, sound.sampleSize, data );
                     res( audio );
                 } );
             } );
         } );
 }
-function createController ( ctx, name, fftSize, data ) {
+function createController ( ctx, id, name, fftSize, data ) {
         // packs a controller object with it's specific data
         const analyser = ctx.createAnalyser();
         const gain = ctx.createGain();
@@ -34,13 +40,14 @@ function createController ( ctx, name, fftSize, data ) {
         gain.connect( ctx.destination );
 
         let audioController = {
-            name,
-            ctx,
-            source,
             analyser,
-            gain,
-            timeData,
+            ctx,
             frequencyData,
+            gain,
+            id,
+            name,
+            source,
+            timeData,
         }
 
         return audioController;
@@ -62,11 +69,11 @@ function initializeAudio ( options = {} ) {
 function seperateSoundName ( path ) {
         //if for some reason the name isn't in config, grabs it out the url path
         var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
+        var patternTwo = /[\s_\-]/;
         var matchedString = path.match(pattern);
-        var remappedArr = matchedString[0].split( "_" ).map( function ( each ) {
-            return each.toLowerCase();
-        } );
-        var newString = remappedArr.join( " " );
+        console.log(matchedString);
+        var newString = matchedString[0].replace(patternTwo, " ").toLowerCase();
+        console.log( newString );
         return newString;
 
 }
