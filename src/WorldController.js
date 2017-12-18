@@ -3,6 +3,7 @@ import * as THREE from "three";
 import animationChoices from "./animationChoices.js";
 import geometryChoices from "./geometryChoices.js";
 import initializeAudio from "./audioInitializer.js";
+import progressEmitter from "./events/progressEmitter";
 
 function WorldController (options) {
     this.preloader = options.preloader;
@@ -12,7 +13,6 @@ function WorldController (options) {
     this.audioControllers = [];
     this.cameras = [];
     this.scenes = [];
-    this.audioControllers = [];
     //
 
     this.canvas = this.getCanvas();
@@ -94,7 +94,6 @@ var framework = {
         let mesh = new THREE.Mesh( g, m );
         mesh.name = this.scenes.length === 1 ? "preloader" : "";
         mesh.anime = this.createAnime( mesh, options.animation );
-        console.log( )
         this.scenes[ sI ].add( mesh );
     },
     setupScene: function( options = {}, audioControllers ) {
@@ -129,16 +128,17 @@ var framework = {
         requestAnimationFrame( this.runScene );
 
         audioPromise.then( ( controllers ) => {
-           this.audioControllers = controllers;
-           this.setupScene( this.worldObjects, controllers );
+            progressEmitter.emit( "message", { message: "building world. please wait" } );
+            this.audioControllers = controllers;
+            this.setupScene( this.worldObjects, controllers );
 
-           const fadeTime = 10000;
-           //add a delay
+            const fadeTime = 10000;
+            //add a delay
 
-            var preloader = this.scene.getObjectByName( "preloader" );
-            console.log( preloader );
+            let preloader = this.scene.getObjectByName( "preloader" );
             preloader.anime = this.createAnime( preloader, "fade" );
             setTimeout( () => {
+                progressEmitter.emit( "message", { message: "" } );
                 this.scene = this.scenes[1];
                 console.log( this.scene );
             }, fadeTime );

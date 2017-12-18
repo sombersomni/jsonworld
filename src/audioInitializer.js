@@ -1,3 +1,5 @@
+import progressEmitter from "./events/progressEmitter.js";
+
 function audioFetcher ( sound ) {
         //a promise wrapper that takes care of fetching audio data
         return new Promise( ( res, rej ) => {
@@ -19,8 +21,10 @@ function audioFetcher ( sound ) {
             } ).then( buffer => {
                 //create the audio context here and start decoding buffer
                 const ctx = new AudioContext();
+                progressEmitter.emit( "message", { message: "downloading " + name } );
                 ctx.decodeAudioData( buffer, data => {
                     // assign the controller with each attribute
+                    progressEmitter.emit( "message", { message: "completed " + name } );
                     let audio = createController( ctx, id, name, sound.sampleSize, data );
                     res( audio );
                 } );
@@ -71,9 +75,7 @@ function seperateSoundName ( path ) {
         var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
         var patternTwo = /[\s_\-]/;
         var matchedString = path.match(pattern);
-        console.log(matchedString);
         var newString = matchedString[0].replace(patternTwo, " ").toLowerCase();
-        console.log( newString );
         return newString;
 
 }

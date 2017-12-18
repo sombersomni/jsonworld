@@ -1,19 +1,26 @@
 //World Component
 import React, { Component } from "react";
-import { connect } from "react-redux";
 import * as THREE from "three";
 
+import progressEmitter from "../events/progressEmitter.js";
 import Progress from "./Progress.js";
 import WorldController from "../WorldController.js";
 
 class World extends Component {
 	constructor ( props ) {
 		super( props );
-		
+
+		this.state = {
+			message: "...",
+		};
+
 		this.world = null;
 
 	}
 	componentDidMount () {
+        progressEmitter.on("message", ( e ) => {
+            this.setState( { message: e.message } );
+        } );
 		this.world = new WorldController( this.props.config );
 		this.world.start();
 		console.log( this.world );
@@ -46,7 +53,7 @@ class World extends Component {
 		return (
 			<div>
 				<canvas id="world" ></canvas>
-				<Progress message = { "dummy message" } />
+				<Progress message = { this.state.message } />
 			</div>
 		);
 	}
