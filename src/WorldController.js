@@ -110,13 +110,13 @@ var framework = {
     },
     setupScene: function( options = {}, audioControllers ) {
         this.scenes.push(new THREE.Scene());
-        this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main";
+        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
         if (options instanceof Array) {
-            options.forEach((o) => {
-                this.setupMesh(o, 1);
+            options.forEach( ( o ) => {
+                this.setupMesh(o, this.scenes.length - 1 );
             });
         } else {
-            this.setupMesh(options, this.scenes.length - 1);
+            this.setupMesh( options, this.scenes.length - 1 );
         }
     },
     setupRenderer: function ( options = {} ) {
@@ -134,14 +134,14 @@ var framework = {
     initWorld: function () {
         //initializes world after clicking and removes event listener to prevent memory leaks
         this.canvas.removeEventListener("click", this.initWorld, false);
-        let title = this.scenes[ this.scenes.length - 1].getObjectByName( "title" );
+        let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
         title.anime = this.createAnime( title, "fade" );
         const audioPromise = initializeAudio( this.sounds );
         //delays preloader but not the audio loader
         setTimeout( () => {
             this.scenes[ this.scenes.length - 1 ].remove( title );
             this.preloader.name = "preloader";
-            this.setupMesh( this.preloader, 0 );
+            this.setupMesh( this.preloader, this.scenes.length - 1 );
         }, 1000 );
 
         audioPromise.then( ( controllers ) => {

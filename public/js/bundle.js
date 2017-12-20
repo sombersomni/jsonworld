@@ -66993,7 +66993,7 @@ var framework = {
         this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main";
         if (options instanceof Array) {
             options.forEach(function (o) {
-                _this.setupMesh(o, 1);
+                _this.setupMesh(o, _this.scenes.length - 1);
             });
         } else {
             this.setupMesh(options, this.scenes.length - 1);
@@ -67025,7 +67025,7 @@ var framework = {
         setTimeout(function () {
             _this2.scenes[_this2.scenes.length - 1].remove(title);
             _this2.preloader.name = "preloader";
-            _this2.setupMesh(_this2.preloader, 0);
+            _this2.setupMesh(_this2.preloader, _this2.scenes.length - 1);
         }, 1000);
 
         audioPromise.then(function (controllers) {
@@ -67458,7 +67458,7 @@ exports.default = function () {
                 side: THREE.DoubleSide,
                 transparent: true });
         case "toon":
-            new THREE.MeshToonMaterial({
+            return new THREE.MeshToonMaterial({
                 color: color,
                 emissive: new THREE.Color(0x333333),
                 shading: THREE.SmoothShading

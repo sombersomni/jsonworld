@@ -12,7 +12,7 @@ export default function (options = {} ) {
                 side: THREE.DoubleSide,
                 transparent: true } );
         case "toon" :
-            new THREE.MeshToonMaterial({
+            return new THREE.MeshToonMaterial( {
                 color,
                 emissive: new THREE.Color(0x333333),
                 shading: THREE.SmoothShading,
