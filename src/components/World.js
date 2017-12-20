@@ -11,11 +11,24 @@ class World extends Component {
 		super( props );
 
 		this.state = {
-			message: "...",
+			message: "click the screen to start.",
 		};
 
 		this.world = null;
 
+	}
+	createLinks ( links ) {
+		var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
+		var domLinks = [];
+		for ( let i = 0; i < links.length; i++ ) {
+			var match = links[i].match( pattern );
+			console.log(match);
+			domLinks.push( <a href = { links[i]} key ={ match[0] } ><span className ="fa-stack fa-lg">
+			  <i className = "fa fa-square-o fa-stack-2x"></i>
+			  <i className ={ "fa fa-" + match[0] + " fa-stack-1x" }></i>
+			</span> </a> );
+		}
+		return domLinks;
 	}
 	componentDidMount () {
         progressEmitter.on("message", ( e ) => {
@@ -23,10 +36,8 @@ class World extends Component {
         } );
 		this.world = new WorldController( this.props.config );
 		this.world.start();
-		console.log( this.world );
 		window.addEventListener( "resize" , this.onWindowResize, false );
-		var canvas = document.getElementById( "world" );
-		canvas.addEventListener( "mousemove", ( e ) => {
+		this.world.canvas.addEventListener( "mousemove", ( e ) => {
 			this.onMouseMove( e );
 		},  false );
 	}
@@ -50,8 +61,12 @@ class World extends Component {
 		*/
 	}
 	render () {
+		const { config } = this.props;
 		return (
 			<div>
+				<div id = "links">
+					{ this.createLinks( config.menu.links ) }
+				</div>
 				<canvas id="world" ></canvas>
 				<Progress message = { this.state.message } />
 			</div>
@@ -61,7 +76,7 @@ class World extends Component {
 		//console.log( e.clientX );
 	}
 	onWindowResize () {
-
+		console.log( this.world );
 	    this.world.camera.aspect = window.innerWidth / window.innerHeight;
 	    this.world.camera.updateProjectionMatrix();
 

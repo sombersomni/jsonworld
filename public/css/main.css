@@ -8,6 +8,11 @@
 
 @import url('https://fonts.googleapis.com/css?family=Share+Tech+Mono');
 
+*:hover {
+    cursor: pointer;
+
+}
+
 body {
 	background: #222222;
     color: #ffffff;
@@ -51,10 +56,30 @@ body {
     left: 50%;
     position: absolute;
     text-align: center;
+    -webkit-transform: translateX(-50%);
+    -moz-transform: translateX(-50%);
     transform: translateX(-50%);
     top: 80vh;
     width: auto;
     z-index: 99;
+}
+.fa {
+    color: black;
+    text-align: center;
+}
+
+span {
+    display: block;
+}
+
+#links {
+    color: black;
+    display: block;
+    position: absolute;
+    z-index: 98;
+    background: aliceblue;
+    width: auto;
+    height: auto;
 }
 
 #progress {
@@ -68,8 +93,4 @@ body {
     width: 100vw;
     height: 100vh;
     z-index: 1;
-}
-
-@keyframes stretchDisappear {
-    0% { width: ; }
 }

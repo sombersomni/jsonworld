@@ -8,13 +8,16 @@ import World from "./components/World.js";
 const config = {
 	"bpm": 120,
 	"genres": "house",
-	"logo": "imgs/logo.png", //it's best to have a transparent png for your logo
     "camera": {
         "type": "perspective",
         "fov": 90,
         "near": 1,
         "far": 2000
     },
+	"menu": {
+        "title": "imgs/header.png",
+		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
+	},
     "preloader": {
         "type": "sphere",
         "material": "normal",
