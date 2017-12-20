@@ -1,7 +1,11 @@
 import * as THREE from "three";
+import ThreeBSP from "./csg/threeCSG.js";
 
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
+import createMaterial from "./createMaterial.js";
+
+
 import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
 
@@ -30,22 +34,7 @@ function WorldController (options) {
 var framework = {
     createAnime,
     createGeometry,
-    createMaterial: function ( options = {} ) {
-        const color = options.color !== undefined ? options.color : 0xffffff;
-        const material = options.material !== undefined ? options.material : "wireframe";
-        const map = options.texture !== undefined ? options.texture : null;
-        switch( material ) {
-            case "basic" :
-                return new THREE.MeshBasicMaterial( { color, map, transparent: true } );
-            case "normal" :
-                return new THREE.MeshNormalMaterial( { color, flatShading: true, side: THREE.DoubleSide, transparent: true } );
-            case "wireframe" :
-                return new THREE.MeshNormalMaterial( { transparent: true, wireframe: true } );
-            default:
-                return new THREE.MeshBasicMaterial( { color } );
-
-        }
-    },
+    createMaterial,
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
         const canvas = document.querySelector("canvas");
@@ -143,12 +132,17 @@ var framework = {
         return renderer;
     },
     initWorld: function () {
-        console.log( "clicked" );
+        //initializes world after clicking and removes event listener to prevent memory leaks
         this.canvas.removeEventListener("click", this.initWorld, false);
+        let title = this.scenes[ this.scenes.length - 1].getObjectByName( "title" );
+        title.anime = this.createAnime( title, "fade" );
         const audioPromise = initializeAudio( this.sounds );
-        this.scenes[0].remove( this.scenes[0].getObjectByName( "title" ) );
-        this.preloader.name = "preloader";
-        this.setupMesh( this.preloader, 0 );
+        //delays preloader but not the audio loader
+        setTimeout( () => {
+            this.scenes[ this.scenes.length - 1 ].remove( title );
+            this.preloader.name = "preloader";
+            this.setupMesh( this.preloader, 0 );
+        }, 1000 );
 
         audioPromise.then( ( controllers ) => {
             progressEmitter.emit( "message", { message: "building world. please wait" } );
@@ -162,16 +156,17 @@ var framework = {
             preloader.anime = this.createAnime( preloader, "fade" );
             setTimeout( () => {
                 progressEmitter.emit( "message", { message: "" } );
-                this.scene = this.scenes[1];
+                this.scene = this.scenes[ this.scenes.length - 1 ];
                 console.log( this.scene );
             }, fadeTime );
         } );
 
     },
     start: function () {
+        console.log( ThreeBSP );
         this.canvas.addEventListener("click", this.initWorld );
         this.scenes.push(new THREE.Scene());
-        this.scene = this.scenes[0];
+        this.scene = this.scenes[ this.scenes.length - 1 ];
         requestAnimationFrame( this.runScene );
         let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
         const isImgLink = checkFormat.test(this.menu.title);
