@@ -47,7 +47,7 @@ const config = {
 			"type": "sphere", //can call primitive shapes like box or premade objects like lego
 			"color": 0xFF7618, //you can use hex values, rgba(0,0,0,0) or strings such as "red"
 			"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
-			"size": [ 5, 2, 3 ], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
+			"size": [ 20, 10, 3 ], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
 			"position": [ 20, 0, -20 ], // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
 			"material": "normal",
 			"sound_id": 1 //maps the sound to this object and will be replaced with uuid once ordered.
@@ -61,7 +61,8 @@ const config = {
             "size": 10,
             "position": 0,
 			"material": "normal",
-            "sound_id": 2
+            "sound_id": 2,
+			"isUniform": true
         }
 	]
 };

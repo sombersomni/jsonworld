@@ -28,7 +28,7 @@ function WorldController (options) {
 }
 
 var framework = {
-    createAnime: animationChoices,
+    createAnime,
     createGeometry,
     createMaterial: function ( options = {} ) {
         const color = options.color !== undefined ? options.color : 0xffffff;
