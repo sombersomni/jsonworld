@@ -77,9 +77,10 @@ span {
     display: block;
     position: absolute;
     z-index: 98;
-    background: aliceblue;
+    background: #00bb22;
     width: auto;
     height: auto;
+    border-radius: 0px 0px 10px 0px;
 }
 
 #progress {

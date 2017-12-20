@@ -15,6 +15,7 @@ class World extends Component {
 		};
 
 		this.world = null;
+		this.onWindowResize = this.onWindowResize.bind( this );
 
 	}
 	createLinks ( links ) {
@@ -22,7 +23,6 @@ class World extends Component {
 		var domLinks = [];
 		for ( let i = 0; i < links.length; i++ ) {
 			var match = links[i].match( pattern );
-			console.log(match);
 			domLinks.push( <a href = { links[i]} key ={ match[0] } ><span className ="fa-stack fa-lg">
 			  <i className = "fa fa-square-o fa-stack-2x"></i>
 			  <i className ={ "fa fa-" + match[0] + " fa-stack-1x" }></i>
@@ -36,6 +36,7 @@ class World extends Component {
         } );
 		this.world = new WorldController( this.props.config );
 		this.world.start();
+		console.log( this.world );
 		window.addEventListener( "resize" , this.onWindowResize, false );
 		this.world.canvas.addEventListener( "mousemove", ( e ) => {
 			this.onMouseMove( e );

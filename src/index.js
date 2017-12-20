@@ -17,13 +17,13 @@ const config = {
 	"menu": {
         "title": "imgs/header.png",
 		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
+		"animation": "default"
 	},
     "preloader": {
         "type": "sphere",
-        "material": "normal",
-        "count": 3,
+        "material": "wireframe",
         "size": 20,
-        "animation": "spin_basic"
+        "animation": "erratic"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"sounds": [
 		//fill this array with sounds that will compliment each object. this is where your sound options should go
@@ -54,12 +54,13 @@ const config = {
     },
         {
             "type": "dodecahedron",
+			"animation": "spin_random",
             "color": 0xFF7618,
 			"count": 100,
             "scale": [2,1,1],
-            "size": 5,
+            "size": 10,
             "position": 0,
-			"material": "plastic",
+			"material": "normal",
             "sound_id": 2
         }
 	]

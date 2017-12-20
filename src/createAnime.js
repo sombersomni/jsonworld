@@ -2,7 +2,7 @@ import anime from "animejs";
 import * as THREE from "three";
 
 export default function (mesh, type ) {
-    var t = type !== undefined ? type : "default",
+    var t = type !== undefined ? type : "spin_basic",
         speed = 1;
     switch( t ) {
         case "atom":

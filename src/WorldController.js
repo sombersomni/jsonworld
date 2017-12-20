@@ -1,7 +1,7 @@
 import * as THREE from "three";
 
-import animationChoices from "./animationChoices.js";
-import geometryChoices from "./geometryChoices.js";
+import createAnime from "./createAnime.js";
+import createGeometry from "./createGeometry.js";
 import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
 
@@ -23,13 +23,13 @@ function WorldController (options) {
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer( options );
 
-
+    this.initWorld = this.initWorld.bind( this );
     this.runScene = this.runScene.bind( this );
 }
 
 var framework = {
     createAnime: animationChoices,
-    createGeometry: geometryChoices,
+    createGeometry,
     createMaterial: function ( options = {} ) {
         const color = options.color !== undefined ? options.color : 0xffffff;
         const material = options.material !== undefined ? options.material : "wireframe";
@@ -38,7 +38,7 @@ var framework = {
             case "basic" :
                 return new THREE.MeshBasicMaterial( { color, map, transparent: true } );
             case "normal" :
-                return new THREE.MeshNormalMaterial( { flatShading: true, side: THREE.DoubleSide, transparent: true } );
+                return new THREE.MeshNormalMaterial( { color, flatShading: true, side: THREE.DoubleSide, transparent: true } );
             case "wireframe" :
                 return new THREE.MeshNormalMaterial( { transparent: true, wireframe: true } );
             default:
@@ -94,12 +94,30 @@ var framework = {
         return camera;
     },
     setupMesh: function ( options, sI ) {
-        let g = this.createGeometry(options);
-        let m = this.createMaterial(options);
-        let mesh = new THREE.Mesh(g, m);
-        mesh.name = options.name !== undefined ? options.name : "";
-        mesh.anime = this.createAnime(mesh, options.animation);
-        this.scenes[sI].add(mesh);
+        if ( options.count !== undefined && options.count > 1 ) {
+            let group = new THREE.Group();
+            for ( let i = 0; i <= options.count - 1; i++ ) {
+                let g = this.createGeometry(options);
+                let m = this.createMaterial(options);
+                let mesh = new THREE.Mesh( g, m );
+                mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
+                mesh.name = options.name !== undefined ? options.name + "i" : "";
+                mesh.anime = this.createAnime( mesh, options.animation );
+                mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                    Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                    Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
+                group.add( mesh );
+            }
+            this.scenes[sI].add( group );
+        } else {
+            let g = this.createGeometry(options);
+            let m = this.createMaterial(options);
+            let mesh = new THREE.Mesh( g, m );
+            mesh.name = options.name !== undefined ? options.name : "";
+            mesh.anime = this.createAnime(mesh, options.animation);
+            this.scenes[sI].add(mesh);
+        }
+
     },
     setupScene: function( options = {}, audioControllers ) {
         this.scenes.push(new THREE.Scene());
@@ -115,7 +133,7 @@ var framework = {
     setupRenderer: function ( options = {} ) {
         const opt = options.renderer || options;
         let renderer = new THREE.WebGLRenderer({canvas: this.canvas});
-        const color = opt.color !== undefined ? opt.color : 0x0022CC,
+        const color = opt.color !== undefined ? opt.color : 0xcc0022,
             width = opt.width !== undefined ? opt.width : window.innerWidth,
             height = opt.height !== undefined ? opt.height : window.innerHeight;
         renderer.setSize(width, height);
@@ -125,18 +143,19 @@ var framework = {
         return renderer;
     },
     initWorld: function () {
+        console.log( "clicked" );
+        this.canvas.removeEventListener("click", this.initWorld, false);
         const audioPromise = initializeAudio( this.sounds );
         this.scenes[0].remove( this.scenes[0].getObjectByName( "title" ) );
         this.preloader.name = "preloader";
         this.setupMesh( this.preloader, 0 );
 
         audioPromise.then( ( controllers ) => {
-            this.canvas.removeEventListener("click", this.initWorld, false);
             progressEmitter.emit( "message", { message: "building world. please wait" } );
             this.audioControllers = controllers;
             this.setupScene( this.worldObjects, controllers );
 
-            const fadeTime = 10000;
+            const fadeTime = 2000;
             //add a delay
 
             let preloader = this.scene.getObjectByName( "preloader" );
@@ -150,7 +169,7 @@ var framework = {
 
     },
     start: function () {
-        this.canvas.addEventListener("click", this.initWorld.bind( this ));
+        this.canvas.addEventListener("click", this.initWorld );
         this.scenes.push(new THREE.Scene());
         this.scene = this.scenes[0];
         requestAnimationFrame( this.runScene );
@@ -162,6 +181,7 @@ var framework = {
                     type: "plane",
                     name: "title",
                     material: "basic",
+                    animation: this.menu.animation !== undefined ? this.menu.animation : "default",
                     color: 0xffffff,
                     size: [tex.image.naturalWidth, tex.image.naturalHeight],
                     texture: tex
@@ -173,13 +193,22 @@ var framework = {
         }
     },
     runAnimations: function ( time ) {
-        this.scene.children.forEach( ( m ) => {
-            if( m.type.toLowerCase() === "mesh" ) {
-                if( typeof m.anime === "function" ) {
-                    m.anime( time, m.name );
+        this.scene.children.forEach( ( obj ) => {
+            if( obj.type.toLowerCase() === "mesh" ) {
+                if( typeof obj.anime === "function" ) {
+                    obj.anime( time, obj.name );
                 } else {
-                    m.material.needsUpdate = true;
+                    obj.material.needsUpdate = true;
                 }
+            }
+            else if ( obj.type.toLowerCase() === "group" ) {
+                obj.children.forEach( ( m ) => {
+                    if( typeof obj.anime === "function" ) {
+                        m.anime( time, obj.name );
+                    } else {
+                        m.material.needsUpdate = true;
+                    }
+                } );
             }
         });
     },
