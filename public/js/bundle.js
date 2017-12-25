@@ -67150,7 +67150,7 @@ var framework = {
                     texture: tex
                 };
                 _this3.setupMesh(options, _this3.scenes.length - 1);
-                //calculate mesh porpotions. Will add it in setupMesh function later
+                //calculate title mesh so if img is too large it will fit inside the camera view
                 var title = _this3.scenes[_this3.scenes.length - 1].getObjectByName("title");
                 var camData = (0, _cameraView2.default)(title.position.z, _this3.camera);
                 title.scale.set(1 / 2, 1 / 2, 1);

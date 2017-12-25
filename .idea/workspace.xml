@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="0fb7aa41-558d-4f7e-aa2f-f26f97ab4f8d" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/src/WorldController.js" afterPath="$PROJECT_DIR$/src/WorldController.js" />
-      <change beforePath="$PROJECT_DIR$/src/index.js" afterPath="$PROJECT_DIR$/src/index.js" />
     </list>
     <ignored path="$PROJECT_DIR$/public/js/" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -109,8 +108,8 @@
       <file leaf-file-name="WorldController.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/WorldController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="292">
-              <caret line="220" column="48" lean-forward="false" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
+            <state relative-caret-position="351">
+              <caret line="217" column="80" lean-forward="false" selection-start-line="217" selection-start-column="80" selection-end-line="217" selection-end-column="80" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
                 <element signature="e#83#142#0" expanded="true" />
@@ -303,12 +302,12 @@
       <workItem from="1513747647331" duration="3416000" />
       <workItem from="1513782189883" duration="10224000" />
       <workItem from="1514153884133" duration="9932000" />
-      <workItem from="1514220689755" duration="10443000" />
+      <workItem from="1514220689755" duration="10665000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="72710000" />
+    <option name="totallyTimeSpent" value="72932000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1296" height="696" extended-state="6" />
@@ -697,8 +696,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/WorldController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="292">
-          <caret line="220" column="48" lean-forward="false" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
+        <state relative-caret-position="351">
+          <caret line="217" column="80" lean-forward="false" selection-start-line="217" selection-start-column="80" selection-end-line="217" selection-end-column="80" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#83#142#0" expanded="true" />

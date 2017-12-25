@@ -215,7 +215,7 @@ const framework = {
                     texture: tex
                 };
                 this.setupMesh( options, this.scenes.length - 1 );
-                //calculate mesh porpotions. Will add it in setupMesh function later
+                //calculate title mesh so if img is too large it will fit inside the camera view
                 let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
                 const camData = calculateCameraView( title.position.z, this.camera );
                 title.scale.set( 1 / 2, 1 / 2, 1 );
