@@ -1,6 +1,9 @@
 import * as THREE from "three";
 import ThreeBSP from "./csg/threeCSG.js";
 
+//UTILS
+import stringToArray from "./utils/stringToArray.js";
+
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
 import createMaterial from "./createMaterial.js";
@@ -10,6 +13,7 @@ import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
 
 function WorldController (options) {
+
     this.menu = options.menu;
     this.preloader = options.preloader;
     this.sounds = options.sounds;
@@ -24,6 +28,7 @@ function WorldController (options) {
     this.canvas = this.getCanvas();
     this.camera = this.setupCamera( options );
     this.clock = new THREE.Clock();
+    this.fog = this.setupFog( options );
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer( options );
 
@@ -31,9 +36,20 @@ function WorldController (options) {
     this.runScene = this.runScene.bind( this );
 }
 
-var framework = {
+const framework = {
     createAnime,
     createGeometry,
+    colorInterpreter: function ( color ) {
+        if ( typeof color === "string" ) {
+            const pattern = /^[a-z]+/;
+            if ( pattern.test( color.toLowerCase() ) ) {
+                return new THREE.Color( color );
+            } else {
+                const cArr = stringToArray( color );
+                return new THREE.Color( cArr[0], cArr[1], cArr[2] );
+            }
+        }
+    },
     createMaterial,
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
@@ -111,6 +127,11 @@ var framework = {
     setupScene: function( options = {}, audioControllers ) {
         this.scenes.push(new THREE.Scene());
         this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
+        this.scenes[ this.scenes.length - 1 ].fog = this.fog;
+        let light = new THREE.DirectionalLight( 0xffffff, 10 );
+        light.position.set( 0, 1000, 0 );
+        this.scenes[ this.scenes.length - 1 ].add( light );
+        console.log( light );
         if (options instanceof Array) {
             options.forEach( ( o ) => {
                 this.setupMesh(o, this.scenes.length - 1 );
@@ -131,6 +152,19 @@ var framework = {
         renderer.setClearColor(color);
         return renderer;
     },
+    setupFog: function ( options = {} ) {
+        let fog;
+        const opt = options.fog !== undefined ? options.fog : {};
+        const color = opt.color !== undefined ? this.colorInterpreter( opt.color )  :  0xffffff;
+        const type =  opt.type !== undefined ? opt.type : "exponential";
+        const density = opt.density !== undefined ? opt.density : .0025;
+        if ( type === "linear" ) {
+            fog = new THREE.Fog( color, density );
+        } else {
+            fog = new THREE.FogExp2( color, density );
+        }
+        return fog;
+    },
     initWorld: function () {
         //initializes world after clicking and removes event listener to prevent memory leaks
         this.canvas.removeEventListener("click", this.initWorld, false);
@@ -148,7 +182,6 @@ var framework = {
             progressEmitter.emit( "message", { message: "building world. please wait" } );
             this.audioControllers = controllers;
             this.setupScene( this.worldObjects, controllers );
-
             const fadeTime = 2000;
             //add a delay
 

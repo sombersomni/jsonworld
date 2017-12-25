@@ -14,6 +14,11 @@ const config = {
         "near": 1,
         "far": 2000
     },
+	"fog": {
+		"type": "exponential",
+		"color": "1 0 0",
+		"density": .1
+	},
 	"menu": {
         "title": "imgs/header.png",
 		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
@@ -55,12 +60,12 @@ const config = {
         {
             "type": "dodecahedron",
 			"animation": "spin_random",
-            "color": 0xFF7618,
+            "color": 0x00ff22,
 			"count": 100,
             "scale": [2,1,1],
             "size": 10,
             "position": 0,
-			"material": "normal",
+			"material": "standard",
             "sound_id": 2,
 			"isUniform": true
         }
