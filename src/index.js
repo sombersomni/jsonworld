@@ -17,7 +17,7 @@ const config = {
 	"fog": {
 		"type": "exponential",
 		"color": "1 0 0",
-		"density": .1
+
 	},
 	"menu": {
         "title": "imgs/header.png",
@@ -52,7 +52,7 @@ const config = {
 			"type": "sphere", //can call primitive shapes like box or premade objects like lego
 			"color": 0xFF7618, //you can use hex values, rgba(0,0,0,0) or strings such as "red"
 			"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
-			"size": [ 20, 10, 3 ], // [ "width", "height", "depth" ] for easier creationg. you can use a single number for uniform sizing. if not defined, moves to default
+			"size": [ 20, 10, 3 ], // [ "width", "height", "depth" ] for easier creation. you can use a single number for uniform sizing. if not defined, moves to default
 			"position": [ 20, 0, -20 ], // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
 			"material": "normal",
 			"sound_id": 1 //maps the sound to this object and will be replaced with uuid once ordered.
@@ -60,7 +60,7 @@ const config = {
         {
             "type": "dodecahedron",
 			"animation": "spin_random",
-            "color": 0x00ff22,
+            "color": "skyblue",
 			"count": 100,
             "scale": [2,1,1],
             "size": 10,

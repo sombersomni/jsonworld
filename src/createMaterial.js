@@ -1,7 +1,9 @@
 import * as THREE from "three";
 
+import colorInterpreter from "./utils/colorInterpreter.js";
+
 export default function (options = {} ) {
-    const color = options.color !== undefined ? new THREE.Color( options.color ) : new THREE.Color( 0xffffff );
+    const color = options.color !== undefined ? colorInterpreter( options.color ) : new THREE.Color();
     const material = options.material !== undefined ? options.material : "wireframe";
     const map = options.texture !== undefined ? options.texture : null;
     const emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( 0x333333 );
@@ -26,8 +28,9 @@ export default function (options = {} ) {
         case "standard" :
             return new THREE.MeshStandardMaterial( {
                 color,
-                flatShading: true,
+                emissive,
                 roughness: 0,
+                metalness: 0,
                 side: THREE.DoubleSide,
                 transparent: true } );
         case "wireframe" :

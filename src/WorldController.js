@@ -2,7 +2,7 @@ import * as THREE from "three";
 import ThreeBSP from "./csg/threeCSG.js";
 
 //UTILS
-import stringToArray from "./utils/stringToArray.js";
+import colorInterpreter from "./utils/colorInterpreter.js";
 
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
@@ -39,17 +39,6 @@ function WorldController (options) {
 const framework = {
     createAnime,
     createGeometry,
-    colorInterpreter: function ( color ) {
-        if ( typeof color === "string" ) {
-            const pattern = /^[a-z]+/;
-            if ( pattern.test( color.toLowerCase() ) ) {
-                return new THREE.Color( color );
-            } else {
-                const cArr = stringToArray( color );
-                return new THREE.Color( cArr[0], cArr[1], cArr[2] );
-            }
-        }
-    },
     createMaterial,
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
@@ -105,7 +94,7 @@ const framework = {
                 let g = this.createGeometry(options);
                 let m = this.createMaterial(options);
                 let mesh = new THREE.Mesh( g, m );
-                mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
+                //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
                 mesh.name = options.name !== undefined ? options.name + "i" : "";
                 mesh.anime = this.createAnime( mesh, options.animation );
                 mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
@@ -126,12 +115,11 @@ const framework = {
     },
     setupScene: function( options = {}, audioControllers ) {
         this.scenes.push(new THREE.Scene());
-        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
+        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
         this.scenes[ this.scenes.length - 1 ].fog = this.fog;
         let light = new THREE.DirectionalLight( 0xffffff, 10 );
         light.position.set( 0, 1000, 0 );
         this.scenes[ this.scenes.length - 1 ].add( light );
-        console.log( light );
         if (options instanceof Array) {
             options.forEach( ( o ) => {
                 this.setupMesh(o, this.scenes.length - 1 );
@@ -155,11 +143,15 @@ const framework = {
     setupFog: function ( options = {} ) {
         let fog;
         const opt = options.fog !== undefined ? options.fog : {};
-        const color = opt.color !== undefined ? this.colorInterpreter( opt.color )  :  0xffffff;
-        const type =  opt.type !== undefined ? opt.type : "exponential";
+        const camOpt = options.camera !== undefined ? options.camera : {};
+        const color = opt.color !== undefined ? colorInterpreter( opt.color )  :  new THREE.Color();
         const density = opt.density !== undefined ? opt.density : .0025;
+        const far = camOpt.far !== undefined ? camOpt.far : 1000;
+        const type =  opt.type !== undefined ? opt.type : "exponential";
+        const near = camOpt.near !== undefined ? camOpt.near : .01;
+
         if ( type === "linear" ) {
-            fog = new THREE.Fog( color, density );
+            fog = new THREE.Fog( color, near, far );
         } else {
             fog = new THREE.FogExp2( color, density );
         }
@@ -210,7 +202,7 @@ const framework = {
                     name: "title",
                     material: "basic",
                     animation: this.menu.animation !== undefined ? this.menu.animation : "default",
-                    color: 0xffffff,
+                    color: new THREE.Color(),
                     size: [tex.image.naturalWidth, tex.image.naturalHeight],
                     texture: tex
                 }
