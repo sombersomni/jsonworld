@@ -60,12 +60,12 @@ const config = {
         {
             "type": "dodecahedron",
 			"animation": "spin_random",
-            "color": "skyblue",
+            "color": "blue",
 			"count": 100,
             "scale": [2,1,1],
             "size": 10,
             "position": 0,
-			"material": "standard",
+			"material": "toon",
             "sound_id": 2,
 			"isUniform": true
         }

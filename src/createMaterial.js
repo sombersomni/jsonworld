@@ -6,7 +6,7 @@ export default function (options = {} ) {
     const color = options.color !== undefined ? colorInterpreter( options.color ) : new THREE.Color();
     const material = options.material !== undefined ? options.material : "wireframe";
     const map = options.texture !== undefined ? options.texture : null;
-    const emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( 0x333333 );
+    const emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color();
     switch( material ) {
         case "basic" :
             return new THREE.MeshBasicMaterial( {
@@ -17,8 +17,7 @@ export default function (options = {} ) {
         case "toon" :
             return new THREE.MeshToonMaterial( {
                 color,
-                emissive,
-                shading: THREE.SmoothShading,
+                flatShading: true
             });
         case "normal" :
             return new THREE.MeshNormalMaterial( {
@@ -28,7 +27,6 @@ export default function (options = {} ) {
         case "standard" :
             return new THREE.MeshStandardMaterial( {
                 color,
-                emissive,
                 roughness: 0,
                 metalness: 0,
                 side: THREE.DoubleSide,

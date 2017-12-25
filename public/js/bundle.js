@@ -47111,12 +47111,12 @@ var config = {
 	}, {
 		"type": "dodecahedron",
 		"animation": "spin_random",
-		"color": "skyblue",
+		"color": "blue",
 		"count": 100,
 		"scale": [2, 1, 1],
 		"size": 10,
 		"position": 0,
-		"material": "standard",
+		"material": "toon",
 		"sound_id": 2,
 		"isUniform": true
 	}]
@@ -66904,6 +66904,10 @@ var _colorInterpreter = __webpack_require__(30);
 
 var _colorInterpreter2 = _interopRequireDefault(_colorInterpreter);
 
+var _cameraView = __webpack_require__(83);
+
+var _cameraView2 = _interopRequireDefault(_cameraView);
+
 var _createAnime = __webpack_require__(77);
 
 var _createAnime2 = _interopRequireDefault(_createAnime);
@@ -66928,7 +66932,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-//UTILS
 function WorldController(options) {
 
     this.menu = options.menu;
@@ -66952,6 +66955,9 @@ function WorldController(options) {
     this.initWorld = this.initWorld.bind(this);
     this.runScene = this.runScene.bind(this);
 }
+
+//UTILS
+
 
 var framework = {
     createAnime: _createAnime2.default,
@@ -67040,7 +67046,7 @@ var framework = {
         this.scenes.push(new THREE.Scene());
         this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
         this.scenes[this.scenes.length - 1].fog = this.fog;
-        var light = new THREE.DirectionalLight(0xffffff, 10);
+        var light = new THREE.DirectionalLight(0xffffff, 100);
         light.position.set(0, 1000, 0);
         this.scenes[this.scenes.length - 1].add(light);
         if (options instanceof Array) {
@@ -67143,8 +67149,17 @@ var framework = {
         }
     },
     runAnimations: function runAnimations(time) {
+        var _this4 = this;
+
         this.scene.children.forEach(function (obj) {
             if (obj.type.toLowerCase() === "mesh") {
+                if (obj.geometry.parameters.hasOwnProperty("width") && obj.geometry.parameters.hasOwnProperty("height")) {
+                    var camData = (0, _cameraView2.default)(obj.position.z, _this4.camera);
+                } else if (obj.geometry.parameters.hasOwnProperty("radius")) {
+                    var _camData = (0, _cameraView2.default)(obj.position.z, _this4.camera);
+                } else {
+                    console.warn("can't calculate object parameters");
+                }
                 if (typeof obj.anime === "function") {
                     obj.anime(time, obj.name);
                 } else {
@@ -67166,6 +67181,7 @@ var framework = {
         var time = this.clock.getDelta();
         var elaspedTime = this.clock.getElapsedTime();
         this.runAnimations(elaspedTime);
+
         /*
         this.camera.aspect = window.innerWidth/ window.innerHeight;
         this.camera.updateProjectionMatrix();
@@ -68078,7 +68094,7 @@ exports.default = function () {
     var color = options.color !== undefined ? (0, _colorInterpreter2.default)(options.color) : new THREE.Color();
     var material = options.material !== undefined ? options.material : "wireframe";
     var map = options.texture !== undefined ? options.texture : null;
-    var emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color(0x333333);
+    var emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color();
     switch (material) {
         case "basic":
             return new THREE.MeshBasicMaterial({
@@ -68089,8 +68105,7 @@ exports.default = function () {
         case "toon":
             return new THREE.MeshToonMaterial({
                 color: color,
-                emissive: emissive,
-                shading: THREE.SmoothShading
+                flatShading: true
             });
         case "normal":
             return new THREE.MeshNormalMaterial({
@@ -68100,7 +68115,6 @@ exports.default = function () {
         case "standard":
             return new THREE.MeshStandardMaterial({
                 color: color,
-                emissive: emissive,
                 roughness: 0,
                 metalness: 0,
                 side: THREE.DoubleSide,
@@ -68243,6 +68257,40 @@ exports.default = function (str) {
     var pattern = /[0-9]{1}(?=\s)/g;
     var match = str.match(pattern);
     return match;
+};
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function (depth, camera) {
+    var height = visibleHeightAtZDepth(depth, camera);
+    var width = visibleWidthAtZDepth(depth, camera);
+    return { height: height, width: width };
+};
+
+var visibleHeightAtZDepth = function visibleHeightAtZDepth(depth, camera) {
+    // compensate for cameras not positioned at z=0
+    var cameraOffset = camera.position.z;
+    if (depth < cameraOffset) depth -= cameraOffset;else depth += cameraOffset;
+
+    // vertical fov in radians
+    var vFOV = camera.fov * Math.PI / 180;
+
+    // Math.abs to ensure the result is always positive
+    return 2 * Math.tan(vFOV / 2) * Math.abs(depth);
+};
+
+var visibleWidthAtZDepth = function visibleWidthAtZDepth(depth, camera) {
+    var height = visibleHeightAtZDepth(depth, camera);
+    return height * camera.aspect;
 };
 
 /***/ })

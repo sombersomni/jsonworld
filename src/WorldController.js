@@ -3,6 +3,7 @@ import ThreeBSP from "./csg/threeCSG.js";
 
 //UTILS
 import colorInterpreter from "./utils/colorInterpreter.js";
+import calculateCameraView from "./utils/cameraView.js";
 
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
@@ -117,7 +118,7 @@ const framework = {
         this.scenes.push(new THREE.Scene());
         this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
         this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-        let light = new THREE.DirectionalLight( 0xffffff, 10 );
+        let light = new THREE.DirectionalLight( 0xffffff, 100 );
         light.position.set( 0, 1000, 0 );
         this.scenes[ this.scenes.length - 1 ].add( light );
         if (options instanceof Array) {
@@ -205,7 +206,7 @@ const framework = {
                     color: new THREE.Color(),
                     size: [tex.image.naturalWidth, tex.image.naturalHeight],
                     texture: tex
-                }
+                };
                 this.setupMesh( options, this.scenes.length - 1 );
             });
         } else {
@@ -215,6 +216,13 @@ const framework = {
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {
             if( obj.type.toLowerCase() === "mesh" ) {
+                if ( obj.geometry.parameters.hasOwnProperty( "width" ) && obj.geometry.parameters.hasOwnProperty( "height" ) ) {
+                    const camData = calculateCameraView( obj.position.z, this.camera );
+                } else if ( obj.geometry.parameters.hasOwnProperty( "radius" ) ) {
+                    const camData = calculateCameraView( obj.position.z, this.camera );
+                } else {
+                    console.warn( "can't calculate object parameters" );
+                }
                 if( typeof obj.anime === "function" ) {
                     obj.anime( time, obj.name );
                 } else {
@@ -237,6 +245,8 @@ const framework = {
         var time = this.clock.getDelta();
         var elaspedTime = this.clock.getElapsedTime();
         this.runAnimations( elaspedTime );
+
+
         /*
         this.camera.aspect = window.innerWidth/ window.innerHeight;
         this.camera.updateProjectionMatrix();
