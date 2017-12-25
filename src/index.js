@@ -20,7 +20,7 @@ const config = {
 
 	},
 	"menu": {
-        "title": "imgs/header.png",
+        "title": "imgs/title.png",
 		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
 		"animation": "default"
 	},

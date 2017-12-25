@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="0fb7aa41-558d-4f7e-aa2f-f26f97ab4f8d" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/src/WorldController.js" afterPath="$PROJECT_DIR$/src/WorldController.js" />
-      <change beforePath="$PROJECT_DIR$/src/createMaterial.js" afterPath="$PROJECT_DIR$/src/createMaterial.js" />
       <change beforePath="$PROJECT_DIR$/src/index.js" afterPath="$PROJECT_DIR$/src/index.js" />
     </list>
     <ignored path="$PROJECT_DIR$/public/js/" />
@@ -64,7 +63,7 @@
       <file leaf-file-name="createMaterial.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/createMaterial.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="314">
+            <state relative-caret-position="323">
               <caret line="19" column="33" lean-forward="false" selection-start-line="19" selection-start-column="33" selection-end-line="19" selection-end-column="33" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
@@ -98,8 +97,8 @@
       <file leaf-file-name="index.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/index.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="46" column="9" lean-forward="false" selection-start-line="46" selection-start-column="9" selection-end-line="62" selection-end-column="28" />
+            <state relative-caret-position="229">
+              <caret line="22" column="28" lean-forward="false" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
               <folding>
                 <element signature="e#8#34#0" expanded="true" />
               </folding>
@@ -110,8 +109,8 @@
       <file leaf-file-name="WorldController.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/WorldController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="219" column="87" lean-forward="false" selection-start-line="219" selection-start-column="87" selection-end-line="219" selection-end-column="87" />
+            <state relative-caret-position="292">
+              <caret line="220" column="48" lean-forward="false" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
                 <element signature="e#83#142#0" expanded="true" />
@@ -151,9 +150,9 @@
         <option value="$PROJECT_DIR$/src/utils/stringToArray.js" />
         <option value="$PROJECT_DIR$/src/colorInterpreter.js" />
         <option value="$PROJECT_DIR$/src/utils/colorInterpreter.js" />
-        <option value="$PROJECT_DIR$/src/index.js" />
         <option value="$PROJECT_DIR$/src/createMaterial.js" />
         <option value="$PROJECT_DIR$/src/utils/cameraView.js" />
+        <option value="$PROJECT_DIR$/src/index.js" />
         <option value="$PROJECT_DIR$/src/WorldController.js" />
       </list>
     </option>
@@ -304,12 +303,12 @@
       <workItem from="1513747647331" duration="3416000" />
       <workItem from="1513782189883" duration="10224000" />
       <workItem from="1514153884133" duration="9932000" />
-      <workItem from="1514220689755" duration="6903000" />
+      <workItem from="1514220689755" duration="10443000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="69170000" />
+    <option name="totallyTimeSpent" value="72710000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1296" height="696" extended-state="6" />
@@ -650,24 +649,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/utils/stringToArray.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="73" lean-forward="false" selection-start-line="1" selection-start-column="73" selection-end-line="1" selection-end-column="73" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/index.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="46" column="9" lean-forward="false" selection-start-line="46" selection-start-column="9" selection-end-line="62" selection-end-column="28" />
-          <folding>
-            <element signature="e#8#34#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/utils/colorInterpreter.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
@@ -678,12 +659,12 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/createMaterial.js">
+    <entry file="file://$PROJECT_DIR$/src/index.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="314">
-          <caret line="19" column="33" lean-forward="false" selection-start-line="19" selection-start-column="33" selection-end-line="19" selection-end-column="33" />
+        <state relative-caret-position="229">
+          <caret line="22" column="28" lean-forward="false" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#8#34#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -696,10 +677,28 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/createMaterial.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="19" column="33" lean-forward="false" selection-start-line="19" selection-start-column="33" selection-end-line="19" selection-end-column="33" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/utils/stringToArray.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="1" column="73" lean-forward="false" selection-start-line="1" selection-start-column="73" selection-end-line="1" selection-end-column="73" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/WorldController.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="219" column="87" lean-forward="false" selection-start-line="219" selection-start-column="87" selection-end-line="219" selection-end-column="87" />
+        <state relative-caret-position="292">
+          <caret line="220" column="48" lean-forward="false" selection-start-line="220" selection-start-column="48" selection-end-line="220" selection-end-column="48" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
             <element signature="e#83#142#0" expanded="true" />

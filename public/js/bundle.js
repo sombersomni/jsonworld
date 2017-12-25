@@ -47074,7 +47074,7 @@ var config = {
 
 	},
 	"menu": {
-		"title": "imgs/header.png",
+		"title": "imgs/title.png",
 		"links": ["https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla"],
 		"animation": "default"
 	},
@@ -67036,12 +67036,14 @@ var framework = {
             _mesh.anime = this.createAnime(_mesh, options.animation);
             this.scenes[sI].add(_mesh);
         }
+
+        return;
     },
     setupScene: function setupScene() {
         var _this = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-        var audioControllers = arguments[1];
+        var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         this.scenes.push(new THREE.Scene());
         this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
@@ -67056,6 +67058,8 @@ var framework = {
         } else {
             this.setupMesh(options, this.scenes.length - 1);
         }
+
+        return;
     },
     setupRenderer: function setupRenderer() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -67096,6 +67100,8 @@ var framework = {
         //initializes world after clicking and removes event listener to prevent memory leaks
         this.canvas.removeEventListener("click", this.initWorld, false);
         var title = this.scenes[this.scenes.length - 1].getObjectByName("title");
+        var camData = (0, _cameraView2.default)(title.position.z, this.camera);
+        //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
         title.anime = this.createAnime(title, "fade");
         var audioPromise = (0, _audioInitializer2.default)(this.sounds);
         //delays preloader but not the audio loader
@@ -67125,14 +67131,15 @@ var framework = {
         var _this3 = this;
 
         console.log(_threeCSG2.default);
-        this.canvas.addEventListener("click", this.initWorld);
         this.scenes.push(new THREE.Scene());
-        this.scene = this.scenes[this.scenes.length - 1];
+        this.scene = this.scenes[0];
+        this.canvas.addEventListener("click", this.initWorld);
         requestAnimationFrame(this.runScene);
         var checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
         var isImgLink = checkFormat.test(this.menu.title);
         if (isImgLink) {
             var texture = new THREE.TextureLoader().load(this.menu.title, function (tex) {
+
                 var options = {
                     type: "plane",
                     name: "title",
@@ -67143,23 +67150,28 @@ var framework = {
                     texture: tex
                 };
                 _this3.setupMesh(options, _this3.scenes.length - 1);
+                //calculate mesh porpotions. Will add it in setupMesh function later
+                var title = _this3.scenes[_this3.scenes.length - 1].getObjectByName("title");
+                var camData = (0, _cameraView2.default)(title.position.z, _this3.camera);
+                title.scale.set(1 / 2, 1 / 2, 1);
             });
         } else {
             console.log("turn into a 3D font");
         }
     },
     runAnimations: function runAnimations(time) {
-        var _this4 = this;
-
         this.scene.children.forEach(function (obj) {
             if (obj.type.toLowerCase() === "mesh") {
-                if (obj.geometry.parameters.hasOwnProperty("width") && obj.geometry.parameters.hasOwnProperty("height")) {
-                    var camData = (0, _cameraView2.default)(obj.position.z, _this4.camera);
-                } else if (obj.geometry.parameters.hasOwnProperty("radius")) {
-                    var _camData = (0, _cameraView2.default)(obj.position.z, _this4.camera);
+                /*
+                if ( obj.geometry.parameters.hasOwnProperty( "width" ) && obj.geometry.parameters.hasOwnProperty( "height" ) ) {
+                    const camData = calculateCameraView( obj.position.z, this.camera );
+                } else if ( obj.geometry.parameters.hasOwnProperty( "radius" ) ) {
+                    const camData = calculateCameraView( obj.position.z, this.camera );
                 } else {
-                    console.warn("can't calculate object parameters");
+                    console.warn( "can't calculate object parameters" );
                 }
+                */
+
                 if (typeof obj.anime === "function") {
                     obj.anime(time, obj.name);
                 } else {

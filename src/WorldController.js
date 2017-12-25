@@ -113,9 +113,11 @@ const framework = {
             this.scenes[sI].add(mesh);
         }
 
+        return;
+
     },
-    setupScene: function( options = {}, audioControllers ) {
-        this.scenes.push(new THREE.Scene());
+    setupScene: function( options = {}, audioControllers = {} ) {
+        this.scenes.push( new THREE.Scene() );
         this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
         this.scenes[ this.scenes.length - 1 ].fog = this.fog;
         let light = new THREE.DirectionalLight( 0xffffff, 100 );
@@ -126,8 +128,10 @@ const framework = {
                 this.setupMesh(o, this.scenes.length - 1 );
             });
         } else {
-            this.setupMesh( options, this.scenes.length - 1 );
+                this.setupMesh( options, this.scenes.length - 1 );
         }
+
+        return;
     },
     setupRenderer: function ( options = {} ) {
         const opt = options.renderer || options;
@@ -162,6 +166,8 @@ const framework = {
         //initializes world after clicking and removes event listener to prevent memory leaks
         this.canvas.removeEventListener("click", this.initWorld, false);
         let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
+        const camData = calculateCameraView( title.position.z, this.camera );
+        //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
         title.anime = this.createAnime( title, "fade" );
         const audioPromise = initializeAudio( this.sounds );
         //delays preloader but not the audio loader
@@ -190,24 +196,29 @@ const framework = {
     },
     start: function () {
         console.log( ThreeBSP );
+        this.scenes.push( new THREE.Scene() );
+        this.scene = this.scenes[ 0 ];
         this.canvas.addEventListener("click", this.initWorld );
-        this.scenes.push(new THREE.Scene());
-        this.scene = this.scenes[ this.scenes.length - 1 ];
         requestAnimationFrame( this.runScene );
         let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
         const isImgLink = checkFormat.test(this.menu.title);
         if (isImgLink) {
             let texture = new THREE.TextureLoader().load(this.menu.title, (tex) => {
+
                 const options = {
                     type: "plane",
                     name: "title",
                     material: "basic",
                     animation: this.menu.animation !== undefined ? this.menu.animation : "default",
                     color: new THREE.Color(),
-                    size: [tex.image.naturalWidth, tex.image.naturalHeight],
+                    size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
                     texture: tex
                 };
                 this.setupMesh( options, this.scenes.length - 1 );
+                //calculate mesh porpotions. Will add it in setupMesh function later
+                let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
+                const camData = calculateCameraView( title.position.z, this.camera );
+                title.scale.set( 1 / 2, 1 / 2, 1 );
             });
         } else {
             console.log("turn into a 3D font");
@@ -216,6 +227,7 @@ const framework = {
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {
             if( obj.type.toLowerCase() === "mesh" ) {
+                /*
                 if ( obj.geometry.parameters.hasOwnProperty( "width" ) && obj.geometry.parameters.hasOwnProperty( "height" ) ) {
                     const camData = calculateCameraView( obj.position.z, this.camera );
                 } else if ( obj.geometry.parameters.hasOwnProperty( "radius" ) ) {
@@ -223,6 +235,8 @@ const framework = {
                 } else {
                     console.warn( "can't calculate object parameters" );
                 }
+                */
+
                 if( typeof obj.anime === "function" ) {
                     obj.anime( time, obj.name );
                 } else {
