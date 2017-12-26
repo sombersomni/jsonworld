@@ -2,8 +2,8 @@ import anime from "animejs";
 import * as THREE from "three";
 
 export default function (mesh, type ) {
-    var t = type !== undefined ? type : "spin_basic",
-        speed = 1;
+    const t = type !== undefined ? type : "spin_basic",
+        speed = 10;
     switch( t ) {
         case "atom":
             return function ( time ) {
@@ -14,8 +14,8 @@ export default function (mesh, type ) {
                 if ( mesh.children.length >= count ) {
 
                 } else {
-                    for ( var i = 0; i <= count - 1; i++ ) {
-                        var g = new THREE.Geometry();
+                    for ( let i = 0; i <= count - 1; i++ ) {
+                        let g = new THREE.Geometry();
                         g.vertices = mesh.geometry.vertices;
                         //console.log( g );
                         // console.log( mesh );
@@ -55,24 +55,24 @@ export default function (mesh, type ) {
                 mesh.rotation.y += .01;
                 mesh.geometry.verticesNeedUpdate = true;
             }
-        case "fade":
+        case "fade" :
             return anime( {
                 targets: mesh.material,
                 opacity: 0,
                 duration: 1000 / speed,
                 loop: 1
             } );
-        case "shapeshift":
+        case "shapeshift" :
             return function ( time ) {
-                var meshes = this;
-                for ( var i = 0; i < mesh.geometry.vertices.length; i++ ) {
+                let mesh = this;
+                for ( let i = 0; i < mesh.geometry.vertices.length; i++ ) {
                     mesh.geometry.vertices[i].y += Math.sin( time + i ) * 1/20;
                     mesh.geometry.vertices[i].x += Math.cos( time + i ) * 1/20;
                     mesh.geometry.vertices[i].z += Math.sin( time + i ) * 1/20;
                 }
                 mesh.geometry.verticesNeedUpdate = true;
             }
-        case "spin_basic":
+        case "spin_basic" :
             return anime( {
                 targets: mesh.rotation,
                 y: Math.PI * 2,
@@ -80,20 +80,39 @@ export default function (mesh, type ) {
                 duration: 5000 / speed,
                 loop: true
             } );
-        case "spin_random":
+        case "spin_random" :
             return anime( {
                 targets: mesh.rotation,
                 y: Math.PI * 2,
-                elasticity: 100,
+                elasticity: 100 / speed,
                 duration: 5000 / speed,
                 loop: 1,
                 complete: function( anim ) {
-                    var axis = "xyz";
-                    var random = Math.round( Math.random() * 3 - 1 );
+                    const axis = "xyz";
+                    const random = Math.round( Math.random() * 3 - 1 );
                     anim.animations[0].property = axis.charAt( random );
                     anim.restart();
                 }
             } );
+        case "zoom_beat" :
+            return anime( {
+                targets: mesh.position,
+                z: mesh.position.z - 20,
+                elasticity: 100 / speed,
+                direction: "alternate",
+                duration: 1000 / speed,
+                loop: true
+            } );
+        case "zoom_normal" :
+            return function ( time ) {
+                let mesh = this;
+                const distance = 20;
+                if ( mesh.prevPosition === undefined ) {
+                    mesh.prevPosition = {};
+                    mesh.prevPosition.z = mesh.position.z;
+                }
+                mesh.position.z = ( distance * Math.sin( time * ( speed / 10 ) ) ) + mesh.prevPosition.z;
+            }
         default:
             return;
     }

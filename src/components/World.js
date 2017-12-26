@@ -36,7 +36,6 @@ class World extends Component {
         } );
 		this.world = new WorldController( this.props.config );
 		this.world.start();
-		console.log( this.world );
 		window.addEventListener( "resize" , this.onWindowResize, false );
 		this.world.canvas.addEventListener( "mousemove", ( e ) => {
 			this.onMouseMove( e );

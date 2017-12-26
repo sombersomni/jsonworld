@@ -60,7 +60,7 @@ const config = {
         {
             "type": "dodecahedron",
 			"animation": "spin_random",
-            "color": "blue",
+            "color": 0xffcc22,
 			"count": 100,
             "scale": [2,1,1],
             "size": 10,

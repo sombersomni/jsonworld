@@ -53,6 +53,27 @@ const framework = {
             return canvas;
         }
     },
+    fitOnScreen: function ( mesh, w, h, n = 2 ) {
+        const data = calculateCameraView( mesh.position.z, this.camera );
+        console.log( w, h, n );
+        if ( mesh.geometry.parameters.hasOwnProperty( "width" ) && mesh.geometry.parameters.hasOwnProperty( "height" ) ) {
+            const width = w ||  mesh.geometry.parameters.width;
+            const height = h || mesh.geometry.parameters.height;
+
+            if( width > data.width || height > data.height ) {
+                mesh.scale.set( 1 / n, 1 / n, 1 );
+                w = width / n;
+                h = height / n;
+                n++;
+                return this.fitOnScreen( mesh, w, h, n );
+            }
+
+        } else {
+            console.warn( "this object doesn't have width or height properties. check if using correct image file type or image properties" );
+        }
+
+        return;
+    },
     setupCamera: function ( options = {} ) {
         //camera setup * need to add cinematic option later
         const opt = options.camera || options;
@@ -118,20 +139,21 @@ const framework = {
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         this.scenes.push( new THREE.Scene() );
-        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
+        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
         this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-        let light = new THREE.DirectionalLight( 0xffffff, 100 );
+        let light = new THREE.DirectionalLight( 0xffffff, 2 );
         light.position.set( 0, 1000, 0 );
         this.scenes[ this.scenes.length - 1 ].add( light );
         if (options instanceof Array) {
             options.forEach( ( o ) => {
                 this.setupMesh(o, this.scenes.length - 1 );
             });
+        } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
+            this.setupMesh( options, this.scenes.length - 1 );
         } else {
-                this.setupMesh( options, this.scenes.length - 1 );
-        }
 
-        return;
+            return;
+        }
     },
     setupRenderer: function ( options = {} ) {
         const opt = options.renderer || options;
@@ -196,7 +218,7 @@ const framework = {
     },
     start: function () {
         console.log( ThreeBSP );
-        this.scenes.push( new THREE.Scene() );
+        this.setupScene( {} );
         this.scene = this.scenes[ 0 ];
         this.canvas.addEventListener("click", this.initWorld );
         requestAnimationFrame( this.runScene );
@@ -209,7 +231,7 @@ const framework = {
                     type: "plane",
                     name: "title",
                     material: "basic",
-                    animation: this.menu.animation !== undefined ? this.menu.animation : "default",
+                    animation: "zoom_normal",
                     color: new THREE.Color(),
                     size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
                     texture: tex
@@ -217,8 +239,7 @@ const framework = {
                 this.setupMesh( options, this.scenes.length - 1 );
                 //calculate title mesh so if img is too large it will fit inside the camera view
                 let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
-                const camData = calculateCameraView( title.position.z, this.camera );
-                title.scale.set( 1 / 2, 1 / 2, 1 );
+                this.fitOnScreen( title );
             });
         } else {
             console.log("turn into a 3D font");

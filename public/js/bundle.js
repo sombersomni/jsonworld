@@ -47011,22 +47011,31 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (color) {
     if (typeof color === "string") {
-        var pattern = /^[a-z]+/;
-        console.log(pattern.test(color.toLowerCase()));
-        if (pattern.test(color.toLowerCase())) {
-            return new THREE.Color(color);
+        var c = color.toLowerCase();
+        if (/^[a-z]+/.test(c)) {
+            return new THREE.Color(c);
+        } else if (/^[#]{1}/.test(c)) {
+            var hex = c.slice(1);
+            var a = hex.match(/\w{2}/g);
+            var arr = a.map(function (e) {
+                return Number.parseInt(e, 16) / 255;
+            });
+            var r = Number(Math.round(arr[0] + 'e2') + 'e-2');
+            var g = Number(Math.round(arr[1] + 'e2') + 'e-2');
+            var b = Number(Math.round(arr[2] + 'e2') + 'e-2');
+            return new THREE.Color(r, g, b);
         } else {
-            var cArr = (0, _stringToArray2.default)(color);
+            var cArr = (0, _stringToArray2.default)(c);
             return new THREE.Color(cArr[0], cArr[1], cArr[2]);
         }
-    }
+    } else return new THREE.Color(color);
 };
 
 var _three = __webpack_require__(3);
 
 var THREE = _interopRequireWildcard(_three);
 
-var _stringToArray = __webpack_require__(82);
+var _stringToArray = __webpack_require__(77);
 
 var _stringToArray2 = _interopRequireDefault(_stringToArray);
 
@@ -47111,7 +47120,7 @@ var config = {
 	}, {
 		"type": "dodecahedron",
 		"animation": "spin_random",
-		"color": "blue",
+		"color": 0xffcc22,
 		"count": 100,
 		"scale": [2, 1, 1],
 		"size": 10,
@@ -66462,7 +66471,6 @@ var World = function (_Component) {
 			});
 			this.world = new _WorldController2.default(this.props.config);
 			this.world.start();
-			console.log(this.world);
 			window.addEventListener("resize", this.onWindowResize, false);
 			this.world.canvas.addEventListener("mousemove", function (e) {
 				_this2.onMouseMove(e);
@@ -66904,23 +66912,23 @@ var _colorInterpreter = __webpack_require__(30);
 
 var _colorInterpreter2 = _interopRequireDefault(_colorInterpreter);
 
-var _cameraView = __webpack_require__(83);
+var _cameraView = __webpack_require__(78);
 
 var _cameraView2 = _interopRequireDefault(_cameraView);
 
-var _createAnime = __webpack_require__(77);
+var _createAnime = __webpack_require__(79);
 
 var _createAnime2 = _interopRequireDefault(_createAnime);
 
-var _createGeometry = __webpack_require__(79);
+var _createGeometry = __webpack_require__(81);
 
 var _createGeometry2 = _interopRequireDefault(_createGeometry);
 
-var _createMaterial = __webpack_require__(80);
+var _createMaterial = __webpack_require__(82);
 
 var _createMaterial2 = _interopRequireDefault(_createMaterial);
 
-var _audioInitializer = __webpack_require__(81);
+var _audioInitializer = __webpack_require__(83);
 
 var _audioInitializer2 = _interopRequireDefault(_audioInitializer);
 
@@ -66976,6 +66984,28 @@ var framework = {
         } else {
             return canvas;
         }
+    },
+    fitOnScreen: function fitOnScreen(mesh, w, h) {
+        var n = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
+
+        var data = (0, _cameraView2.default)(mesh.position.z, this.camera);
+        console.log(w, h, n);
+        if (mesh.geometry.parameters.hasOwnProperty("width") && mesh.geometry.parameters.hasOwnProperty("height")) {
+            var width = w || mesh.geometry.parameters.width;
+            var height = h || mesh.geometry.parameters.height;
+
+            if (width > data.width || height > data.height) {
+                mesh.scale.set(1 / n, 1 / n, 1);
+                w = width / n;
+                h = height / n;
+                n++;
+                return this.fitOnScreen(mesh, w, h, n);
+            }
+        } else {
+            console.warn("this object doesn't have width or height properties. check if using correct image file type or image properties");
+        }
+
+        return;
     },
     setupCamera: function setupCamera() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -67046,20 +67076,21 @@ var framework = {
         var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
         this.scenes.push(new THREE.Scene());
-        this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main_" + this.scenes.length - 1;
+        this.scenes[this.scenes.length - 1].name = this.scenes.length === 1 ? "menu" : "main";
         this.scenes[this.scenes.length - 1].fog = this.fog;
-        var light = new THREE.DirectionalLight(0xffffff, 100);
+        var light = new THREE.DirectionalLight(0xffffff, 2);
         light.position.set(0, 1000, 0);
         this.scenes[this.scenes.length - 1].add(light);
         if (options instanceof Array) {
             options.forEach(function (o) {
                 _this.setupMesh(o, _this.scenes.length - 1);
             });
-        } else {
+        } else if (Object.keys(options).length > 0 && options.constructor === Object) {
             this.setupMesh(options, this.scenes.length - 1);
-        }
+        } else {
 
-        return;
+            return;
+        }
     },
     setupRenderer: function setupRenderer() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -67131,7 +67162,7 @@ var framework = {
         var _this3 = this;
 
         console.log(_threeCSG2.default);
-        this.scenes.push(new THREE.Scene());
+        this.setupScene({});
         this.scene = this.scenes[0];
         this.canvas.addEventListener("click", this.initWorld);
         requestAnimationFrame(this.runScene);
@@ -67144,7 +67175,7 @@ var framework = {
                     type: "plane",
                     name: "title",
                     material: "basic",
-                    animation: _this3.menu.animation !== undefined ? _this3.menu.animation : "default",
+                    animation: "zoom_normal",
                     color: new THREE.Color(),
                     size: [tex.image.naturalWidth, tex.image.naturalHeight],
                     texture: tex
@@ -67152,8 +67183,7 @@ var framework = {
                 _this3.setupMesh(options, _this3.scenes.length - 1);
                 //calculate title mesh so if img is too large it will fit inside the camera view
                 var title = _this3.scenes[_this3.scenes.length - 1].getObjectByName("title");
-                var camData = (0, _cameraView2.default)(title.position.z, _this3.camera);
-                title.scale.set(1 / 2, 1 / 2, 1);
+                _this3.fitOnScreen(title);
             });
         } else {
             console.log("turn into a 3D font");
@@ -67876,9 +67906,61 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+exports.default = function (str) {
+    str += " "; //adds a space for the last number to register in pattern
+    var pattern = /[0-9]{1}(?=\s)/g;
+    var match = str.match(pattern);
+    return match;
+};
+
+/***/ }),
+/* 78 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function (depth, camera) {
+    var height = visibleHeightAtZDepth(depth, camera);
+    var width = visibleWidthAtZDepth(depth, camera);
+    return { height: height, width: width };
+};
+
+var visibleHeightAtZDepth = function visibleHeightAtZDepth(depth, camera) {
+    // compensate for cameras not positioned at z=0
+    var cameraOffset = camera.position.z;
+    if (depth < cameraOffset) depth -= cameraOffset;else depth += cameraOffset;
+
+    // vertical fov in radians
+    var vFOV = camera.fov * Math.PI / 180;
+
+    // Math.abs to ensure the result is always positive
+    return 2 * Math.tan(vFOV / 2) * Math.abs(depth);
+};
+
+var visibleWidthAtZDepth = function visibleWidthAtZDepth(depth, camera) {
+    var height = visibleHeightAtZDepth(depth, camera);
+    return height * camera.aspect;
+};
+
+/***/ }),
+/* 79 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 exports.default = function (mesh, type) {
     var t = type !== undefined ? type : "spin_basic",
-        speed = 1;
+        speed = 10;
     switch (t) {
         case "atom":
             return function (time) {
@@ -67937,7 +68019,7 @@ exports.default = function (mesh, type) {
             });
         case "shapeshift":
             return function (time) {
-                var meshes = this;
+                var mesh = this;
                 for (var i = 0; i < mesh.geometry.vertices.length; i++) {
                     mesh.geometry.vertices[i].y += Math.sin(time + i) * 1 / 20;
                     mesh.geometry.vertices[i].x += Math.cos(time + i) * 1 / 20;
@@ -67957,7 +68039,7 @@ exports.default = function (mesh, type) {
             return (0, _animejs2.default)({
                 targets: mesh.rotation,
                 y: Math.PI * 2,
-                elasticity: 100,
+                elasticity: 100 / speed,
                 duration: 5000 / speed,
                 loop: 1,
                 complete: function complete(anim) {
@@ -67967,12 +68049,31 @@ exports.default = function (mesh, type) {
                     anim.restart();
                 }
             });
+        case "zoom_beat":
+            return (0, _animejs2.default)({
+                targets: mesh.position,
+                z: mesh.position.z - 20,
+                elasticity: 100 / speed,
+                direction: "alternate",
+                duration: 1000 / speed,
+                loop: true
+            });
+        case "zoom_normal":
+            return function (time) {
+                var mesh = this;
+                var distance = 20;
+                if (mesh.prevPosition === undefined) {
+                    mesh.prevPosition = {};
+                    mesh.prevPosition.z = mesh.position.z;
+                }
+                mesh.position.z = distance * Math.sin(time * (speed / 10)) + mesh.prevPosition.z;
+            };
         default:
             return;
     }
 };
 
-var _animejs = __webpack_require__(78);
+var _animejs = __webpack_require__(80);
 
 var _animejs2 = _interopRequireDefault(_animejs);
 
@@ -67985,7 +68086,7 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*
@@ -68027,7 +68128,7 @@ function(a){a=P(a);for(var c=v.length;c--;)for(var d=v[c],b=d.animations,f=b.len
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11)))
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -68090,7 +68191,7 @@ var THREE = _interopRequireWildcard(_three);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -68154,7 +68255,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -68252,58 +68353,6 @@ function seperateSoundName(path) {
 }
 
 exports.default = initializeAudio;
-
-/***/ }),
-/* 82 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function (str) {
-    str += " "; //adds a space for the last number to register in pattern
-    var pattern = /[0-9]{1}(?=\s)/g;
-    var match = str.match(pattern);
-    return match;
-};
-
-/***/ }),
-/* 83 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function (depth, camera) {
-    var height = visibleHeightAtZDepth(depth, camera);
-    var width = visibleWidthAtZDepth(depth, camera);
-    return { height: height, width: width };
-};
-
-var visibleHeightAtZDepth = function visibleHeightAtZDepth(depth, camera) {
-    // compensate for cameras not positioned at z=0
-    var cameraOffset = camera.position.z;
-    if (depth < cameraOffset) depth -= cameraOffset;else depth += cameraOffset;
-
-    // vertical fov in radians
-    var vFOV = camera.fov * Math.PI / 180;
-
-    // Math.abs to ensure the result is always positive
-    return 2 * Math.tan(vFOV / 2) * Math.abs(depth);
-};
-
-var visibleWidthAtZDepth = function visibleWidthAtZDepth(depth, camera) {
-    var height = visibleHeightAtZDepth(depth, camera);
-    return height * camera.aspect;
-};
 
 /***/ })
 /******/ ]);
