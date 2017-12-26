@@ -66434,9 +66434,7 @@ var World = function (_Component) {
 			message: "click the screen to start."
 		};
 
-		_this.world = null;
-		_this.onWindowResize = _this.onWindowResize.bind(_this);
-
+		_this.world = new _WorldController2.default(_this.props.config);
 		return _this;
 	}
 
@@ -66469,12 +66467,7 @@ var World = function (_Component) {
 			_progressEmitter2.default.on("message", function (e) {
 				_this2.setState({ message: e.message });
 			});
-			this.world = new _WorldController2.default(this.props.config);
 			this.world.start();
-			window.addEventListener("resize", this.onWindowResize, false);
-			this.world.canvas.addEventListener("mousemove", function (e) {
-				_this2.onMouseMove(e);
-			}, false);
 		}
 	}, {
 		key: "componentWillReceiveProps",
@@ -66513,20 +66506,6 @@ var World = function (_Component) {
 				_react2.default.createElement("canvas", { id: "world" }),
 				_react2.default.createElement(_Progress2.default, { message: this.state.message })
 			);
-		}
-	}, {
-		key: "onMouseMove",
-		value: function onMouseMove(e) {
-			//console.log( e.clientX );
-		}
-	}, {
-		key: "onWindowResize",
-		value: function onWindowResize() {
-			console.log(this.world);
-			this.world.camera.aspect = window.innerWidth / window.innerHeight;
-			this.world.camera.updateProjectionMatrix();
-
-			this.world.renderer.setSize(window.innerWidth, window.innerHeight);
 		}
 	}, {
 		key: "preloadTextures",
@@ -66962,6 +66941,8 @@ function WorldController(options) {
 
     this.initWorld = this.initWorld.bind(this);
     this.runScene = this.runScene.bind(this);
+    this.onWindowResize = this.onWindowResize.bind(this);
+    this.doMouseMove = this.doMouseMove.bind(this);
 }
 
 //UTILS
@@ -67164,12 +67145,18 @@ var framework = {
         console.log(_threeCSG2.default);
         this.setupScene({});
         this.scene = this.scenes[0];
+        //start event listeners
         this.canvas.addEventListener("click", this.initWorld);
+        this.canvas.addEventListener("mousemove", this.doMouseMove, false);
+        window.addEventListener("resize", function (e) {
+            _this3.onWindowResize();
+        }, false);
+        //run animation cycle for all scenes
         requestAnimationFrame(this.runScene);
         var checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
         var isImgLink = checkFormat.test(this.menu.title);
         if (isImgLink) {
-            var texture = new THREE.TextureLoader().load(this.menu.title, function (tex) {
+            new THREE.TextureLoader().load(this.menu.title, function (tex) {
 
                 var options = {
                     type: "plane",
@@ -67188,6 +67175,15 @@ var framework = {
         } else {
             console.log("turn into a 3D font");
         }
+    },
+    doMouseMove: function doMouseMove(e) {
+        //console.log( e );
+    },
+    onWindowResize: function onWindowResize() {
+
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
         this.scene.children.forEach(function (obj) {

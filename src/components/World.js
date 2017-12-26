@@ -14,9 +14,7 @@ class World extends Component {
 			message: "click the screen to start.",
 		};
 
-		this.world = null;
-		this.onWindowResize = this.onWindowResize.bind( this );
-
+		this.world = new WorldController( this.props.config );
 	}
 	createLinks ( links ) {
 		var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
@@ -34,12 +32,7 @@ class World extends Component {
         progressEmitter.on("message", ( e ) => {
             this.setState( { message: e.message } );
         } );
-		this.world = new WorldController( this.props.config );
 		this.world.start();
-		window.addEventListener( "resize" , this.onWindowResize, false );
-		this.world.canvas.addEventListener( "mousemove", ( e ) => {
-			this.onMouseMove( e );
-		},  false );
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );
@@ -71,17 +64,6 @@ class World extends Component {
 				<Progress message = { this.state.message } />
 			</div>
 		);
-	}
-	onMouseMove ( e ) {
-		//console.log( e.clientX );
-	}
-	onWindowResize () {
-		console.log( this.world );
-	    this.world.camera.aspect = window.innerWidth / window.innerHeight;
-	    this.world.camera.updateProjectionMatrix();
-
-	    this.world.renderer.setSize( window.innerWidth, window.innerHeight );
-
 	}
 	preloadTextures( textures ) {
 		//wait for textures to load before starting anything

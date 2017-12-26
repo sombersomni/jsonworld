@@ -35,6 +35,8 @@ function WorldController (options) {
 
     this.initWorld = this.initWorld.bind( this );
     this.runScene = this.runScene.bind( this );
+    this.onWindowResize = this.onWindowResize.bind( this );
+    this.doMouseMove = this.doMouseMove.bind( this );
 }
 
 const framework = {
@@ -220,12 +222,18 @@ const framework = {
         console.log( ThreeBSP );
         this.setupScene( {} );
         this.scene = this.scenes[ 0 ];
+        //start event listeners
         this.canvas.addEventListener("click", this.initWorld );
+        this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
+        window.addEventListener( "resize" , ( e ) => {
+            this.onWindowResize();
+        }, false );
+        //run animation cycle for all scenes
         requestAnimationFrame( this.runScene );
         let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
         const isImgLink = checkFormat.test(this.menu.title);
         if (isImgLink) {
-            let texture = new THREE.TextureLoader().load(this.menu.title, (tex) => {
+            new THREE.TextureLoader().load(this.menu.title, (tex) => {
 
                 const options = {
                     type: "plane",
@@ -244,6 +252,16 @@ const framework = {
         } else {
             console.log("turn into a 3D font");
         }
+    },
+    doMouseMove: ( e ) => {
+        //console.log( e );
+    },
+    onWindowResize: function () {
+
+        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+
     },
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {

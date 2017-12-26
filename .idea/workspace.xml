@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0fb7aa41-558d-4f7e-aa2f-f26f97ab4f8d" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/src/WorldController.js" afterPath="$PROJECT_DIR$/src/WorldController.js" />
       <change beforePath="$PROJECT_DIR$/src/components/World.js" afterPath="$PROJECT_DIR$/src/components/World.js" />
-      <change beforePath="$PROJECT_DIR$/src/createAnime.js" afterPath="$PROJECT_DIR$/src/createAnime.js" />
-      <change beforePath="$PROJECT_DIR$/src/index.js" afterPath="$PROJECT_DIR$/src/index.js" />
-      <change beforePath="$PROJECT_DIR$/src/utils/colorInterpreter.js" afterPath="$PROJECT_DIR$/src/utils/colorInterpreter.js" />
     </list>
     <ignored path="$PROJECT_DIR$/public/js/" />
     <ignored path="$PROJECT_DIR$/.tmp/" />
@@ -25,8 +21,8 @@
       <file leaf-file-name="World.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/components/World.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-365">
-              <caret line="42" column="5" lean-forward="false" selection-start-line="42" selection-start-column="5" selection-end-line="42" selection-end-column="5" />
+            <state relative-caret-position="501">
+              <caret line="78" column="21" lean-forward="false" selection-start-line="28" selection-start-column="24" selection-end-line="78" selection-end-column="21" />
               <folding>
                 <element signature="e#18#59#0" expanded="true" />
               </folding>
@@ -34,11 +30,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="WorldController.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="WorldController.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/WorldController.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="145">
-              <caret line="233" column="43" lean-forward="false" selection-start-line="233" selection-start-column="43" selection-end-line="233" selection-end-column="43" />
+            <state relative-caret-position="306">
+              <caret line="262" column="71" lean-forward="false" selection-start-line="262" selection-start-column="71" selection-end-line="262" selection-end-column="71" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
                 <element signature="e#83#142#0" expanded="true" />
@@ -47,7 +43,7 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="createAnime.js" pinned="false" current-in-tab="true">
+      <file leaf-file-name="createAnime.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/createAnime.js">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="334">
@@ -144,11 +140,13 @@
         <option value="$PROJECT_DIR$/src/colorInterpreter.js" />
         <option value="$PROJECT_DIR$/src/createMaterial.js" />
         <option value="$PROJECT_DIR$/src/utils/cameraView.js" />
-        <option value="$PROJECT_DIR$/src/components/World.js" />
         <option value="$PROJECT_DIR$/src/index.js" />
         <option value="$PROJECT_DIR$/src/utils/colorInterpreter.js" />
-        <option value="$PROJECT_DIR$/src/WorldController.js" />
         <option value="$PROJECT_DIR$/src/createAnime.js" />
+        <option value="$PROJECT_DIR$/src/components/windowEvents.js" />
+        <option value="$PROJECT_DIR$/src/windowEvents.js" />
+        <option value="$PROJECT_DIR$/src/components/World.js" />
+        <option value="$PROJECT_DIR$/src/WorldController.js" />
       </list>
     </option>
   </component>
@@ -253,6 +251,9 @@
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
   </component>
   <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\sombersomni\Documents\Bioluminescence\src" />
+    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\sombersomni\Documents\Bioluminescence\src" />
     </key>
@@ -299,12 +300,12 @@
       <workItem from="1513782189883" duration="10224000" />
       <workItem from="1514153884133" duration="9932000" />
       <workItem from="1514220689755" duration="10665000" />
-      <workItem from="1514301816640" duration="10250000" />
+      <workItem from="1514301816640" duration="11771000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="83182000" />
+    <option name="totallyTimeSpent" value="84703000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1296" height="696" extended-state="6" />
@@ -363,14 +364,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/components/Progress.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/public/css/main.css">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="799">
@@ -648,16 +641,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/components/World.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-365">
-          <caret line="42" column="5" lean-forward="false" selection-start-line="42" selection-start-column="5" selection-end-line="42" selection-end-column="5" />
-          <folding>
-            <element signature="e#18#59#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/utils/cameraView.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="374">
@@ -686,22 +669,40 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/WorldController.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="145">
-          <caret line="233" column="43" lean-forward="false" selection-start-line="233" selection-start-column="43" selection-end-line="233" selection-end-column="43" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-            <element signature="e#83#142#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/createAnime.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="334">
           <caret line="109" column="21" lean-forward="false" selection-start-line="109" selection-start-column="21" selection-end-line="109" selection-end-column="21" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/windowEvents.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/components/World.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="501">
+          <caret line="78" column="21" lean-forward="false" selection-start-line="28" selection-start-column="24" selection-end-line="78" selection-end-column="21" />
+          <folding>
+            <element signature="e#18#59#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/WorldController.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="262" column="71" lean-forward="false" selection-start-line="262" selection-start-column="71" selection-end-line="262" selection-end-column="71" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#83#142#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
