@@ -14,6 +14,11 @@ export default function (options = {} ) {
                 map,
                 side: THREE.DoubleSide,
                 transparent: true } );
+        case "line" :
+            return new THREE.LineBasicMaterial( {
+            color: color,
+            side: THREE.DoubleSide
+        } );
         case "toon" :
             return new THREE.MeshToonMaterial( {
                 color,

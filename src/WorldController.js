@@ -19,10 +19,12 @@ function WorldController (options) {
     this.preloader = options.preloader;
     this.sounds = options.sounds;
     this.worldObjects = options.worldObjects;
+    this.mainFont = options.font;
 
     //packages for storing
     this.audioControllers = [];
     this.cameras = [];
+    this.fonts = [];
     this.scenes = [];
     //
 
@@ -57,7 +59,7 @@ const framework = {
     },
     fitOnScreen: function ( mesh, w, h, n = 2 ) {
         const data = calculateCameraView( mesh.position.z, this.camera );
-        console.log( w, h, n );
+
         if ( mesh.geometry.parameters.hasOwnProperty( "width" ) && mesh.geometry.parameters.hasOwnProperty( "height" ) ) {
             const width = w ||  mesh.geometry.parameters.width;
             const height = h || mesh.geometry.parameters.height;
@@ -102,7 +104,7 @@ const framework = {
         camera.position.set(0, 0, 200);
 
         if (this.cameras.length > 0) {
-            camera.name = "cam_" + this.cameras.length;
+            camera.name = "cam_" + this.cameras.length.toString();
             this.cameras.push(camera);
         } else {
             camera.name = "main";
@@ -111,13 +113,32 @@ const framework = {
 
         return camera;
     },
+    handleMultiGeometries: function ( g, m, isLine ) {
+        let mesh;
+        if ( isLine ) {
+            mesh = new THREE.Line( g, m );
+        } else {
+            mesh = new THREE.Mesh( g, m );
+        }
+        return mesh;
+    },
     setupMesh: function ( options, sI ) {
         if ( options.count !== undefined && options.count > 1 ) {
             let group = new THREE.Group();
             for ( let i = 0; i <= options.count - 1; i++ ) {
-                let g = this.createGeometry(options);
-                let m = this.createMaterial(options);
-                let mesh = new THREE.Mesh( g, m );
+                let g = this.createGeometry( options );
+                let m = this.createMaterial( options );
+                let mesh;
+                if ( g instanceof Array && g.length > 0 ) {
+
+                    mesh = new THREE.Group();
+                    for ( let x = 0; x <= g.length - 1; x++ ) {
+
+                        mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
+                    }
+                } else {
+                    mesh = new THREE.Mesh( g, m );
+                }
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
                 mesh.name = options.name !== undefined ? options.name + "i" : "";
                 mesh.anime = this.createAnime( mesh, options.animation );
@@ -128,12 +149,27 @@ const framework = {
             }
             this.scenes[sI].add( group );
         } else {
-            let g = this.createGeometry(options);
-            let m = this.createMaterial(options);
-            let mesh = new THREE.Mesh( g, m );
+            let g = this.createGeometry( options );
+            let m = this.createMaterial( options );
+            let mesh;
+            /*
+            if ( g instanceof Array && g.length > 0 ) {
+
+                mesh = new THREE.Object3D();
+                for ( let i = 0; i <= g.length - 1; i++ ) {
+
+                    mesh.add( this.handleMultiGeometries( g[i], m, options.material === "line" ? true : false ) );
+                }
+            } else {
+                mesh = new THREE.Mesh( g, m );
+            }
+            */
+
+            mesh = new THREE.Mesh( g, m );
+
             mesh.name = options.name !== undefined ? options.name : "";
-            mesh.anime = this.createAnime(mesh, options.animation);
-            this.scenes[sI].add(mesh);
+            mesh.anime = this.createAnime( mesh, options.animation );
+            this.scenes[ sI ].add( mesh );
         }
 
         return;
@@ -251,6 +287,23 @@ const framework = {
             });
         } else {
             console.log("turn into a 3D font");
+            new THREE.FontLoader().load( this.mainFont, ( font ) => {
+                this.fonts[0] = font;
+
+                const options = {
+                    animation: "zoom_normal",
+                    color: new THREE.Color(),
+                    font,
+                    title: this.menu.title,
+                    type: "font",
+                    name: "title",
+                    material: "basic",
+                    size: 1
+
+                };
+
+                this.setupMesh( options, this.scenes.length - 1 );
+            } );
         }
     },
     doMouseMove: ( e ) => {

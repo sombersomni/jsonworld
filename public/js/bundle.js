@@ -47082,8 +47082,9 @@ var config = {
 		"color": "1 0 0"
 
 	},
+	"font": "fonts/AlphaMack_AOE_Regular.json",
 	"menu": {
-		"title": "imgs/title.png",
+		"title": "golf",
 		"links": ["https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla"],
 		"animation": "default"
 	},
@@ -66925,10 +66926,12 @@ function WorldController(options) {
     this.preloader = options.preloader;
     this.sounds = options.sounds;
     this.worldObjects = options.worldObjects;
+    this.mainFont = options.font;
 
     //packages for storing
     this.audioControllers = [];
     this.cameras = [];
+    this.fonts = [];
     this.scenes = [];
     //
 
@@ -66970,7 +66973,7 @@ var framework = {
         var n = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
 
         var data = (0, _cameraView2.default)(mesh.position.z, this.camera);
-        console.log(w, h, n);
+
         if (mesh.geometry.parameters.hasOwnProperty("width") && mesh.geometry.parameters.hasOwnProperty("height")) {
             var width = w || mesh.geometry.parameters.width;
             var height = h || mesh.geometry.parameters.height;
@@ -67016,7 +67019,7 @@ var framework = {
         camera.position.set(0, 0, 200);
 
         if (this.cameras.length > 0) {
-            camera.name = "cam_" + this.cameras.length;
+            camera.name = "cam_" + this.cameras.length.toString();
             this.cameras.push(camera);
         } else {
             camera.name = "main";
@@ -67025,13 +67028,32 @@ var framework = {
 
         return camera;
     },
+    handleMultiGeometries: function handleMultiGeometries(g, m, isLine) {
+        var mesh = void 0;
+        if (isLine) {
+            mesh = new THREE.Line(g, m);
+        } else {
+            mesh = new THREE.Mesh(g, m);
+        }
+        return mesh;
+    },
     setupMesh: function setupMesh(options, sI) {
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
             for (var i = 0; i <= options.count - 1; i++) {
                 var g = this.createGeometry(options);
                 var m = this.createMaterial(options);
-                var mesh = new THREE.Mesh(g, m);
+                var mesh = void 0;
+                if (g instanceof Array && g.length > 0) {
+
+                    mesh = new THREE.Group();
+                    for (var x = 0; x <= g.length - 1; x++) {
+
+                        mesh.add(this.handleMultiGeometries(g[x], m, options.material === "line" ? true : false));
+                    }
+                } else {
+                    mesh = new THREE.Mesh(g, m);
+                }
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
                 mesh.name = options.name !== undefined ? options.name + "i" : "";
                 mesh.anime = this.createAnime(mesh, options.animation);
@@ -67042,7 +67064,20 @@ var framework = {
         } else {
             var _g = this.createGeometry(options);
             var _m = this.createMaterial(options);
-            var _mesh = new THREE.Mesh(_g, _m);
+            var _mesh = void 0;
+            /*
+            if ( g instanceof Array && g.length > 0 ) {
+                  mesh = new THREE.Object3D();
+                for ( let i = 0; i <= g.length - 1; i++ ) {
+                      mesh.add( this.handleMultiGeometries( g[i], m, options.material === "line" ? true : false ) );
+                }
+            } else {
+                mesh = new THREE.Mesh( g, m );
+            }
+            */
+
+            _mesh = new THREE.Mesh(_g, _m);
+
             _mesh.name = options.name !== undefined ? options.name : "";
             _mesh.anime = this.createAnime(_mesh, options.animation);
             this.scenes[sI].add(_mesh);
@@ -67174,6 +67209,23 @@ var framework = {
             });
         } else {
             console.log("turn into a 3D font");
+            new THREE.FontLoader().load(this.mainFont, function (font) {
+                _this3.fonts[0] = font;
+
+                var options = {
+                    animation: "zoom_normal",
+                    color: new THREE.Color(),
+                    font: font,
+                    title: _this3.menu.title,
+                    type: "font",
+                    name: "title",
+                    material: "basic",
+                    size: 1
+
+                };
+
+                _this3.setupMesh(options, _this3.scenes.length - 1);
+            });
         }
     },
     doMouseMove: function doMouseMove(e) {
@@ -68138,9 +68190,9 @@ exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     //goes through every geometry type plus custom ones
-    var segments = options.segments ? options.segments : 2,
+    var segments = options.segments !== undefined ? options.segments : 2,
         type = options.type !== undefined ? options.type : "default";
-    var size;
+    var size = void 0;
     if (typeof options.size === "number") {
         //uses a single number for sizing
         size = options.size;
@@ -68164,11 +68216,41 @@ exports.default = function () {
         case "dodecahedron":
             //creates dodecahedron geometry.
             return new THREE.DodecahedronGeometry(size);
+        case "font":
+            var shapes = options.font.generateShapes(options.title, 100, 4);
+            var shapeGeo = new THREE.ShapeGeometry(shapes);
+            shapeGeo.computeBoundingBox();
+            var xMid = -0.5 * (shapeGeo.boundingBox.max.x - shapeGeo.boundingBox.min.x);
+            shapeGeo.translate(xMid, 0, 0);
+            if (options.material !== undefined && options.material === "line") {
+                var holeShapes = [];
+                for (var i = 0; i < shapes.length; i++) {
+                    var shape = shapes[i];
+                    if (shape.holes && shape.holes.length > 0) {
+                        for (var j = 0; j < shape.holes.length; j++) {
+                            var hole = shape.holes[j];
+                            holeShapes.push(hole);
+                        }
+                    }
+                }
+                shapes.push.apply(shapes, holeShapes);
+                var geometries = [];
+                for (var _i = 0; _i < shapes.length; _i++) {
+                    var _shape = shapes[_i];
+                    var points = _shape.getPoints();
+                    var geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    geometries.push(geometry);
+                }
+
+                return geometries;
+            } else {
+                var _geometry = new THREE.BufferGeometry();
+                return _geometry.fromGeometry(shapeGeo);
+            }
         case "plane":
             //creates plane geometry
             if (typeof options.size === "number") {
                 //uses a single number for sizing
-                var size = options.size;
                 return new THREE.PlaneGeometry(size, size, segments);
             } else {
                 //uses the first value which should be width
@@ -68211,6 +68293,11 @@ exports.default = function () {
                 map: map,
                 side: THREE.DoubleSide,
                 transparent: true });
+        case "line":
+            return new THREE.LineBasicMaterial({
+                color: color,
+                side: THREE.DoubleSide
+            });
         case "toon":
             return new THREE.MeshToonMaterial({
                 color: color,

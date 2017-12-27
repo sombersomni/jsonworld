@@ -2,9 +2,9 @@ import * as THREE from "three";
 
 export default function (options = {} ) {
     //goes through every geometry type plus custom ones
-    var segments = options.segments ? options.segments : 2,
+    const segments = options.segments !== undefined ? options.segments : 2,
         type = options.type !== undefined ? options.type : "default";
-    var size;
+    let size;
     if ( typeof options.size === "number" ) {
         //uses a single number for sizing
         size = options.size;
@@ -29,11 +29,42 @@ export default function (options = {} ) {
         case "dodecahedron" :
             //creates dodecahedron geometry.
             return new THREE.DodecahedronGeometry( size );
+        case "font" :
+            let shapes = options.font.generateShapes( options.title , 100, 4 );
+            let shapeGeo = new THREE.ShapeGeometry( shapes );
+            shapeGeo.computeBoundingBox();
+            const xMid = - 0.5 * ( shapeGeo.boundingBox.max.x - shapeGeo.boundingBox.min.x );
+            shapeGeo.translate( xMid, 0, 0 );
+            if ( options.material !== undefined && options.material === "line" ) {
+                let holeShapes = [];
+                for ( let i = 0; i < shapes.length; i ++ ) {
+                    let shape = shapes[ i ];
+                    if ( shape.holes && shape.holes.length > 0 ) {
+                        for ( let j = 0; j < shape.holes.length; j ++ ) {
+                            let hole = shape.holes[ j ];
+                            holeShapes.push( hole );
+                        }
+                    }
+                }
+                shapes.push.apply( shapes, holeShapes );
+                let geometries = [];
+                for ( let i = 0; i < shapes.length; i ++ ) {
+                    let shape = shapes[ i ];
+                    let points = shape.getPoints();
+                    let geometry = new THREE.BufferGeometry().setFromPoints( points );
+                    geometries.push( geometry );
+                }
+
+                return geometries;
+
+            } else {
+                let geometry = new THREE.BufferGeometry();
+                return geometry.fromGeometry( shapeGeo );
+            }
         case "plane" :
             //creates plane geometry
             if ( typeof options.size === "number" ) {
                 //uses a single number for sizing
-                var size = options.size;
                 return new THREE.PlaneGeometry( size, size, segments );
             } else {
                 //uses the first value which should be width

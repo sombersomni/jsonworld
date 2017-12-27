@@ -19,8 +19,9 @@ const config = {
 		"color": "1 0 0",
 
 	},
+	"font": "fonts/AlphaMack_AOE_Regular.json",
 	"menu": {
-        "title": "imgs/title.png",
+        "title": "golf",
 		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
 		"animation": "default"
 	},
