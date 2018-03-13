@@ -1,34 +1,35 @@
 import * as THREE from "three";
+import proceduralTree from "./utils/proceduralTree";
 
 export default function (options = {} ) {
     //goes through every geometry type plus custom ones
-    const segments = options.segments !== undefined ? options.segments : 2,
-        type = options.type !== undefined ? options.type : "default";
-    let size;
-    if ( typeof options.size === "number" ) {
-        //uses a single number for sizing
-        size = options.size;
-    } else if ( options.size instanceof Array ) {
-        console.log( "this is an array for size" );
-        size = [ options.size[0], options.size[1], options.size[2] ];
-    }
-    else {
-        console.log( "size options are not valid for " + options.type );
-        return;
-    }
+    const segments = options.segments !== undefined ? options.segments : 8,
+        type = options.type !== undefined ? options.type : "default",
+        size = options.size !== undefined ? options.size: 1,
+        numCheck = typeof options.size === "number";
     //CHOICES
     switch( type ) {
         case "box":
-            if( typeof options.size === "number" ) {
+            if ( numCheck ) {
                 return new THREE.BoxGeometry( size, size, size );
             } else {
                 return new THREE.BoxGeometry( size[0], size[1], size[2] );
             }
         case "cylinder" :
-            return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
+            if ( numCheck ) {
+                return new THREE.CylinderGeometry( size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
+            } else {
+                return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
+            }
+            
         case "dodecahedron" :
-            //creates dodecahedron geometry.
-            return new THREE.DodecahedronGeometry( size );
+            //creates dodecahedron geometry
+            if ( numCheck ){
+                return new THREE.DodecahedronGeometry( size );  
+            } else {
+                return new THREE.DodecahedronGeometry( size[0] );
+            }
+            
         case "font" :
             let shapes = options.font.generateShapes( options.title , 100, 4 );
             let shapeGeo = new THREE.ShapeGeometry( shapes );
@@ -63,7 +64,7 @@ export default function (options = {} ) {
             }
         case "plane" :
             //creates plane geometry
-            if ( typeof options.size === "number" ) {
+            if ( numCheck) {
                 //uses a single number for sizing
                 return new THREE.PlaneGeometry( size, size, segments );
             } else {
@@ -71,7 +72,17 @@ export default function (options = {} ) {
                 return new THREE.PlaneGeometry( size[0], size[1], segments );
             }
         case "sphere":
-            return new THREE.SphereGeometry( size ? size : 1 );
+            //creates a sphere geometry
+            if ( numCheck ) {
+                return new THREE.SphereGeometry( size, segments, segments );
+            } else {
+                return new THREE.SphereGeometry( size[0], segments, segments );
+            }
+        case "tree":
+
+            return proceduralTree();
         default:
+            return new THREE.BoxGeometry(1,1,1);
     }
 }
+

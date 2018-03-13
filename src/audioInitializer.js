@@ -21,10 +21,10 @@ function audioFetcher ( sound ) {
             } ).then( buffer => {
                 //create the audio context here and start decoding buffer
                 const ctx = new AudioContext();
-                progressEmitter.emit( "message", { message: "downloading " + name } );
+                progressEmitter.emit( "worldmessage", { message: "downloading " + name } );
                 ctx.decodeAudioData( buffer, data => {
                     // assign the controller with each attribute
-                    progressEmitter.emit( "message", { message: "completed " + name } );
+                    progressEmitter.emit( "worldmessage", { message: "completed " + name } );
                     let audio = createController( ctx, id, name, sound.sampleSize, data );
                     res( audio );
                 } );
@@ -36,6 +36,7 @@ function createController ( ctx, id, name, fftSize, data ) {
         const analyser = ctx.createAnalyser();
         const gain = ctx.createGain();
         const source = ctx.createBufferSource();
+        console.log( source );
         source.buffer = data;
         analyser.fftSize = fftSize;
         let timeData = new Uint8Array( analyser.fftSize );

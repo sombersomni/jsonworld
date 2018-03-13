@@ -34,6 +34,7 @@ function WorldController (options) {
     this.fog = this.setupFog( options );
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer( options );
+    this.divWrapper = this.checkWrapper( options );
 
     this.initWorld = this.initWorld.bind( this );
     this.runScene = this.runScene.bind( this );
@@ -42,12 +43,31 @@ function WorldController (options) {
 }
 
 const framework = {
+    checkWrapper: function ( options = {} ) {
+        return document.getElementById( options.wrapperID !== undefined ? options.wrapperID : "world" );
+    },
+    cameraMovement: function ( e ) {
+        //track player movement for camera tracking
+      let marginLeft = this.divWrapper.style.left !== "" ? this.divWrapper.style.left : ( this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0 ), 
+            marginTop = this.divWrapper.style.top !== "" ? this.divWrapper.style.top : ( this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0 );
+      
+      const regSearch = /[px|em]{1}/;
+      marginLeft = typeof marginLeft === "string" ? parseInt(marginLeft.replace(regSearch, ""), 10) : marginLeft;
+      marginTop = typeof marginTop === "string" ?  parseInt(marginTop.replace(regSearch, ""), 10) : marginTop;
+      console.log( marginLeft, marginTop );
+      const speedY = ((e.y - marginTop) - (this.canvas.clientHeight/2))/(this.canvas.clientHeight/2), 
+            speedX = ((e.x - marginLeft) - (this.canvas.clientWidth/2))/(this.canvas.clientWidth/2);
+      
+      //inverse rotation
+      this.camera.rotation.y = speedX * -1;
+      this.camera.rotation.x = speedY * -1;
+    },
     createAnime,
     createGeometry,
     createMaterial,
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
-        const canvas = document.querySelector("canvas");
+        const canvas = document.querySelector( id+" canvas" );
         if (canvas === null || canvas === undefined) {
             let newCanvas = document.createElement("canvas");
             newCanvas.setAttribute("id", id);
@@ -123,24 +143,30 @@ const framework = {
         return mesh;
     },
     setupMesh: function ( options, sI ) {
+        let m, mesh;
+        //@params sI is scene index
         if ( options.count !== undefined && options.count > 1 ) {
             let group = new THREE.Group();
             for ( let i = 0; i <= options.count - 1; i++ ) {
                 let g = this.createGeometry( options );
-                let m = this.createMaterial( options );
-                let mesh;
-                if ( g instanceof Array && g.length > 0 ) {
-
-                    mesh = new THREE.Group();
-                    for ( let x = 0; x <= g.length - 1; x++ ) {
-
-                        mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
-                    }
+                if ( g.type === "Mesh" || g.type === "Group" ) {
+                    mesh = g;
                 } else {
-                    mesh = new THREE.Mesh( g, m );
+                    m = this.createMaterial(options);
+                    if ( g instanceof Array && g.length > 0 ) {
+
+                        mesh = new THREE.Group();
+                        for ( let x = 0; x <= g.length - 1; x++ ) {
+
+                            mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
+                        }
+                    } else {
+                        mesh = new THREE.Mesh( g, m );
+                    }
                 }
+                
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                mesh.name = options.name !== undefined ? options.name + "i" : "";
+                mesh.name = options.name !== undefined ? options.name + i.toString() : "";
                 mesh.anime = this.createAnime( mesh, options.animation );
                 mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                     Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
@@ -150,22 +176,13 @@ const framework = {
             this.scenes[sI].add( group );
         } else {
             let g = this.createGeometry( options );
-            let m = this.createMaterial( options );
-            let mesh;
-            /*
-            if ( g instanceof Array && g.length > 0 ) {
-
-                mesh = new THREE.Object3D();
-                for ( let i = 0; i <= g.length - 1; i++ ) {
-
-                    mesh.add( this.handleMultiGeometries( g[i], m, options.material === "line" ? true : false ) );
-                }
+            if( g.type === "Mesh" || g.type ==="Group" ) {
+                mesh = g;
             } else {
+                m = this.createMaterial( options );
                 mesh = new THREE.Mesh( g, m );
             }
-            */
-
-            mesh = new THREE.Mesh( g, m );
+            
 
             mesh.name = options.name !== undefined ? options.name : "";
             mesh.anime = this.createAnime( mesh, options.animation );
@@ -184,7 +201,7 @@ const framework = {
         this.scenes[ this.scenes.length - 1 ].add( light );
         if (options instanceof Array) {
             options.forEach( ( o ) => {
-                this.setupMesh(o, this.scenes.length - 1 );
+                this.setupMesh( o, this.scenes.length - 1 );
             });
         } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
             this.setupMesh( options, this.scenes.length - 1 );
@@ -306,12 +323,12 @@ const framework = {
             } );
         }
     },
-    doMouseMove: ( e ) => {
-        //console.log( e );
+    doMouseMove: function ( e ) {
+        this.cameraMovement( e );
     },
     onWindowResize: function () {
 
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.aspect = (this.divWrapper.clientWidth !== undefined ? this.divWrapper.clientWidth : window.innerWidth) / (this.divWrapper.innerHeight !== undefined ? this.divWrapper.innerHeight : window.innerHeight);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize( window.innerWidth, window.innerHeight );
 

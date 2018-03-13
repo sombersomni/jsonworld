@@ -47108,57 +47108,9 @@ var config = {
 		"url": "tracked_songs/tundra_synth.mp3",
 		"sampleSize": 1024
 	}],
-	"worldObjects": [
-	//fill this array with objects that will compliment each sound. this is where your object options should go
-	{
-		"type": "sphere", //can call primitive shapes like box or premade objects like lego
-		"color": 0xFF7618, //you can use hex values, rgba(0,0,0,0) or strings such as "red"
-		"scale": 2, //pick the overall scale for the object. use an array for more control [ "x", "y", "z" ]
-		"size": [20, 10, 3], // [ "width", "height", "depth" ] for easier creation. you can use a single number for uniform sizing. if not defined, moves to default
-		"position": [20, 0, -20], // starting position for object.[ "x", "y", "z" ].if not defined, computer will figure out a place to put it
-		"material": "normal",
-		"sound_id": 1 //maps the sound to this object and will be replaced with uuid once ordered.
-	}, {
-		"type": "dodecahedron",
-		"animation": "spin_random",
-		"color": 0xffcc22,
-		"count": 100,
-		"scale": [2, 1, 1],
-		"size": 10,
-		"position": 0,
-		"material": "toon",
-		"sound_id": 2,
-		"isUniform": true
-	}]
+	"worldObjects": []
 }; //index
 
-
-var dummy = {
-	preloadApp: {
-		start: false
-	},
-	audio: {
-		controllers: []
-	}
-};
-
-var reducer = function reducer() {
-	var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-	var action = arguments[1];
-
-	switch (action.type) {
-		case "START_APP":
-			var newState = Object.assign({}, state, { preloadApp: { start: action.start } });
-			return newState;
-		case "SEND_AUDIO_CONTROLLERS":
-			var newState = Object.assign({}, state, { audio: { controllers: action.payload } });
-			return newState;
-		default:
-			return state;
-	}
-};
-
-var store = (0, _redux.createStore)(reducer, dummy);
 
 var Main = function Main() {
 	return _react2.default.createElement(
@@ -47169,11 +47121,7 @@ var Main = function Main() {
 };
 
 var docRoot = document.querySelector("#root");
-_reactDom2.default.render(_react2.default.createElement(
-	_reactRedux.Provider,
-	{ store: store },
-	_react2.default.createElement(Main, null)
-), docRoot);
+_reactDom2.default.render(_react2.default.createElement(Main, null), docRoot);
 
 /***/ }),
 /* 32 */
@@ -66465,7 +66413,8 @@ var World = function (_Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			_progressEmitter2.default.on("message", function (e) {
+			_progressEmitter2.default.on("worldmessage", function (e) {
+				console.log(e);
 				_this2.setState({ message: e.message });
 			});
 			this.world.start();
@@ -66474,22 +66423,6 @@ var World = function (_Component) {
 		key: "componentWillReceiveProps",
 		value: function componentWillReceiveProps(nextProps) {
 			console.log(nextProps);
-			//makes sure it doesn't equal current props and goes when true
-			/*
-   if ( nextProps.preloadApp.start !== this.props.preloadApp.start && nextProps.preloadApp.start ) {
-   	var logo = this.scene.getObjectByName( "logo" );
-   	this.scene.remove( logo );
-   	this.createPreloader( nextProps.preloader, this.scene );
-   	var preloader = this.scene.getObjectByName( "preloader" );
-   	anime( {
-   		targets: preloader.rotation,
-   		y: Math.PI * 2,
-   		direction: "alternate",
-   		duration: 1000,
-   		loop: true
-   	} );
-   }
-   */
 		}
 	}, {
 		key: "render",
@@ -66501,11 +66434,11 @@ var World = function (_Component) {
 				null,
 				_react2.default.createElement(
 					"div",
-					{ id: "links" },
+					{ className: "links" },
 					this.createLinks(config.menu.links)
 				),
-				_react2.default.createElement("canvas", { id: "world" }),
-				_react2.default.createElement(_Progress2.default, { message: this.state.message })
+				_react2.default.createElement(_Progress2.default, { message: this.state.message }),
+				_react2.default.createElement("canvas", { id: "world" })
 			);
 		}
 	}, {
@@ -66941,6 +66874,7 @@ function WorldController(options) {
     this.fog = this.setupFog(options);
     this.scene = new THREE.Scene();
     this.renderer = this.setupRenderer(options);
+    this.divWrapper = this.checkWrapper(options);
 
     this.initWorld = this.initWorld.bind(this);
     this.runScene = this.runScene.bind(this);
@@ -66952,6 +66886,27 @@ function WorldController(options) {
 
 
 var framework = {
+    checkWrapper: function checkWrapper() {
+        var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        return document.getElementById(options.wrapperID !== undefined ? options.wrapperID : "world");
+    },
+    cameraMovement: function cameraMovement(e) {
+        //track player movement for camera tracking
+        var marginLeft = this.divWrapper.style.left !== "" ? this.divWrapper.style.left : this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0,
+            marginTop = this.divWrapper.style.top !== "" ? this.divWrapper.style.top : this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0;
+
+        var regSearch = /[px|em]{1}/;
+        marginLeft = typeof marginLeft === "string" ? parseInt(marginLeft.replace(regSearch, ""), 10) : marginLeft;
+        marginTop = typeof marginTop === "string" ? parseInt(marginTop.replace(regSearch, ""), 10) : marginTop;
+        console.log(marginLeft, marginTop);
+        var speedY = (e.y - marginTop - this.canvas.clientHeight / 2) / (this.canvas.clientHeight / 2),
+            speedX = (e.x - marginLeft - this.canvas.clientWidth / 2) / (this.canvas.clientWidth / 2);
+
+        //inverse rotation
+        this.camera.rotation.y = speedX * -1;
+        this.camera.rotation.x = speedY * -1;
+    },
     createAnime: _createAnime2.default,
     createGeometry: _createGeometry2.default,
     createMaterial: _createMaterial2.default,
@@ -66959,7 +66914,7 @@ var framework = {
         var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "world";
 
         //if canvas doesn't exist we will create one//
-        var canvas = document.querySelector("canvas");
+        var canvas = document.querySelector(id + " canvas");
         if (canvas === null || canvas === undefined) {
             var newCanvas = document.createElement("canvas");
             newCanvas.setAttribute("id", id);
@@ -67038,24 +66993,31 @@ var framework = {
         return mesh;
     },
     setupMesh: function setupMesh(options, sI) {
+        var m = void 0,
+            mesh = void 0;
+        //@params sI is scene index
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
             for (var i = 0; i <= options.count - 1; i++) {
                 var g = this.createGeometry(options);
-                var m = this.createMaterial(options);
-                var mesh = void 0;
-                if (g instanceof Array && g.length > 0) {
-
-                    mesh = new THREE.Group();
-                    for (var x = 0; x <= g.length - 1; x++) {
-
-                        mesh.add(this.handleMultiGeometries(g[x], m, options.material === "line" ? true : false));
-                    }
+                if (g.type === "Mesh" || g.type === "Group") {
+                    mesh = g;
                 } else {
-                    mesh = new THREE.Mesh(g, m);
+                    m = this.createMaterial(options);
+                    if (g instanceof Array && g.length > 0) {
+
+                        mesh = new THREE.Group();
+                        for (var x = 0; x <= g.length - 1; x++) {
+
+                            mesh.add(this.handleMultiGeometries(g[x], m, options.material === "line" ? true : false));
+                        }
+                    } else {
+                        mesh = new THREE.Mesh(g, m);
+                    }
                 }
+
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                mesh.name = options.name !== undefined ? options.name + "i" : "";
+                mesh.name = options.name !== undefined ? options.name + i.toString() : "";
                 mesh.anime = this.createAnime(mesh, options.animation);
                 mesh.position.set(Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1));
                 group.add(mesh);
@@ -67063,24 +67025,16 @@ var framework = {
             this.scenes[sI].add(group);
         } else {
             var _g = this.createGeometry(options);
-            var _m = this.createMaterial(options);
-            var _mesh = void 0;
-            /*
-            if ( g instanceof Array && g.length > 0 ) {
-                  mesh = new THREE.Object3D();
-                for ( let i = 0; i <= g.length - 1; i++ ) {
-                      mesh.add( this.handleMultiGeometries( g[i], m, options.material === "line" ? true : false ) );
-                }
+            if (_g.type === "Mesh" || _g.type === "Group") {
+                mesh = _g;
             } else {
-                mesh = new THREE.Mesh( g, m );
+                m = this.createMaterial(options);
+                mesh = new THREE.Mesh(_g, m);
             }
-            */
 
-            _mesh = new THREE.Mesh(_g, _m);
-
-            _mesh.name = options.name !== undefined ? options.name : "";
-            _mesh.anime = this.createAnime(_mesh, options.animation);
-            this.scenes[sI].add(_mesh);
+            mesh.name = options.name !== undefined ? options.name : "";
+            mesh.anime = this.createAnime(mesh, options.animation);
+            this.scenes[sI].add(mesh);
         }
 
         return;
@@ -67229,11 +67183,11 @@ var framework = {
         }
     },
     doMouseMove: function doMouseMove(e) {
-        //console.log( e );
+        this.cameraMovement(e);
     },
     onWindowResize: function onWindowResize() {
 
-        this.camera.aspect = window.innerWidth / window.innerHeight;
+        this.camera.aspect = (this.divWrapper.clientWidth !== undefined ? this.divWrapper.clientWidth : window.innerWidth) / (this.divWrapper.innerHeight !== undefined ? this.divWrapper.innerHeight : window.innerHeight);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
@@ -68080,7 +68034,7 @@ exports.default = function (mesh, type) {
                 targets: mesh.rotation,
                 y: Math.PI * 2,
                 elasticity: 100,
-                duration: 5000 / speed,
+                duration: 5000,
                 loop: true
             });
         case "spin_random":
@@ -68190,32 +68144,33 @@ exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     //goes through every geometry type plus custom ones
-    var segments = options.segments !== undefined ? options.segments : 2,
-        type = options.type !== undefined ? options.type : "default";
-    var size = void 0;
-    if (typeof options.size === "number") {
-        //uses a single number for sizing
-        size = options.size;
-    } else if (options.size instanceof Array) {
-        console.log("this is an array for size");
-        size = [options.size[0], options.size[1], options.size[2]];
-    } else {
-        console.log("size options are not valid for " + options.type);
-        return;
-    }
+    var segments = options.segments !== undefined ? options.segments : 8,
+        type = options.type !== undefined ? options.type : "default",
+        size = options.size !== undefined ? options.size : 1,
+        numCheck = typeof options.size === "number";
     //CHOICES
     switch (type) {
         case "box":
-            if (typeof options.size === "number") {
+            if (numCheck) {
                 return new THREE.BoxGeometry(size, size, size);
             } else {
                 return new THREE.BoxGeometry(size[0], size[1], size[2]);
             }
         case "cylinder":
-            return new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2);
+            if (numCheck) {
+                return new THREE.CylinderGeometry(size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2);
+            } else {
+                return new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2);
+            }
+
         case "dodecahedron":
-            //creates dodecahedron geometry.
-            return new THREE.DodecahedronGeometry(size);
+            //creates dodecahedron geometry
+            if (numCheck) {
+                return new THREE.DodecahedronGeometry(size);
+            } else {
+                return new THREE.DodecahedronGeometry(size[0]);
+            }
+
         case "font":
             var shapes = options.font.generateShapes(options.title, 100, 4);
             var shapeGeo = new THREE.ShapeGeometry(shapes);
@@ -68249,7 +68204,7 @@ exports.default = function () {
             }
         case "plane":
             //creates plane geometry
-            if (typeof options.size === "number") {
+            if (numCheck) {
                 //uses a single number for sizing
                 return new THREE.PlaneGeometry(size, size, segments);
             } else {
@@ -68257,14 +68212,29 @@ exports.default = function () {
                 return new THREE.PlaneGeometry(size[0], size[1], segments);
             }
         case "sphere":
-            return new THREE.SphereGeometry(size ? size : 1);
+            //creates a sphere geometry
+            if (numCheck) {
+                return new THREE.SphereGeometry(size, segments, segments);
+            } else {
+                return new THREE.SphereGeometry(size[0], segments, segments);
+            }
+        case "tree":
+
+            return (0, _proceduralTree2.default)();
         default:
+            return new THREE.BoxGeometry(1, 1, 1);
     }
 };
 
 var _three = __webpack_require__(3);
 
 var THREE = _interopRequireWildcard(_three);
+
+var _proceduralTree = __webpack_require__(84);
+
+var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -68375,10 +68345,10 @@ function audioFetcher(sound) {
         }).then(function (buffer) {
             //create the audio context here and start decoding buffer
             var ctx = new AudioContext();
-            _progressEmitter2.default.emit("message", { message: "downloading " + name });
+            _progressEmitter2.default.emit("worldmessage", { message: "downloading " + name });
             ctx.decodeAudioData(buffer, function (data) {
                 // assign the controller with each attribute
-                _progressEmitter2.default.emit("message", { message: "completed " + name });
+                _progressEmitter2.default.emit("worldmessage", { message: "completed " + name });
                 var audio = createController(ctx, id, name, sound.sampleSize, data);
                 res(audio);
             });
@@ -68390,6 +68360,7 @@ function createController(ctx, id, name, fftSize, data) {
     var analyser = ctx.createAnalyser();
     var gain = ctx.createGain();
     var source = ctx.createBufferSource();
+    console.log(source);
     source.buffer = data;
     analyser.fftSize = fftSize;
     var timeData = new Uint8Array(analyser.fftSize);
@@ -68436,6 +68407,115 @@ function seperateSoundName(path) {
 }
 
 exports.default = initializeAudio;
+
+/***/ }),
+/* 84 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = generateBranch;
+var THREE = __webpack_require__(3);
+
+function recordBeginAndEnd(obj) {
+  var verts = obj.geometry.vertices;
+  return { top: verts[verts.length - 2], bottom: verts[verts.length - 1] };
+}
+var calculateNewPos = function calculateNewPos(topVert, h) {
+  var angle = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 45;
+
+  var axis = new THREE.Vector3(0, 0, 1);
+  var axisTwo = new THREE.Vector3(0, 1, 0);
+  var anchor = new THREE.Vector3(0, 0, 0);
+  var followPoint = new THREE.Vector3(0, h / 2, 0);
+  var a = Math.PI / 180 * angle;
+  followPoint.applyAxisAngle(axis, a);
+  //position rotation around
+  //followPoint.setY( topVert.y + h );
+  return followPoint;
+};
+
+function makeBranch(rootBranch, material) {
+  var segCalc = Math.round(rootBranch.height / 20) >= 2 ? Math.round(rootBranch.height / 20) : 2;
+  return new THREE.Mesh(new THREE.CylinderGeometry(rootBranch.radiusTop - rootBranch.radiusTop / 3 * 2, rootBranch.radiusBottom - rootBranch.radiusBottom / 4 * 2, rootBranch.height - rootBranch.height / 3, 8, segCalc), material !== undefined ? material : new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true }));
+}
+function modifyBranch(obj) {
+  return obj;
+}
+
+function generateBranch() {
+  var root = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+  var cycleRecord = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : { branchCycles: 0 };
+
+  var material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
+  root = root.hasOwnProperty("uuid") ? root : new THREE.Mesh(new THREE.CylinderGeometry(root.radiusTop !== undefined ? root.radiusTop : 8, root.radiusBottom !== undefined ? root.radiusBottom : 10, root.trunkHeight !== undefined ? root.trunkHeight : 100, root.widthSegs !== undefined ? root.widthSegs : 8, root.heightSegs !== undefined ? root.heightSegs : 6), root.material !== undefined ? root.material : material);
+
+  if (cycleRecord.branchCycles === 0) {
+    root.name = "root";
+    modifyBranch(root);
+  }
+  cycleRecord.rootID = cycleRecord.rootID === undefined ? root.uuid : cycleRecord.rootID;
+  cycleRecord[root.uuid] = {};
+  cycleRecord[root.uuid].cycles = 0;
+
+  //we can change where certain branches branch out from
+  var rootVerts = { x: 0, y: root.geometry.parameters.height / 2, z: 0 };
+
+  var branches = new THREE.Group();
+  branches.name = "branches";
+  var branchNum = Math.round(Math.random() * 6) + 1;
+  var rootBranch = root.geometry.parameters;
+  var branchHeight = rootBranch.height;
+
+  var stump = new THREE.Mesh(new THREE.SphereGeometry(rootBranch.radiusTop), material);
+  stump.name = "stump";
+  stump.position.set(rootVerts.x, rootVerts.y, rootVerts.z);
+  root.add(stump);
+
+  for (var x = 1; x <= branchNum; x++) {
+    var newBranch = void 0;
+    var spread = 15;
+    var ang = Math.round(Math.random() * 18 + 1) * 5 * (x % 2 === 0 ? -1 : 1);
+    var treeCenter = new THREE.Group();
+    treeCenter.position.set(root.position.x, root.position.y, root.position.z);
+    treeCenter.name = "container";
+    root.add(treeCenter);
+
+    var branch = modifyBranch(makeBranch(rootBranch, material));
+
+    branch.name = "branch" + x.toString();
+    var branchParams = branch.geometry.parameters;
+
+    if (branchHeight > 50) {
+      //creates multiple branches
+      cycleRecord.branchCycles++;
+      cycleRecord[root.uuid].cycles++;
+      newBranch = generateBranch(branch, cycleRecord);
+    } else {
+      //creates single branch
+      cycleRecord[root.uuid].cycles++;
+      newBranch = branch;
+    }
+
+    var newPos = calculateNewPos(rootVerts, branchParams.height, ang);
+
+    newBranch.rotation.set(0, 0, ang * Math.PI / 180);
+    newBranch.position.set(newPos.x, newPos.y + rootBranch.height / 2, newPos.z);
+
+    //console.log( obj.children[1] );
+    treeCenter.add(newBranch);
+    treeCenter.rotation.set(0, 45 * ((x - 1) % 4 == 0 ? x / 4 * spread : 1) * x * Math.PI / 180, 0);
+
+    branches.add(treeCenter);
+  }
+
+  root.add(branches);
+  return root;
+}
 
 /***/ })
 /******/ ]);

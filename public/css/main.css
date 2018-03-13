@@ -38,8 +38,8 @@ body {
 
 .container {
     position: relative;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
 }
 
 .hide {
@@ -48,6 +48,26 @@ body {
 
 .show {
     display: block;
+}
+
+.fa {
+    color: black;
+    text-align: center;
+}
+
+span {
+    display: block;
+}
+
+.links {
+    color: black;
+    display: block;
+    position: absolute;
+    z-index: 98;
+    background: #00bb22;
+    width: auto;
+    height: auto;
+    border-radius: 0px 0px 10px 0px;
 }
 
 .menu {
@@ -63,35 +83,11 @@ body {
     width: auto;
     z-index: 99;
 }
-.fa {
-    color: black;
-    text-align: center;
-}
-
-span {
-    display: block;
-}
-
-#links {
-    color: black;
-    display: block;
-    position: absolute;
-    z-index: 98;
-    background: #00bb22;
-    width: auto;
-    height: auto;
-    border-radius: 0px 0px 10px 0px;
-}
-
-#progress {
-    display: block;
-    position: relative;
-    margin-top: 10px;
-}
 
 #world {
     position: absolute;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     z-index: 1;
 }
+

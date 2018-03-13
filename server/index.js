@@ -3,7 +3,7 @@ var compression = require( "compression" ),
 	express = require( "express" ),
 	path = require( "path" );
 var app = express(),
-	port = 3000;
+	port = 3020;
 
 app.use( compression() );
 app.use( express.static( path.join( __dirname, "../public" ) ) );

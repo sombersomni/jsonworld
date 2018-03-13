@@ -21,7 +21,7 @@ class World extends Component {
 		var domLinks = [];
 		for ( let i = 0; i < links.length; i++ ) {
 			var match = links[i].match( pattern );
-			domLinks.push( <a href = { links[i]} key ={ match[0] } ><span className ="fa-stack fa-lg">
+			domLinks.push( <a href = { links[i] } key ={ match[0] } ><span className ="fa-stack fa-lg">
 			  <i className = "fa fa-square-o fa-stack-2x"></i>
 			  <i className ={ "fa fa-" + match[0] + " fa-stack-1x" }></i>
 			</span> </a> );
@@ -29,39 +29,26 @@ class World extends Component {
 		return domLinks;
 	}
 	componentDidMount () {
-        progressEmitter.on("message", ( e ) => {
+        progressEmitter.on("worldmessage", ( e ) => {
+            console.log( e );
             this.setState( { message: e.message } );
         } );
 		this.world.start();
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );
-		//makes sure it doesn't equal current props and goes when true
-		/*
-		if ( nextProps.preloadApp.start !== this.props.preloadApp.start && nextProps.preloadApp.start ) {
-			var logo = this.scene.getObjectByName( "logo" );
-			this.scene.remove( logo );
-			this.createPreloader( nextProps.preloader, this.scene );
-			var preloader = this.scene.getObjectByName( "preloader" );
-			anime( {
-				targets: preloader.rotation,
-				y: Math.PI * 2,
-				direction: "alternate",
-				duration: 1000,
-				loop: true
-			} );
-		}
-		*/
+	
 	}
 	render () {
 		const { config } = this.props;
 		return (
 			<div>
-				<div id = "links">
+				<div className = "links">
 					{ this.createLinks( config.menu.links ) }
 				</div>
-				<canvas id="world" ></canvas>
-				<Progress message = { this.state.message } />
+                <Progress message = { this.state.message } />
+				<canvas id = "world" ></canvas>
+				
 			</div>
 		);
 	}

@@ -77,7 +77,7 @@ export default function (mesh, type ) {
                 targets: mesh.rotation,
                 y: Math.PI * 2,
                 elasticity: 100,
-                duration: 5000 / speed,
+                duration: 5000,
                 loop: true
             } );
         case "spin_random" :
