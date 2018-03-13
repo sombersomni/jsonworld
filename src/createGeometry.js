@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 import proceduralTree from "./utils/proceduralTree";
 
 export default function (options = {} ) {
@@ -15,13 +16,14 @@ export default function (options = {} ) {
             } else {
                 return new THREE.BoxGeometry( size[0], size[1], size[2] );
             }
+            break;
         case "cylinder" :
             if ( numCheck ) {
                 return new THREE.CylinderGeometry( size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
             } else {
                 return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
             }
-            
+           break; 
         case "dodecahedron" :
             //creates dodecahedron geometry
             if ( numCheck ){
@@ -29,7 +31,7 @@ export default function (options = {} ) {
             } else {
                 return new THREE.DodecahedronGeometry( size[0] );
             }
-            
+           break; 
         case "font" :
             let shapes = options.font.generateShapes( options.title , 100, 4 );
             let shapeGeo = new THREE.ShapeGeometry( shapes );
@@ -62,6 +64,7 @@ export default function (options = {} ) {
                 let geometry = new THREE.BufferGeometry();
                 return geometry.fromGeometry( shapeGeo );
             }
+            break;
         case "plane" :
             //creates plane geometry
             if ( numCheck) {
@@ -71,6 +74,7 @@ export default function (options = {} ) {
                 //uses the first value which should be width
                 return new THREE.PlaneGeometry( size[0], size[1], segments );
             }
+            break;
         case "sphere":
             //creates a sphere geometry
             if ( numCheck ) {
@@ -78,11 +82,12 @@ export default function (options = {} ) {
             } else {
                 return new THREE.SphereGeometry( size[0], segments, segments );
             }
+            break;
         case "tree":
 
             return proceduralTree();
         default:
-            return new THREE.BoxGeometry(1,1,1);
+            return new THREE.BoxGeometry( 25, 25, 25 );
     }
 }
 

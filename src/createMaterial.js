@@ -2,9 +2,9 @@ import * as THREE from "three";
 
 import colorInterpreter from "./utils/colorInterpreter.js";
 
-export default function (options = {} ) {
+export default function ( options = {} ) {
     const color = options.color !== undefined ? colorInterpreter( options.color ) : new THREE.Color();
-    const material = options.material !== undefined ? options.material : "wireframe";
+    const material = options.hasOwnProperty( "material" ) && options.material !== undefined ? options.material : "default";
     const map = options.texture !== undefined ? options.texture : null;
     const emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color();
     switch( material ) {

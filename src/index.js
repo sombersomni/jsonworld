@@ -20,11 +20,6 @@ const config = {
 
 	},
 	"font": "fonts/AlphaMack_AOE_Regular.json",
-	"menu": {
-        "title": "golf",
-		"links": [ "https://open.spotify.com/episode/5Yd71D8hCdiDeTsKwaQW1Q", "https://twitter.com/kartunehustla" ],
-		"animation": "default"
-	},
     "preloader": {
         "type": "sphere",
         "material": "wireframe",
@@ -48,8 +43,11 @@ const config = {
 		}
 	],
 	"worldObjects": [
-
-	]
+        {
+            type: "models/model.obj",
+            material: "standard"
+        }
+    ]
 };
 
 

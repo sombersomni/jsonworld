@@ -1,5 +1,9 @@
 import * as THREE from "three";
 import ThreeBSP from "./csg/threeCSG.js";
+let OBJLoader = require('three-obj-loader');
+OBJLoader(THREE);
+
+var MTLLoader = require('three-mtl-loader');
 
 //UTILS
 import colorInterpreter from "./utils/colorInterpreter.js";
@@ -14,8 +18,7 @@ import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
 
 function WorldController (options) {
-
-    this.menu = options.menu;
+    this.options = options;
     this.preloader = options.preloader;
     this.sounds = options.sounds;
     this.worldObjects = options.worldObjects;
@@ -144,53 +147,59 @@ const framework = {
     },
     setupMesh: function ( options, sI ) {
         let m, mesh;
-        //@params sI is scene index
-        if ( options.count !== undefined && options.count > 1 ) {
-            let group = new THREE.Group();
-            for ( let i = 0; i <= options.count - 1; i++ ) {
-                let g = this.createGeometry( options );
-                if ( g.type === "Mesh" || g.type === "Group" ) {
-                    mesh = g;
-                } else {
-                    m = this.createMaterial(options);
-                    if ( g instanceof Array && g.length > 0 ) {
-
-                        mesh = new THREE.Group();
-                        for ( let x = 0; x <= g.length - 1; x++ ) {
-
-                            mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
-                        }
+        //@params sI - the index of the scene
+        
+        const isTypeLoader = options.type.search(/[\.obj]{1}/);
+        const isMaterialURL = options.material.search(/(\.mtl){1}/);
+        
+        
+                if ( options.count !== undefined && options.count > 1 ) {
+                let group = new THREE.Group();
+                for ( let i = 0; i <= options.count - 1; i++ ) {
+                    let g = this.createGeometry( options );
+                    if ( g.type === "Mesh" || g.type === "Group" ) {
+                        mesh = g;
                     } else {
-                        mesh = new THREE.Mesh( g, m );
+                        m = this.createMaterial(options);
+                        if ( g instanceof Array && g.length > 0 ) {
+
+                            mesh = new THREE.Group();
+                            for ( let x = 0; x <= g.length - 1; x++ ) {
+
+                                mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
+                            }
+                        } else {
+                            mesh = new THREE.Mesh( g, m );
+                        }
                     }
+
+                    //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
+                    mesh.name = options.name !== undefined ? options.name + i.toString() : "";
+                    mesh.anime = this.createAnime( mesh, options.animation );
+                    mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
+                    group.add( mesh );
                 }
-                
-                //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                mesh.anime = this.createAnime( mesh, options.animation );
-                mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                    Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                    Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
-                group.add( mesh );
-            }
-            this.scenes[sI].add( group );
-        } else {
-            let g = this.createGeometry( options );
-            if( g.type === "Mesh" || g.type ==="Group" ) {
-                mesh = g;
+                this.scenes[sI].add( group );
             } else {
-                m = this.createMaterial( options );
-                mesh = new THREE.Mesh( g, m );
+                let g = this.createGeometry( options );
+                if( g.type === "Mesh" || g.type === "Group" ) {
+                    mesh = g;
+                    console.log( mesh );
+                } else {
+                    console.log( options );
+                    m = this.createMaterial( options );
+                    mesh = new THREE.Mesh( g, m );
+                }
+
+
+                mesh.name = options.name !== undefined ? options.name : "";
+                mesh.anime = this.createAnime( mesh, options.animation );
+                this.scenes[ sI ].add( mesh );
             }
-            
 
-            mesh.name = options.name !== undefined ? options.name : "";
-            mesh.anime = this.createAnime( mesh, options.animation );
-            this.scenes[ sI ].add( mesh );
-        }
-
-        return;
-
+            return;
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         this.scenes.push( new THREE.Scene() );
@@ -241,34 +250,46 @@ const framework = {
     },
     initWorld: function () {
         //initializes world after clicking and removes event listener to prevent memory leaks
-        this.canvas.removeEventListener("click", this.initWorld, false);
-        let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
-        const camData = calculateCameraView( title.position.z, this.camera );
-        //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
-        title.anime = this.createAnime( title, "fade" );
-        const audioPromise = initializeAudio( this.sounds );
+        let title;
+        
+        if ( this.options.hasOwnProperty("menu") ) {
+            this.canvas.removeEventListener("click", this.initWorld, false);
+            title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
+            if ( title !== undefined ) {
+                 const camData = calculateCameraView( title.position.z, this.camera );
+                //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
+                title.anime = this.createAnime( title, "fade" );
+            }
+        }
+       
+        if ( this.options.hasOwnProperty( "sounds") ) {
+            const audioPromise = initializeAudio( this.sounds );
+                audioPromise.then( ( controllers ) => {
+                progressEmitter.emit( "worldmessage", { message: "building world. please wait" } );
+                this.audioControllers = controllers;
+                this.setupScene( this.worldObjects, controllers );
+                const fadeTime = 2000;
+                //add a delay
+
+                let preloader = this.scene.getObjectByName( "preloader" );
+                preloader.anime = this.createAnime( preloader, "fade" );
+                setTimeout( () => {
+                    progressEmitter.emit( "worldmessage", { message: "" } );
+                    this.scene = this.scenes[ this.scenes.length - 1 ];
+                    console.log( this.scene );
+                }, fadeTime );
+            } );
+        }
         //delays preloader but not the audio loader
         setTimeout( () => {
-            this.scenes[ this.scenes.length - 1 ].remove( title );
+            if ( title ) {
+                this.scenes[ this.scenes.length - 1 ].remove( title );
+            }
             this.preloader.name = "preloader";
             this.setupMesh( this.preloader, this.scenes.length - 1 );
         }, 1000 );
 
-        audioPromise.then( ( controllers ) => {
-            progressEmitter.emit( "message", { message: "building world. please wait" } );
-            this.audioControllers = controllers;
-            this.setupScene( this.worldObjects, controllers );
-            const fadeTime = 2000;
-            //add a delay
-
-            let preloader = this.scene.getObjectByName( "preloader" );
-            preloader.anime = this.createAnime( preloader, "fade" );
-            setTimeout( () => {
-                progressEmitter.emit( "message", { message: "" } );
-                this.scene = this.scenes[ this.scenes.length - 1 ];
-                console.log( this.scene );
-            }, fadeTime );
-        } );
+        
 
     },
     start: function () {
@@ -276,59 +297,65 @@ const framework = {
         this.setupScene( {} );
         this.scene = this.scenes[ 0 ];
         //start event listeners
-        this.canvas.addEventListener("click", this.initWorld );
         this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
         window.addEventListener( "resize" , ( e ) => {
             this.onWindowResize();
         }, false );
         //run animation cycle for all scenes
         requestAnimationFrame( this.runScene );
-        let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
-        const isImgLink = checkFormat.test(this.menu.title);
-        if (isImgLink) {
-            new THREE.TextureLoader().load(this.menu.title, (tex) => {
+        if ( this.options.hasOwnProperty( "menu" ) ) {
+            this.canvas.addEventListener("click", this.initWorld );
+            const menu = this.options.menu;
+             let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
+            const isImgLink = checkFormat.test( menu.title );
+            if (isImgLink) {
+                new THREE.TextureLoader().load( menu.title, (tex) => {
 
-                const options = {
-                    type: "plane",
-                    name: "title",
-                    material: "basic",
-                    animation: "zoom_normal",
-                    color: new THREE.Color(),
-                    size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
-                    texture: tex
-                };
-                this.setupMesh( options, this.scenes.length - 1 );
-                //calculate title mesh so if img is too large it will fit inside the camera view
-                let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
-                this.fitOnScreen( title );
-            });
+                    const options = {
+                        type: "plane",
+                        name: "title",
+                        material: "basic",
+                        animation: "zoom_normal",
+                        color: new THREE.Color(),
+                        size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
+                        texture: tex
+                    };
+                    this.setupMesh( options, this.scenes.length - 1 );
+                    //calculate title mesh so if img is too large it will fit inside the camera viewW
+                    let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
+                    this.fitOnScreen( title );
+                });
+            } else {
+                console.log("turn into a 3D font");
+                new THREE.FontLoader().load( this.mainFont, ( font ) => {
+                    this.fonts[0] = font;
+
+                    const options = {
+                        animation: "zoom_normal",
+                        color: new THREE.Color(),
+                        font,
+                        title: menu.title,
+                        type: "font",
+                        name: "title",
+                        material: "basic",
+                        size: 1
+
+                    };
+
+                    this.setupMesh( options, this.scenes.length - 1 );
+                } );
+            }
         } else {
-            console.log("turn into a 3D font");
-            new THREE.FontLoader().load( this.mainFont, ( font ) => {
-                this.fonts[0] = font;
-
-                const options = {
-                    animation: "zoom_normal",
-                    color: new THREE.Color(),
-                    font,
-                    title: this.menu.title,
-                    type: "font",
-                    name: "title",
-                    material: "basic",
-                    size: 1
-
-                };
-
-                this.setupMesh( options, this.scenes.length - 1 );
-            } );
+            this.initWorld();
         }
+       
     },
     doMouseMove: function ( e ) {
         this.cameraMovement( e );
     },
     onWindowResize: function () {
 
-        this.camera.aspect = (this.divWrapper.clientWidth !== undefined ? this.divWrapper.clientWidth : window.innerWidth) / (this.divWrapper.innerHeight !== undefined ? this.divWrapper.innerHeight : window.innerHeight);
+        this.camera.aspect = ( this.divWrapper.clientWidth !== undefined ? this.divWrapper.clientWidth : window.innerWidth) / (this.divWrapper.innerHeight !== undefined ? this.divWrapper.innerHeight : window.innerHeight );
         this.camera.updateProjectionMatrix();
         this.renderer.setSize( window.innerWidth, window.innerHeight );
 

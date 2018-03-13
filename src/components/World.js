@@ -26,7 +26,7 @@ class World extends Component {
 			  <i className ={ "fa fa-" + match[0] + " fa-stack-1x" }></i>
 			</span> </a> );
 		}
-		return domLinks;
+		return ( <div className="links"> domLinks </div> );
 	}
 	componentDidMount () {
         progressEmitter.on("worldmessage", ( e ) => {
@@ -42,12 +42,10 @@ class World extends Component {
 	render () {
 		const { config } = this.props;
 		return (
-			<div>
-				<div className = "links">
-					{ this.createLinks( config.menu.links ) }
-				</div>
+			<div id = "world">
+					{ config.hasOwnProperty( "menu" ) ? this.createLinks( config.menu.links ) : null }
+				<canvas></canvas>
                 <Progress message = { this.state.message } />
-				<canvas id = "world" ></canvas>
 				
 			</div>
 		);
