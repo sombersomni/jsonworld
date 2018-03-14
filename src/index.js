@@ -29,8 +29,10 @@ const config = {
 	"worldObjects": [
         {
             type: "models/model.obj",
+            material: "wireframe"
         }
-    ]
+    ],
+    "enableShadows": true
 };
 
 

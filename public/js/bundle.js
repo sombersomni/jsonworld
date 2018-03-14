@@ -47096,8 +47096,10 @@ var config = {
         "animation": "erratic 2s ease-in 2000 true alternate 100"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
     "worldObjects": [{
-        type: "models/model.obj"
-    }]
+        type: "models/model.obj",
+        material: "wireframe"
+    }],
+    "enableShadows": true
 }; //index
 
 
@@ -67123,6 +67125,12 @@ var framework = {
             _this3.scenes[_this3.scenes.length - 1].fog = _this3.fog;
             var light = new THREE.DirectionalLight(0xffffff, 2);
             light.position.set(0, 1000, 0);
+            if (_this3.options.hasOwnProperty("enableShadows") && _this3.options.enableShadows) {
+                light.castShadow = true;
+                //debug shadow camera
+                var shadowCamera = new THREE.CameraHelper(light.shadow.camera);
+                _this3.scenes[_this3.scenes.length - 1].add(shadowCamera);
+            }
             _this3.scenes[_this3.scenes.length - 1].add(light);
             if (options instanceof Array) {
                 options.forEach(function (o) {

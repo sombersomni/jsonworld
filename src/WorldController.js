@@ -278,6 +278,12 @@ const framework = {
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
             let light = new THREE.DirectionalLight( 0xffffff, 2 );
             light.position.set( 0, 1000, 0 );
+            if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
+                light.castShadow = true;
+                //debug shadow camera
+                const shadowCamera = new THREE.CameraHelper( light.shadow.camera );
+                this.scenes[ this.scenes.length -1 ].add( shadowCamera );
+            }
             this.scenes[ this.scenes.length - 1 ].add( light );
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
