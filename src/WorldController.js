@@ -73,11 +73,11 @@ const framework = {
     createGeometry,
     createPreloader: function ( options ) {
         
-        return new Promise( ( res, rej ) =>{
+        return new Promise( ( res, rej ) => {
                 
                 options.name = "preloader";
                 this.setupMesh( options, this.scenes.length - 1 );
-                res( options.hasOwnProperty( "message" ) && options.message !== undefined ? defaultOptions.preloader.message );
+                res( options.hasOwnProperty( "message" ) && options.message !== undefined ? options.message: defaultOptions.preloader.message );
         } );
     },
     createFont: function ( fontJSON, title = "hi" ) {
@@ -310,6 +310,7 @@ const framework = {
             
             
             preloaderPromise.then( message => {
+                console.log( "is this working" );
                 progressEmitter.emit( "worldmessage", { message } );
                 audioPromise.then( controllers => {
                         this.audioControllers = controllers;
