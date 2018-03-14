@@ -5,6 +5,9 @@ OBJLoader(THREE);
 
 var MTLLoader = require('three-mtl-loader');
 
+// JSON
+import defaultOptions from "./json/defaults.json"
+
 //UTILS
 import colorInterpreter from "./utils/colorInterpreter.js";
 import calculateCameraView from "./utils/cameraView.js";
@@ -16,6 +19,7 @@ import createMaterial from "./createMaterial.js";
 
 import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
+
 
 function WorldController (options) {
     this.options = options;
@@ -57,7 +61,7 @@ const framework = {
       const regSearch = /[px|em]{1}/;
       marginLeft = typeof marginLeft === "string" ? parseInt(marginLeft.replace(regSearch, ""), 10) : marginLeft;
       marginTop = typeof marginTop === "string" ?  parseInt(marginTop.replace(regSearch, ""), 10) : marginTop;
-      console.log( marginLeft, marginTop );
+
       const speedY = ((e.y - marginTop) - (this.canvas.clientHeight/2))/(this.canvas.clientHeight/2), 
             speedX = ((e.x - marginLeft) - (this.canvas.clientWidth/2))/(this.canvas.clientWidth/2);
       
@@ -67,6 +71,34 @@ const framework = {
     },
     createAnime,
     createGeometry,
+    createPreloader: function ( options ) {
+        
+        return new Promise( ( res, rej ) =>{
+                
+                options.name = "preloader";
+                this.setupMesh( options, this.scenes.length - 1 );
+                res( options.hasOwnProperty( "message" ) && options.message !== undefined ? defaultOptions.preloader.message );
+        } );
+    },
+    createFont: function ( fontJSON, title = "hi" ) {
+        new THREE.FontLoader().load( fontJSON, ( font ) => {
+            this.fonts[0] = font;
+            const options = {
+                animation: "zoom_normal",
+                color: new THREE.Color(),
+                font,
+                title: title,
+                type: "font",
+                name: "title",
+                material: "basic",
+                size: 1
+                
+            };
+            
+            console.log( options );
+            this.setupMesh( options, this.scenes.length - 1 );
+        } );
+    },
     createMaterial,
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
@@ -148,11 +180,12 @@ const framework = {
     setupMesh: function ( options, sI ) {
         let m, mesh;
         //@params sI - the index of the scene
-        
+        /*
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
+        */
         
-        
+                m = this.createMaterial( options );
                 if ( options.count !== undefined && options.count > 1 ) {
                 let group = new THREE.Group();
                 for ( let i = 0; i <= options.count - 1; i++ ) {
@@ -175,7 +208,7 @@ const framework = {
 
                     //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
                     mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                    mesh.anime = this.createAnime( mesh, options.animation );
+                    mesh.anime = this.createAnime( mesh, options.animationType );
                     mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
@@ -186,38 +219,44 @@ const framework = {
                 let g = this.createGeometry( options );
                 if( g.type === "Mesh" || g.type === "Group" ) {
                     mesh = g;
-                    console.log( mesh );
                 } else {
-                    console.log( options );
-                    m = this.createMaterial( options );
+                    console.log( g, m );
                     mesh = new THREE.Mesh( g, m );
+                    console.log( mesh );
                 }
 
 
                 mesh.name = options.name !== undefined ? options.name : "";
-                mesh.anime = this.createAnime( mesh, options.animation );
+                mesh.anime = this.createAnime( mesh, options.animationType );
+                console.log( mesh );
                 this.scenes[ sI ].add( mesh );
             }
 
             return;
     },
     setupScene: function( options = {}, audioControllers = {} ) {
-        this.scenes.push( new THREE.Scene() );
-        this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
-        this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-        let light = new THREE.DirectionalLight( 0xffffff, 2 );
-        light.position.set( 0, 1000, 0 );
-        this.scenes[ this.scenes.length - 1 ].add( light );
-        if (options instanceof Array) {
-            options.forEach( ( o ) => {
-                this.setupMesh( o, this.scenes.length - 1 );
-            });
-        } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
-            this.setupMesh( options, this.scenes.length - 1 );
-        } else {
-
-            return;
-        }
+        //wraps into a promise for preloader to wait on data to be completed
+        return new Promise ( ( res, rej ) => { 
+            this.scenes.push( new THREE.Scene() );
+            this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
+            this.scenes[ this.scenes.length - 1 ].fog = this.fog;
+            let light = new THREE.DirectionalLight( 0xffffff, 2 );
+            light.position.set( 0, 1000, 0 );
+            this.scenes[ this.scenes.length - 1 ].add( light );
+            if (options instanceof Array) {
+                options.forEach( ( o ) => {
+                    this.setupMesh( o, this.scenes.length - 1 );
+                });
+                //sends an animation type for scene transition
+                res( "fade" );
+            } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
+                this.setupMesh( options, this.scenes.length - 1 );
+                res( "fade" );
+            } else {
+                rej( "there are no options to make a scene" );
+            }
+        } );
+        
     },
     setupRenderer: function ( options = {} ) {
         const opt = options.renderer || options;
@@ -251,45 +290,61 @@ const framework = {
     initWorld: function () {
         //initializes world after clicking and removes event listener to prevent memory leaks
         let title;
+        const delay = 1000;
         
-        if ( this.options.hasOwnProperty("menu") ) {
+        if ( this.options.hasOwnProperty("menu") && this.options.menu !== undefined ) {
+            //menu options start
             this.canvas.removeEventListener("click", this.initWorld, false);
             title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
             if ( title !== undefined ) {
-                 const camData = calculateCameraView( title.position.z, this.camera );
-                //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
-                title.anime = this.createAnime( title, "fade" );
+                const camData = calculateCameraView( title.position.z, this.camera );
+                if ( title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined ) {
+                    title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
+                }
+                title.anime = this.createAnime( title, this.options.menu.animation );
             }
         }
        
-        if ( this.options.hasOwnProperty( "sounds") ) {
-            const audioPromise = initializeAudio( this.sounds );
-                audioPromise.then( ( controllers ) => {
-                progressEmitter.emit( "worldmessage", { message: "building world. please wait" } );
-                this.audioControllers = controllers;
-                this.setupScene( this.worldObjects, controllers );
-                const fadeTime = 2000;
-                //add a delay
-
-                let preloader = this.scene.getObjectByName( "preloader" );
-                preloader.anime = this.createAnime( preloader, "fade" );
-                setTimeout( () => {
-                    progressEmitter.emit( "worldmessage", { message: "" } );
-                    this.scene = this.scenes[ this.scenes.length - 1 ];
-                    console.log( this.scene );
-                }, fadeTime );
-            } );
-        }
-        //delays preloader but not the audio loader
-        setTimeout( () => {
-            if ( title ) {
-                this.scenes[ this.scenes.length - 1 ].remove( title );
-            }
-            this.preloader.name = "preloader";
-            this.setupMesh( this.preloader, this.scenes.length - 1 );
-        }, 1000 );
-
+        const preloaderPromise = this.createPreloader( this.options.preloader );
         
+        if ( this.options.hasOwnProperty( "sounds") && this.options.sounds !== undefined ) {
+            
+            const audioPromise = initializeAudio( this.sounds );
+            
+            
+            preloaderPromise.then( message => {
+                progressEmitter.emit( "worldmessage", { message } );
+                audioPromise.then( controllers => {
+                        this.audioControllers = controllers;
+                        const scenePromise = this.setupScene( this.worldObjects, controllers );
+                        scenePromise.then( animationType => { 
+                            let preloader = this.scene.getObjectByName( "preloader" );
+                            preloader.anime = this.createAnime( preloader, animationType );
+                            window.setTimeout( () => {
+                                progressEmitter.emit( "worldmessage", { message: "" } );
+                                this.scene = this.scenes[ this.scenes.length - 1 ];
+                            }, delay );
+                        } );
+                    } );
+                } );
+            } );
+            
+        } else {
+                preloaderPromise.then( message => {
+                    progressEmitter.emit( "worldmessage", { message } );
+                    const scenePromise = this.setupScene( this.worldObjects );
+                    
+                    scenePromise.then( animationType => {
+                        let preloader = this.scene.getObjectByName( "preloader" );
+                        preloader.anime = this.createAnime( preloader, animationType );
+                        window.setTimeout( () => {
+                            progressEmitter.emit( "worldmessage", { message: "" } );
+                            this.scene = this.scenes[ this.scenes.length - 1 ];
+                        }, 3000 );
+                    } );
+                } );               
+            
+        }
 
     },
     start: function () {
@@ -302,12 +357,13 @@ const framework = {
             this.onWindowResize();
         }, false );
         //run animation cycle for all scenes
-        requestAnimationFrame( this.runScene );
-        if ( this.options.hasOwnProperty( "menu" ) ) {
+        window.requestAnimationFrame( this.runScene );
+        if ( this.options.hasOwnProperty( "menu" ) && this.options.menu !== undefined ) {
             this.canvas.addEventListener("click", this.initWorld );
             const menu = this.options.menu;
-             let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
+            let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
             const isImgLink = checkFormat.test( menu.title );
+            
             if (isImgLink) {
                 new THREE.TextureLoader().load( menu.title, (tex) => {
 
@@ -327,23 +383,9 @@ const framework = {
                 });
             } else {
                 console.log("turn into a 3D font");
-                new THREE.FontLoader().load( this.mainFont, ( font ) => {
-                    this.fonts[0] = font;
-
-                    const options = {
-                        animation: "zoom_normal",
-                        color: new THREE.Color(),
-                        font,
-                        title: menu.title,
-                        type: "font",
-                        name: "title",
-                        material: "basic",
-                        size: 1
-
-                    };
-
-                    this.setupMesh( options, this.scenes.length - 1 );
-                } );
+                //will create a font in 3D space based on font family
+                this.createFont( this.mainFont, menu.title );
+                
             }
         } else {
             this.initWorld();

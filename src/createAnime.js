@@ -1,9 +1,22 @@
 import anime from "animejs";
 import * as THREE from "three";
 
-export default function (mesh, type ) {
-    const t = type !== undefined ? type : "spin_basic",
-        speed = 10;
+function filterDefaultsForMesh ( name, type = "animation" ) {
+     switch( name ) {
+        case "title":
+             if ( type === "animation" ) {
+                 return "fade";
+             }
+            break;
+        default:
+            return "spin_basic";
+    }
+    
+}
+
+export default function ( mesh, type ) {
+    const t = type !== undefined ? type : filterDefaultsForMesh( mesh.name, "animation" ),
+          speed = 2;
     switch( t ) {
         case "atom":
             return function ( time ) {

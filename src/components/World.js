@@ -30,7 +30,6 @@ class World extends Component {
 	}
 	componentDidMount () {
         progressEmitter.on("worldmessage", ( e ) => {
-            console.log( e );
             this.setState( { message: e.message } );
         } );
 		this.world.start();
@@ -43,7 +42,7 @@ class World extends Component {
 		const { config } = this.props;
 		return (
 			<div id = "world">
-					{ config.hasOwnProperty( "menu" ) ? this.createLinks( config.menu.links ) : null }
+					{ config.hasOwnProperty( "menu" ) && config.menu.links !== undefined ? this.createLinks( config.menu.links ) : null }
 				<canvas></canvas>
                 <Progress message = { this.state.message } />
 				

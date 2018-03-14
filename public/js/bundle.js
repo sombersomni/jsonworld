@@ -47069,53 +47069,38 @@ var _World2 = _interopRequireDefault(_World);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var config = {
-	"bpm": 120,
-	"genres": "house",
-	"camera": {
-		"type": "perspective",
-		"fov": 90,
-		"near": 1,
-		"far": 2000
-	},
-	"fog": {
-		"type": "exponential",
-		"color": "1 0 0"
+    "bpm": 120,
+    "genres": "house",
+    "camera": {
+        "type": "perspective",
+        "fov": 90,
+        "near": 1,
+        "far": 2000
+    },
+    "fog": {
+        "type": "exponential",
+        "color": "1 0 0"
 
-	},
-	"font": "fonts/AlphaMack_AOE_Regular.json",
-	"preloader": {
-		"type": "sphere",
-		"material": "wireframe",
-		"size": 20,
-		"animation": "erratic"
-	}, // pick a preloader for when the app starts downloading sounds and builds 3D world
-	"sounds": [
-	//fill this array with sounds that will compliment each object. this is where your sound options should go
-	{
-		"id": 1,
-		"type": "drums",
-		"url": "tracked_songs/tundra_drums.mp3", //name your paths uniquely for a better user experience
-		"sampleSize": 512
-	}, {
-		"id": 2,
-		"name": "tundra_synths",
-		"type": "synth",
-		"url": "tracked_songs/tundra_synth.mp3",
-		"sampleSize": 1024
-	}],
-	"worldObjects": [{
-		type: "models/model.obj",
-		material: "standard"
-	}]
+    },
+    "font": "fonts/AlphaMack_AOE_Regular.json",
+    "preloader": {
+        "type": "sphere",
+        "material": "wireframe",
+        "size": 20,
+        "animationType": "erratic"
+    }, // pick a preloader for when the app starts downloading sounds and builds 3D world
+    "worldObjects": [{
+        type: "models/model.obj"
+    }]
 }; //index
 
 
 var Main = function Main() {
-	return _react2.default.createElement(
-		"div",
-		{ className: "container" },
-		_react2.default.createElement(_World2.default, { config: config })
-	);
+    return _react2.default.createElement(
+        "div",
+        { className: "container" },
+        _react2.default.createElement(_World2.default, { config: config })
+    );
 };
 
 var docRoot = document.querySelector("#root");
@@ -66416,7 +66401,6 @@ var World = function (_Component) {
 			var _this2 = this;
 
 			_progressEmitter2.default.on("worldmessage", function (e) {
-				console.log(e);
 				_this2.setState({ message: e.message });
 			});
 			this.world.start();
@@ -66434,7 +66418,7 @@ var World = function (_Component) {
 			return _react2.default.createElement(
 				"div",
 				{ id: "world" },
-				config.hasOwnProperty("menu") ? this.createLinks(config.menu.links) : null,
+				config.hasOwnProperty("menu") && config.menu.links !== undefined ? this.createLinks(config.menu.links) : null,
 				_react2.default.createElement("canvas", null),
 				_react2.default.createElement(_Progress2.default, { message: this.state.message })
 			);
@@ -66835,11 +66819,11 @@ var _createGeometry = __webpack_require__(81);
 
 var _createGeometry2 = _interopRequireDefault(_createGeometry);
 
-var _createMaterial = __webpack_require__(82);
+var _createMaterial = __webpack_require__(83);
 
 var _createMaterial2 = _interopRequireDefault(_createMaterial);
 
-var _audioInitializer = __webpack_require__(83);
+var _audioInitializer = __webpack_require__(84);
 
 var _audioInitializer2 = _interopRequireDefault(_audioInitializer);
 
@@ -66901,7 +66885,7 @@ var framework = {
         var regSearch = /[px|em]{1}/;
         marginLeft = typeof marginLeft === "string" ? parseInt(marginLeft.replace(regSearch, ""), 10) : marginLeft;
         marginTop = typeof marginTop === "string" ? parseInt(marginTop.replace(regSearch, ""), 10) : marginTop;
-        console.log(marginLeft, marginTop);
+
         var speedY = (e.y - marginTop - this.canvas.clientHeight / 2) / (this.canvas.clientHeight / 2),
             speedX = (e.x - marginLeft - this.canvas.clientWidth / 2) / (this.canvas.clientWidth / 2);
 
@@ -66911,6 +66895,43 @@ var framework = {
     },
     createAnime: _createAnime2.default,
     createGeometry: _createGeometry2.default,
+    createPreloader: function createPreloader(options) {
+        var _this = this;
+
+        var delayTime = 1000;
+
+        return new Promise(function (res, rej) {
+            window.setTimeout(function () {
+                options.name = "preloader";
+                console.log(options);
+                _this.setupMesh(options, _this.scenes.length - 1);
+                res("fade");
+            }, delayTime);
+        });
+    },
+    createFont: function createFont(fontJSON) {
+        var _this2 = this;
+
+        var title = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "hi";
+
+        new THREE.FontLoader().load(fontJSON, function (font) {
+            _this2.fonts[0] = font;
+            var options = {
+                animation: "zoom_normal",
+                color: new THREE.Color(),
+                font: font,
+                title: title,
+                type: "font",
+                name: "title",
+                material: "basic",
+                size: 1
+
+            };
+
+            console.log(options);
+            _this2.setupMesh(options, _this2.scenes.length - 1);
+        });
+    },
     createMaterial: _createMaterial2.default,
     getCanvas: function getCanvas() {
         var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "world";
@@ -66998,10 +67019,12 @@ var framework = {
         var m = void 0,
             mesh = void 0;
         //@params sI - the index of the scene
+        /*
+        const isTypeLoader = options.type.search(/[\.obj]{1}/);
+        const isMaterialURL = options.material.search(/(\.mtl){1}/);
+        */
 
-        var isTypeLoader = options.type.search(/[\.obj]{1}/);
-        var isMaterialURL = options.material.search(/(\.mtl){1}/);
-
+        m = this.createMaterial(options);
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
             for (var i = 0; i <= options.count - 1; i++) {
@@ -67024,7 +67047,7 @@ var framework = {
 
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
                 mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                mesh.anime = this.createAnime(mesh, options.animation);
+                mesh.anime = this.createAnime(mesh, options.animationType);
                 mesh.position.set(Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1));
                 group.add(mesh);
             }
@@ -67033,22 +67056,22 @@ var framework = {
             var _g = this.createGeometry(options);
             if (_g.type === "Mesh" || _g.type === "Group") {
                 mesh = _g;
-                console.log(mesh);
             } else {
-                console.log(options);
-                m = this.createMaterial(options);
+                console.log(_g, m);
                 mesh = new THREE.Mesh(_g, m);
+                console.log(mesh);
             }
 
             mesh.name = options.name !== undefined ? options.name : "";
-            mesh.anime = this.createAnime(mesh, options.animation);
+            mesh.anime = this.createAnime(mesh, options.animationType);
+            console.log(mesh);
             this.scenes[sI].add(mesh);
         }
 
         return;
     },
     setupScene: function setupScene() {
-        var _this = this;
+        var _this3 = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -67061,7 +67084,7 @@ var framework = {
         this.scenes[this.scenes.length - 1].add(light);
         if (options instanceof Array) {
             options.forEach(function (o) {
-                _this.setupMesh(o, _this.scenes.length - 1);
+                _this3.setupMesh(o, _this3.scenes.length - 1);
             });
         } else if (Object.keys(options).length > 0 && options.constructor === Object) {
             this.setupMesh(options, this.scenes.length - 1);
@@ -67104,50 +67127,62 @@ var framework = {
         return fog;
     },
     initWorld: function initWorld() {
-        var _this2 = this;
+        var _this4 = this;
 
         //initializes world after clicking and removes event listener to prevent memory leaks
         var title = void 0;
 
-        if (this.options.hasOwnProperty("menu")) {
+        if (this.options.hasOwnProperty("menu") && this.options.menu !== undefined) {
+            //menu options start
             this.canvas.removeEventListener("click", this.initWorld, false);
             title = this.scenes[this.scenes.length - 1].getObjectByName("title");
             if (title !== undefined) {
                 var camData = (0, _cameraView2.default)(title.position.z, this.camera);
-                //title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
-                title.anime = this.createAnime(title, "fade");
+                if (title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined) {
+                    title.scale.set(1 * (camData.width / title.geometry.parameters.width), 1 * (camData.width / title.geometry.parameters.height), 1);
+                }
+                title.anime = this.createAnime(title, this.options.menu.animation);
             }
         }
 
-        if (this.options.hasOwnProperty("sounds")) {
+        if (this.options.hasOwnProperty("sounds") && this.options.sounds !== undefined) {
             var audioPromise = (0, _audioInitializer2.default)(this.sounds);
             audioPromise.then(function (controllers) {
                 _progressEmitter2.default.emit("worldmessage", { message: "building world. please wait" });
-                _this2.audioControllers = controllers;
-                _this2.setupScene(_this2.worldObjects, controllers);
+                _this4.audioControllers = controllers;
+                _this4.setupScene(_this4.worldObjects, controllers);
                 var fadeTime = 2000;
                 //add a delay
-
-                var preloader = _this2.scene.getObjectByName("preloader");
-                preloader.anime = _this2.createAnime(preloader, "fade");
+                var madePreloader = _this4.createPreloader(_this4.options.preloader);
+                madePreloader.then(function (animationType) {
+                    console.log(animationType);
+                    var preloader = _this4.scene.getObjectByName("preloader");
+                    preloader.anime = _this4.createAnime(preloader, "fade");
+                    setTimeout(function () {
+                        _progressEmitter2.default.emit("worldmessage", { message: "" });
+                        _this4.scene = _this4.scenes[_this4.scenes.length - 1];
+                    }, fadeTime);
+                });
+            });
+        } else {
+            var fadeTime = 2000;
+            //add a delay
+            var madePreloader = this.createPreloader(this.options.preloader);
+            madePreloader.then(function (animationType) {
+                _this4.setupScene(_this4.worldObjects);
+                console.log(animationType);
+                _progressEmitter2.default.emit("worldmessage", { message: "building world. please wait" });
+                var preloader = _this4.scene.getObjectByName("preloader");
+                preloader.anime = _this4.createAnime(preloader, animationType);
                 setTimeout(function () {
                     _progressEmitter2.default.emit("worldmessage", { message: "" });
-                    _this2.scene = _this2.scenes[_this2.scenes.length - 1];
-                    console.log(_this2.scene);
+                    _this4.scene = _this4.scenes[_this4.scenes.length - 1];
                 }, fadeTime);
             });
         }
-        //delays preloader but not the audio loader
-        setTimeout(function () {
-            if (title) {
-                _this2.scenes[_this2.scenes.length - 1].remove(title);
-            }
-            _this2.preloader.name = "preloader";
-            _this2.setupMesh(_this2.preloader, _this2.scenes.length - 1);
-        }, 1000);
     },
     start: function start() {
-        var _this3 = this;
+        var _this5 = this;
 
         console.log(_threeCSG2.default);
         this.setupScene({});
@@ -67155,15 +67190,16 @@ var framework = {
         //start event listeners
         this.canvas.addEventListener("mousemove", this.doMouseMove, false);
         window.addEventListener("resize", function (e) {
-            _this3.onWindowResize();
+            _this5.onWindowResize();
         }, false);
         //run animation cycle for all scenes
-        requestAnimationFrame(this.runScene);
-        if (this.options.hasOwnProperty("menu")) {
+        window.requestAnimationFrame(this.runScene);
+        if (this.options.hasOwnProperty("menu") && this.options.menu !== undefined) {
             this.canvas.addEventListener("click", this.initWorld);
             var menu = this.options.menu;
             var checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
             var isImgLink = checkFormat.test(menu.title);
+
             if (isImgLink) {
                 new THREE.TextureLoader().load(menu.title, function (tex) {
 
@@ -67176,30 +67212,15 @@ var framework = {
                         size: [tex.image.naturalWidth, tex.image.naturalHeight],
                         texture: tex
                     };
-                    _this3.setupMesh(options, _this3.scenes.length - 1);
+                    _this5.setupMesh(options, _this5.scenes.length - 1);
                     //calculate title mesh so if img is too large it will fit inside the camera viewW
-                    var title = _this3.scenes[_this3.scenes.length - 1].getObjectByName("title");
-                    _this3.fitOnScreen(title);
+                    var title = _this5.scenes[_this5.scenes.length - 1].getObjectByName("title");
+                    _this5.fitOnScreen(title);
                 });
             } else {
                 console.log("turn into a 3D font");
-                new THREE.FontLoader().load(this.mainFont, function (font) {
-                    _this3.fonts[0] = font;
-
-                    var options = {
-                        animation: "zoom_normal",
-                        color: new THREE.Color(),
-                        font: font,
-                        title: menu.title,
-                        type: "font",
-                        name: "title",
-                        material: "basic",
-                        size: 1
-
-                    };
-
-                    _this3.setupMesh(options, _this3.scenes.length - 1);
-                });
+                //will create a font in 3D space based on font family
+                this.createFont(this.mainFont, menu.title);
             }
         } else {
             this.initWorld();
@@ -67984,8 +68005,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 exports.default = function (mesh, type) {
-    var t = type !== undefined ? type : "spin_basic",
-        speed = 10;
+    var t = type !== undefined ? type : filterDefaultsForMesh(mesh.name, "animation"),
+        speed = 2;
     switch (t) {
         case "atom":
             return function (time) {
@@ -68109,6 +68130,20 @@ var THREE = _interopRequireWildcard(_three);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function filterDefaultsForMesh(name) {
+    var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "animation";
+
+    switch (name) {
+        case "title":
+            if (type === "animation") {
+                return "fade";
+            }
+            break;
+        default:
+            return "spin_basic";
+    }
+}
 
 /***/ }),
 /* 80 */
@@ -68257,7 +68292,7 @@ var _three = __webpack_require__(3);
 
 var THREE = _interopRequireWildcard(_three);
 
-var _proceduralTree = __webpack_require__(84);
+var _proceduralTree = __webpack_require__(82);
 
 var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
 
@@ -68267,176 +68302,6 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 /***/ }),
 /* 82 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function () {
-    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    var color = options.color !== undefined ? (0, _colorInterpreter2.default)(options.color) : new THREE.Color();
-    var material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default";
-    var map = options.texture !== undefined ? options.texture : null;
-    var emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color();
-    switch (material) {
-        case "basic":
-            return new THREE.MeshBasicMaterial({
-                color: color,
-                map: map,
-                side: THREE.DoubleSide,
-                transparent: true });
-        case "line":
-            return new THREE.LineBasicMaterial({
-                color: color,
-                side: THREE.DoubleSide
-            });
-        case "toon":
-            return new THREE.MeshToonMaterial({
-                color: color,
-                flatShading: true
-            });
-        case "normal":
-            return new THREE.MeshNormalMaterial({
-                flatShading: true,
-                side: THREE.DoubleSide,
-                transparent: true });
-        case "standard":
-            return new THREE.MeshStandardMaterial({
-                color: color,
-                roughness: 0,
-                metalness: 0,
-                side: THREE.DoubleSide,
-                transparent: true });
-        case "wireframe":
-            return new THREE.MeshNormalMaterial({
-                transparent: true,
-                wireframe: true });
-        default:
-            return new THREE.MeshBasicMaterial({ color: color });
-
-    }
-};
-
-var _three = __webpack_require__(3);
-
-var THREE = _interopRequireWildcard(_three);
-
-var _colorInterpreter = __webpack_require__(30);
-
-var _colorInterpreter2 = _interopRequireDefault(_colorInterpreter);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-/***/ }),
-/* 83 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _progressEmitter = __webpack_require__(13);
-
-var _progressEmitter2 = _interopRequireDefault(_progressEmitter);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function audioFetcher(sound) {
-    //a promise wrapper that takes care of fetching audio data
-    return new Promise(function (res, rej) {
-        var name = sound.name !== undefined ? sound.name : seperateSoundName(sound.url);
-        var id = void 0;
-        if (sound.id !== undefined) {
-            id = sound.id;
-        } else {
-            rej({ message: "objects can't map to sounds without id. Check your configuration file" });
-        }
-        fetch(sound.url).then(function (response) {
-            if (response.ok) {
-                //if response works, returns a array of sound information
-                return response.arrayBuffer();
-            } else {
-                //stops the promise from even continuing
-                rej({ message: name + " failed to download" });
-            }
-        }).then(function (buffer) {
-            //create the audio context here and start decoding buffer
-            var ctx = new AudioContext();
-            _progressEmitter2.default.emit("worldmessage", { message: "downloading " + name });
-            ctx.decodeAudioData(buffer, function (data) {
-                // assign the controller with each attribute
-                _progressEmitter2.default.emit("worldmessage", { message: "completed " + name });
-                var audio = createController(ctx, id, name, sound.sampleSize, data);
-                res(audio);
-            });
-        });
-    });
-}
-function createController(ctx, id, name, fftSize, data) {
-    // packs a controller object with it's specific data
-    var analyser = ctx.createAnalyser();
-    var gain = ctx.createGain();
-    var source = ctx.createBufferSource();
-    console.log(source);
-    source.buffer = data;
-    analyser.fftSize = fftSize;
-    var timeData = new Uint8Array(analyser.fftSize);
-    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
-    source.connect(gain);
-    gain.connect(ctx.destination);
-
-    var audioController = {
-        analyser: analyser,
-        ctx: ctx,
-        frequencyData: frequencyData,
-        gain: gain,
-        id: id,
-        name: name,
-        source: source,
-        timeData: timeData
-    };
-
-    return audioController;
-}
-function initializeAudio() {
-    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-    //loops through promises and waits til all sounds are loaded
-    var sounds = options !== undefined ? options : [];
-    var promiseArr = [];
-    if (sounds.length !== 0) {
-        for (var x = 0; x < sounds.length; x++) {
-            var p = audioFetcher(sounds[x]);
-            promiseArr.push(p);
-        }
-    } else {
-        console.warn("there are no sounds to download. check your configuration");
-    }
-    return Promise.all(promiseArr);
-}
-function seperateSoundName(path) {
-    //if for some reason the name isn't in config, grabs it out the url path
-    var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
-    var patternTwo = /[\s_\-]/;
-    var matchedString = path.match(pattern);
-    var newString = matchedString[0].replace(patternTwo, " ").toLowerCase();
-    return newString;
-}
-
-exports.default = initializeAudio;
-
-/***/ }),
-/* 84 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -68543,6 +68408,176 @@ function generateBranch() {
   root.add(branches);
   return root;
 }
+
+/***/ }),
+/* 83 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function () {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    var color = options.color !== undefined ? (0, _colorInterpreter2.default)(options.color) : new THREE.Color();
+    var material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default";
+    var map = options.texture !== undefined ? options.texture : null;
+    var emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color();
+    switch (material) {
+        case "basic":
+            return new THREE.MeshBasicMaterial({
+                color: color,
+                map: map,
+                side: THREE.DoubleSide,
+                transparent: true });
+        case "line":
+            return new THREE.LineBasicMaterial({
+                color: color,
+                side: THREE.DoubleSide
+            });
+        case "toon":
+            return new THREE.MeshToonMaterial({
+                color: color,
+                flatShading: true
+            });
+        case "normal":
+            return new THREE.MeshNormalMaterial({
+                flatShading: true,
+                side: THREE.DoubleSide,
+                transparent: true });
+        case "standard":
+            return new THREE.MeshStandardMaterial({
+                color: color,
+                roughness: 0,
+                metalness: 0,
+                side: THREE.DoubleSide,
+                transparent: true });
+        case "wireframe":
+            return new THREE.MeshNormalMaterial({
+                transparent: true,
+                wireframe: true });
+        default:
+            return new THREE.MeshBasicMaterial({ color: color });
+
+    }
+};
+
+var _three = __webpack_require__(3);
+
+var THREE = _interopRequireWildcard(_three);
+
+var _colorInterpreter = __webpack_require__(30);
+
+var _colorInterpreter2 = _interopRequireDefault(_colorInterpreter);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+/***/ }),
+/* 84 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _progressEmitter = __webpack_require__(13);
+
+var _progressEmitter2 = _interopRequireDefault(_progressEmitter);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function audioFetcher(sound) {
+    //a promise wrapper that takes care of fetching audio data
+    return new Promise(function (res, rej) {
+        var name = sound.name !== undefined ? sound.name : seperateSoundName(sound.url);
+        var id = void 0;
+        if (sound.id !== undefined) {
+            id = sound.id;
+        } else {
+            rej({ message: "objects can't map to sounds without id. Check your configuration file" });
+        }
+        fetch(sound.url).then(function (response) {
+            if (response.ok) {
+                //if response works, returns a array of sound information
+                return response.arrayBuffer();
+            } else {
+                //stops the promise from even continuing
+                rej({ message: name + " failed to download" });
+            }
+        }).then(function (buffer) {
+            //create the audio context here and start decoding buffer
+            var ctx = new AudioContext();
+            _progressEmitter2.default.emit("worldmessage", { message: "downloading " + name });
+            ctx.decodeAudioData(buffer, function (data) {
+                // assign the controller with each attribute
+                _progressEmitter2.default.emit("worldmessage", { message: "completed " + name });
+                var audio = createController(ctx, id, name, sound.sampleSize, data);
+                res(audio);
+            });
+        });
+    });
+}
+function createController(ctx, id, name, fftSize, data) {
+    // packs a controller object with it's specific data
+    var analyser = ctx.createAnalyser();
+    var gain = ctx.createGain();
+    var source = ctx.createBufferSource();
+    console.log(source);
+    source.buffer = data;
+    analyser.fftSize = fftSize;
+    var timeData = new Uint8Array(analyser.fftSize);
+    var frequencyData = new Uint8Array(analyser.frequencyBinCount);
+    source.connect(gain);
+    gain.connect(ctx.destination);
+
+    var audioController = {
+        analyser: analyser,
+        ctx: ctx,
+        frequencyData: frequencyData,
+        gain: gain,
+        id: id,
+        name: name,
+        source: source,
+        timeData: timeData
+    };
+
+    return audioController;
+}
+function initializeAudio() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+    //loops through promises and waits til all sounds are loaded
+    var sounds = options !== undefined ? options : [];
+    var promiseArr = [];
+    if (sounds.length !== 0) {
+        for (var x = 0; x < sounds.length; x++) {
+            var p = audioFetcher(sounds[x]);
+            promiseArr.push(p);
+        }
+    } else {
+        console.warn("there are no sounds to download. check your configuration");
+    }
+    return Promise.all(promiseArr);
+}
+function seperateSoundName(path) {
+    //if for some reason the name isn't in config, grabs it out the url path
+    var pattern = /\w+(?!\/){1}(?=\.mp3|\.wav|\.ogg){1}/;
+    var patternTwo = /[\s_\-]/;
+    var matchedString = path.match(pattern);
+    var newString = matchedString[0].replace(patternTwo, " ").toLowerCase();
+    return newString;
+}
+
+exports.default = initializeAudio;
 
 /***/ }),
 /* 85 */

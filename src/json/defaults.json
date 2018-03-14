@@ -1,0 +1,9 @@
+const defaultOptions = {
+    
+    delay: 1000,
+    preloader : {
+        "message" : "building a better world. Please wait"
+    }
+}
+
+export defaultOptions;
