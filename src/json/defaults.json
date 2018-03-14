@@ -1,6 +1,12 @@
 {
-    delay: 1000,
-    preloader : {
+    "animationType" : "spin_basic",
+    "animationDuration" : 1000,
+    "animationEasing" : "easeInSine",
+    "animationElasticity" : 100,
+    "animationDelay" : 0,
+    "loop" : true,
+    "preloader" : {
+        "type": "dodecahedron",
         "message" : "building a better world"
     }
 }

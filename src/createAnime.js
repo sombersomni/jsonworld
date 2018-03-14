@@ -1,23 +1,20 @@
 import anime from "animejs";
 import * as THREE from "three";
 
-function filterDefaultsForMesh ( name, type = "animation" ) {
-     switch( name ) {
-        case "title":
-             if ( type === "animation" ) {
-                 return "fade";
-             }
-            break;
-        default:
-            return "spin_basic";
-    }
-    
-}
+import defaultOptions from "./json/defaults.json";
 
-export default function ( mesh, type ) {
-    const t = type !== undefined ? type : filterDefaultsForMesh( mesh.name, "animation" ),
+export default function ( mesh, options ) {
+    console.log( options );
+    const type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
+          //defaults are handled before they get to this function
+          duration = options.animationDuration !== undefined && options.hasOwnProperty( "animationDuration" ) ? options.animationDuration : defaultOptions.animationDuration ,
+          delay = options.animationDelay !== undefined && options.hasOwnProperty( "animationDelay" ) ? options.animationDelay : defaultOptions.animationDelay,
+          easing = options.animationEasing !== undefined && options.hasOwnProperty( "animationEasing" ) ? options.animationEasing : defaultOptions.animationEasing,
+          elasticity = options.animationElasticity !== undefined && options.hasOwnProperty( "animationElasticity" ) ? options.animationElasticity : defaultOptions.animationElasticity,
+          loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
           speed = 2;
-    switch( t ) {
+    console.log( type );
+    switch( type ) {
         case "atom":
             return function ( time ) {
                 //creates a simple animation that looks like an atom
@@ -72,7 +69,8 @@ export default function ( mesh, type ) {
             return anime( {
                 targets: mesh.material,
                 opacity: 0,
-                duration: 1000 / speed,
+                duration,
+                delay,
                 loop: 1
             } );
         case "shapeshift" :
@@ -127,6 +125,6 @@ export default function ( mesh, type ) {
                 mesh.position.z = ( distance * Math.sin( time * ( speed / 10 ) ) ) + mesh.prevPosition.z;
             }
         default:
-            return;
+            return "not working";
     }
 }

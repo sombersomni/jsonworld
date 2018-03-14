@@ -180,6 +180,7 @@ const framework = {
         let m, mesh;
         //@params sI - the index of the scene
         /*
+        @params m - stands for material 
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
@@ -224,8 +225,46 @@ const framework = {
 
 
                 mesh.name = options.name !== undefined ? options.name : "";
-                mesh.anime = this.createAnime( mesh, options.animationType );
-                console.log( mesh );
+                
+                
+                //set up animation for this mesh
+                let animationOptions = {
+                    animationType: options.animationType,
+                    animationDelay: options.animationDelay,
+                    animationDuration: options.animationDuration,
+                    animationEasing: options.animationEasing,
+                    animationElasticity: options.animationElasticity,
+                    loop: true,
+                };
+                
+                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
+                    const order = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
+                    options.animation.slice().split( " " ).forEach( ( val, i, arr ) => {
+                        let word = val.trim();
+                        if( val.search( /^\d{1}/ ) ) {
+                            if( /(ease){1}/.test( word ) ) {
+                                animationOptions[ order[i] ] = word;
+                            } else if ( word === "true" ) {
+                                animationOptions[ order[i] ] = true
+                            } else {
+                                animationOptions[ order[i] ] = word;
+                            }
+                        
+                        } else {
+                            if( /s$/.test( word ) ) {
+                                animationOptions[ order[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
+                            } else {
+                                animationOptions[ order[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
+                            } 
+                             
+                        }
+                
+                    } );
+                } 
+                
+                
+                mesh.anime = this.createAnime( mesh, animationOptions );
+                console.log( mesh);
                 this.scenes[ sI ].add( mesh );
             }
 
@@ -250,7 +289,7 @@ const framework = {
                 this.setupMesh( options, this.scenes.length - 1 );
                 res( "fade" );
             } else {
-                rej( "there are no options to make a scene" );
+                return;
             }
         } );
         
@@ -298,7 +337,7 @@ const framework = {
                 if ( title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined ) {
                     title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
                 }
-                title.anime = this.createAnime( title, this.options.menu.animation );
+                title.anime = this.createAnime( title, this.options.menu );
             }
         }
        
@@ -310,23 +349,21 @@ const framework = {
             
             
             preloaderPromise.then( message => {
-                console.log( "is this working" );
                 progressEmitter.emit( "worldmessage", { message } );
                 audioPromise.then( controllers => {
                         this.audioControllers = controllers;
                         const scenePromise = this.setupScene( this.worldObjects, controllers );
                         scenePromise.then( animationType => { 
                             let preloader = this.scene.getObjectByName( "preloader" );
-                            preloader.anime = this.createAnime( preloader, animationType );
+                            preloader.anime = this.createAnime( preloader, { animationType } );
                             window.setTimeout( () => {
                                 progressEmitter.emit( "worldmessage", { message: "" } );
                                 this.scene = this.scenes[ this.scenes.length - 1 ];
                             }, delay );
-                        } );
-                    } );
-                } );
-            } );
-            
+                        } )
+                    } )
+                } )
+    
         } else {
                 preloaderPromise.then( message => {
                     progressEmitter.emit( "worldmessage", { message } );
@@ -334,13 +371,13 @@ const framework = {
                     
                     scenePromise.then( animationType => {
                         let preloader = this.scene.getObjectByName( "preloader" );
-                        preloader.anime = this.createAnime( preloader, animationType );
                         window.setTimeout( () => {
+                            preloader.anime = this.createAnime( preloader, { animationType });
                             progressEmitter.emit( "worldmessage", { message: "" } );
                             this.scene = this.scenes[ this.scenes.length - 1 ];
                         }, 3000 );
-                    } );
-                } );               
+                    } )
+                } )            
             
         }
 
@@ -364,16 +401,22 @@ const framework = {
             
             if (isImgLink) {
                 new THREE.TextureLoader().load( menu.title, (tex) => {
-
+                    
                     const options = {
                         type: "plane",
                         name: "title",
                         material: "basic",
-                        animation: "zoom_normal",
+                        animationType: "zoom_normal",
+                        animationTime: 5000,
+                        animationDelay: 1000,
+                        animationDirection: "alternate",
+                        transparent: true,
+                        loop: true,
                         color: new THREE.Color(),
-                        size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
+                        size: [ tex.image.naturalWidth, tex.image.naturalHeight, 0 ],
                         texture: tex
                     };
+                    
                     this.setupMesh( options, this.scenes.length - 1 );
                     //calculate title mesh so if img is too large it will fit inside the camera viewW
                     let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );

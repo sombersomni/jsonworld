@@ -24,7 +24,7 @@ const config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animationType": "erratic"
+        "animation": "erratic 2s ease-in 2000 true alternate 100"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
