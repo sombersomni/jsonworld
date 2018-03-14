@@ -95,7 +95,6 @@ const framework = {
                 
             };
             
-            console.log( options );
             this.setupMesh( options, this.scenes.length - 1 );
         } );
     },
@@ -220,9 +219,7 @@ const framework = {
                 if( g.type === "Mesh" || g.type === "Group" ) {
                     mesh = g;
                 } else {
-                    console.log( g, m );
                     mesh = new THREE.Mesh( g, m );
-                    console.log( mesh );
                 }
 
 
