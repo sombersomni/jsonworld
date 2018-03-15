@@ -28,19 +28,22 @@ const config = {
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            "type": "custom",
+            "type": "dodecahedron",
             "material": "wireframe",
-            "count": 100,
+            "color" : 0x33cc00,
             "gridLayout": [ 3, 3, 3 ],
-            "animation": "linear 2s asymmetry, spin_basic 2s, custom_moveUp 3s asymmetry, blah 2s, zoom_beat 4s ease-in-sine 1s 2 alternate",
+            "animation": "erratic, spin_basic 2s, custom_moveUp 5s",
             "animationGrid": "basic",
             "animationKeyframes": {
-                "linear": "50 100 -50 0", //you can also define each value in string notation like css,
+                "erratic" : "10 20 40",
+                "linear": "50 100 -50 -80 50", //you can also define each value in string notation like css,
                 "custom-make-big": [ { scaleX: 2 }, { scaleX: 3 } ], //with custom animations you need to define what you want to change in the animation
                 //you can use "scale" like the property above, or "rotation, position, opacity and a range of others"
                 //if key of object is not defined in our dictionary of useable properties, a default position x
-                "custom_moveUp": [ { y: Math.random() * 100 } ] //you can also only have one value if needed you can use random numbers
-            }
+                "custom_moveUp": [ { y: Math.random() * 100 }, { y: Math.random() * 100 }, { y: Math.random() * 100 }, { y: Math.random() * 100 } ], //you can also only have one value if needed you can use random numbers
+                "spin_random" : "10 30 -20 360"
+            },
+            "shadow": true
         }
     ],
     "enableShadows": true

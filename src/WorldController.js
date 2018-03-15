@@ -105,6 +105,8 @@ const framework = {
                 console.log( animation );
                 mesh.animeTimeline.add( animation[i] );
             }
+        } else if ( animation instanceof Function ) {
+            mesh.animationManager.push( animation );
         } else {
             if ( animation !== undefined ) {
                 mesh.animeTimeline.add( animation );
@@ -190,6 +192,43 @@ const framework = {
         }
         return mesh;
     },
+    optionParser: function ( str, options = {}, type ) {
+        //parsers option string into viable data type for running code
+        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
+        
+        switch( type ) {
+            case "animation":
+                str.slice().split( " " ).forEach( ( val, i, arr ) => {
+                        let word = val.trim();
+                        
+                            if( val.search( /^\d{1}/ ) ) {
+                                if( /(ease){1}/.test( word ) ) {
+
+                                    options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
+
+                                } else if ( word === "true" ) {
+                                    options[ animationOrder[i] ] = true
+                                } else if ( word === "asymmetry" ) {
+                                    //allows for some to be grouped together and some to run on their own
+                                    options [ "animationAsymmetry" ] = true;
+                                } else {
+                                    options[ animationOrder[i] ] = word;
+                                }
+
+                            } else {
+                                if( /s$/.test( word ) ) {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
+                                } else {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
+                                } 
+
+                            }
+                        
+                
+                    } );
+                return options;
+        }
+    },
     setupAnimationForMesh: function ( mesh, options ) {
         //set up animation for this mesh
                 let animationOptions = {
@@ -205,10 +244,12 @@ const framework = {
                     animationGrid: options.animationGrid,
                     loop: true,
                 };
-                //START TIMELINE FOR ANIMATION
+                //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
                 mesh.animeTimeline = anime.timeline( { 
                     autoplay: false, 
                     loop: true } );
+        
+                mesh.animationManager = [];
         
                 if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
 
@@ -265,12 +306,15 @@ const framework = {
                             mesh = new THREE.Mesh( g, m );
                         }
                     }
-
-                    //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                    
+                    //create a grid to place each object correctly so no objects touch or collide 
                     mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
+                    
+                    if ( options.hasOwnProperty( "shadow" ) && options.shadow ) {
+                        mesh.receiveShadow = true;
+                        mesh.castShadow = true;
+                    }
                     group.add( mesh );
                 }
                 group.name = options.name !== undefined ? options.name : "bundle";
@@ -282,6 +326,10 @@ const framework = {
                 } else {
                     mesh = new THREE.Mesh( g, m );
                 }
+                if ( options.hasOwnProperty( "shadow" ) && options.shadow ) {
+                    mesh.receiveShadow = true;
+                    mesh.castShadow = true;
+                }
                 mesh.name = options.name !== undefined ? options.name : "";
                 
                 this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
@@ -291,43 +339,6 @@ const framework = {
 
             return;
     },
-    optionParser: function ( str, options = {}, type ) {
-        //parsers option string into viable data type for running code
-        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
-        
-        switch( type ) {
-            case "animation":
-                str.slice().split( " " ).forEach( ( val, i, arr ) => {
-                        let word = val.trim();
-                        
-                            if( val.search( /^\d{1}/ ) ) {
-                                if( /(ease){1}/.test( word ) ) {
-
-                                    options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
-
-                                } else if ( word === "true" ) {
-                                    options[ animationOrder[i] ] = true
-                                } else if ( word === "asymmetry" ) {
-                                    //allows for some to be grouped together and some to run on their own
-                                    options [ "animationAsymmetry" ] = true;
-                                } else {
-                                    options[ animationOrder[i] ] = word;
-                                }
-
-                            } else {
-                                if( /s$/.test( word ) ) {
-                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
-                                } else {
-                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
-                                } 
-
-                            }
-                        
-                
-                    } );
-                return options;
-        }
-    },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed
         return new Promise ( ( res, rej ) => { 
@@ -335,7 +346,7 @@ const framework = {
             this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
             let light = new THREE.DirectionalLight( 0xffffff, 2 );
-            light.position.set( 0, 1000, 0 );
+            //light.position.set( 0, 10000, 0 );
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 light.castShadow = true;
                 //debug shadow camera
@@ -343,15 +354,16 @@ const framework = {
                 this.scenes[ this.scenes.length -1 ].add( shadowCamera );
             }
             this.scenes[ this.scenes.length - 1 ].add( light );
+            this.scenes[ this.scenes.length - 1 ].add( new THREE.PointLight( 0x00ff00, 1, 100 ) );
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
                     this.setupMesh( o, this.scenes.length - 1 );
                 });
                 //sends an animation type for scene transition
-                res( "fade" );
+                res( defaultOptions.sceneTransition );
             } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
                 this.setupMesh( options, this.scenes.length - 1 );
-                res( "fade" );
+                res( defaultOptions.sceneTransition );
             } else {
                 return;
             }
@@ -513,34 +525,12 @@ const framework = {
     },
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {
-            if( obj.type.toLowerCase() === "mesh" ) {
-                /*
-                if ( obj.geometry.parameters.hasOwnProperty( "width" ) && obj.geometry.parameters.hasOwnProperty( "height" ) ) {
-                    const camData = calculateCameraView( obj.position.z, this.camera );
-                } else if ( obj.geometry.parameters.hasOwnProperty( "radius" ) ) {
-                    const camData = calculateCameraView( obj.position.z, this.camera );
-                } else {
-                    console.warn( "can't calculate object parameters" );
-                }
-                */
-/*
-                if( typeof obj.anime === "function" ) {
-                    obj.anime( time, obj.name );
-                } else {
-                    obj.material.needsUpdate = true;
-                }
-            }
-            else if ( obj.type.toLowerCase() === "group" ) {
-                obj.children.forEach( ( m ) => {
-                    if( typeof obj.anime === "function" ) {
-                        m.anime( time, obj.name );
-                    } else {
-                        m.material.needsUpdate = true;
-                    }
+            if( obj instanceof THREE.Mesh ) {
+                obj.animationManager.forEach( animation => {
+                    animation.call( this, time, obj.id );
                 } );
             }
-            */
-            }
+        
         });
     },
     runScene: function () {
@@ -549,11 +539,6 @@ const framework = {
         var elaspedTime = this.clock.getElapsedTime();
         this.runAnimations( elaspedTime );
 
-
-        /*
-        this.camera.aspect = window.innerWidth/ window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        */
         this.renderer.render( this.scene, this.camera );
     }
 };

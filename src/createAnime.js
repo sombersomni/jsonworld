@@ -3,8 +3,15 @@ import * as THREE from "three";
 
 import defaultOptions from "./json/defaults.json";
 
+function convertKeyframesToRadians( keyframes ) {
+    console.log( keyframes );
+    return keyframes.map( frame => {
+        return { value: frame.value * ( Math.PI * 2 / 180 ) }
+    } );
+}
+
 function packAnimations( mesh, options ) {
-    const { asymmetry, keyframes, animProp,  canPack, animTarget, rule, elasticity, duration, offset, delay } = options;
+    const { animTarget, asymmetry, duration, elasticity, keyframes, animProp, complete, canPack, finished, rule, offset, delay } = options;
     
     if ( mesh instanceof THREE.Group && asymmetry ) {
 
@@ -15,6 +22,9 @@ function packAnimations( mesh, options ) {
                         pack.push({
                             targets: obj[ animTarget ],
                             [ animProp ] : keyframes || rule,
+                            complete,
+                            delay,
+                            duration,
                             elasticity,
                             offset: "-="+( offset * n ),
                         });
@@ -32,7 +42,7 @@ function packAnimations( mesh, options ) {
                 offset,
                 duration,
                 delay,
-                
+                complete,
                 } ;
         }
 }
@@ -90,7 +100,7 @@ export default function ( mesh, options = {} ) {
     type.trim();
     type.toLowerCase();
     
-    
+    //seperate keyframes and make it compatible for use in anime timeline
     if ( options.animationKeyframes !== undefined && options.hasOwnProperty( "animationKeyframes" ) ) {
         
         if ( options.animationKeyframes[ type ] !== undefined ) {
@@ -132,7 +142,8 @@ export default function ( mesh, options = {} ) {
             animTarget,
             animProp,
             canPack,
-            rule: undefined,
+            complete: undefined,
+            finished: undefined,
             asymmetry,
             keyframes,
             type,
@@ -179,13 +190,13 @@ export default function ( mesh, options = {} ) {
             
             break;
         case "erratic" :
-            return function ( time ) {
-                let mesh = this;
+            return ( time, id ) => {
+                let mesh = this.scene.getObjectById( id );
                 const growthRate = 1.25,
                     length = mesh.geometry.vertices.length,
-                    radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2,
-                    rand = Math.round( Math.random() * length - 1 );
-                //every 5 seconds execute
+                    radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2 || 10,
+                    rand = Math.round( Math.random() * length );
+                //every second execute lerp coordinate change
                 if( Math.round( time ) % 1 === 0 ) {
                     mesh.geometry.currentVectorIndex = rand;
                     mesh.geometry.currentVector = mesh.geometry.vertices[ mesh.geometry.currentVectorIndex ];
@@ -195,7 +206,7 @@ export default function ( mesh, options = {} ) {
                     const x = mesh.geometry.currentVector.x,
                         y = mesh.geometry.currentVector.y,
                         z = mesh.geometry.currentVector.z;
-                    if( Math.abs( x ) < radius * 2 && Math.abs( y ) < radius * 2 && Math.abs( z ) < radius * 2 ) {
+                    if( Math.abs( x ) < radius * 3 && Math.abs( y ) < radius * 3 && Math.abs( z ) < radius * 3 ) {
                         mesh.geometry.vertices[ cIndex ].lerp( new THREE.Vector3( x * growthRate, y * growthRate, z * growthRate ), Math.random() );
                     } else {
                         mesh.geometry.vertices[ cIndex ].lerp( new THREE.Vector3( x / growthRate, y / growthRate, z / growthRate ), Math.random() );
@@ -204,17 +215,20 @@ export default function ( mesh, options = {} ) {
                 mesh.rotation.y += .01;
                 mesh.geometry.verticesNeedUpdate = true;
             }
-        case "fade" :
-            return {
-                targets: mesh.material,
-                opacity: 0,
-                duration,
-                delay,
-                loop: 1
-            }
+            case "test" :
+            return () => console.log( this );
+        case "fade-in" :
+            
+            return packAnimations( mesh, Object.assign({}, newOptions, { rule : 1, animProp: "opacity", animTarget: "material" } ) );
+    
+        case "fade-out" :
+            
+            return packAnimations( mesh, Object.assign({}, newOptions, { rule : 0, animProp: "opacity", animTarget: "material" } ) );
+    
         case "linear" :
             const distance = 50;
             return packAnimations( mesh, Object.assign({}, newOptions, { rule : distance, animProp: "x", animTarget: "position" } ) );
+            
         case "shapeshift" :
             return function ( time ) {
                 let mesh = this;
@@ -226,31 +240,24 @@ export default function ( mesh, options = {} ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin_basic" :
-
-            return packAnimations( mesh, Object.assign({}, newOptions, { rule : defaultOptions.rotationAngle, animProp: "y", animTarget: "rotation" } ) );
+            
+            return packAnimations( mesh, Object.assign( {}, newOptions, { keyframes: keyframes !== undefined ? convertKeyframesToRadians( keyframes ) : keyframes, rule : ( Math.PI * 2 / 180 ) * ( defaultOptions.rotationAngle ), animProp: "y", animTarget: "rotation" } ) );
             
         case "spin_random" :
-            return anime( {
-                targets: mesh.rotation,
-                y: Math.PI * 2,
-                elasticity: 100 / speed,
-                duration: 5000 / speed,
-                loop: 1,
-                complete: function( anim ) {
+            
+            return packAnimations( mesh, Object.assign( {}, newOptions, { keyframes: keyframes !== undefined ? convertKeyframesToRadians( keyframes ) : keyframes, rule: ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle, 
+                    animProp: "y", 
+                    animTarget: "rotation", 
+                    complete: function( anim ) {
                     const axis = "xyz";
                     const random = Math.round( Math.random() * 3 - 1 );
                     anim.animations[0].property = axis.charAt( random );
-                    anim.restart();
-                }
-            } );
+                   } } ) );
+
         case "zoom_beat" :
-            return {
-                targets: mesh.position,
-                z: keyframes !== undefined ? keyframes: mesh.position.z - 100,
-                elasticity,
-                duration,
-                direction : "alternate"
-            };
+            
+            return packAnimations( mesh, Object.assign( {}, newOptions, { keyframes: keyframes !== undefined ? convertKeyframesToRadians( keyframes ) : keyframes, rule : mesh.position.z - 100, animProp: "z", animTarget: "position" } ) );
+            
         case "zoom_normal" :
             return function ( time ) {
                 let mesh = this;

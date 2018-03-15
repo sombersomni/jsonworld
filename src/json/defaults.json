@@ -17,5 +17,6 @@
     "preloader" : {
         "type": "dodecahedron",
         "message" : "building a better world"
-    }
+    },
+    "sceneTransition" : "fade-out"
 }
