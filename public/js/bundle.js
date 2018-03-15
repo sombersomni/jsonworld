@@ -47002,7 +47002,7 @@ function verifyPlainObject(value, displayName, methodName) {
 /* 30 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDelay":0,"animationKeframes":{},"animationAsymmetry":true,"animationGrid":"basic","animationOffset":0,"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"}}
+module.exports = {"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"alternate","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","animVal":50,"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"}}
 
 /***/ }),
 /* 31 */
@@ -47093,15 +47093,22 @@ var config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animation": "linear 1s"
+        "animation": "spin_basic 5s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
     "worldObjects": [{
         "type": "custom",
         "material": "wireframe",
-        "count": 9,
+        "count": 100,
         "gridLayout": [3, 3, 3],
-        "animationAsymmetry": true,
-        "animation": "spin_basic 2s ease-in-sine 2s, linear 5s"
+        "animation": "linear 2s asymmetry, spin_basic 2s, custom_moveUp 3s asymmetry, blah 2s, zoom_beat 4s ease-in-sine 1s 2 alternate",
+        "animationGrid": "basic",
+        "animationKeyframes": {
+            "linear": "50 100 -50 0", //you can also define each value in string notation like css,
+            "custom-make-big": [{ scaleX: 2 }, { scaleX: 3 }], //with custom animations you need to define what you want to change in the animation
+            //you can use "scale" like the property above, or "rotation, position, opacity and a range of others"
+            //if key of object is not defined in our dictionary of useable properties, a default position x
+            "custom_moveUp": [{ y: Math.random() * 100 }] //you can also only have one value if needed you can use random numbers
+        }
     }],
     "enableShadows": true
 }; //index
@@ -66951,6 +66958,21 @@ var framework = {
         });
     },
     createMaterial: _createMaterial2.default,
+    decideTimelineOrder: function decideTimelineOrder(animation, mesh, options) {
+        if (animation instanceof Array && animation.length > 0) {
+            for (var i = 0; i <= animation.length - 1; i++) {
+                console.log(animation);
+                mesh.animeTimeline.add(animation[i]);
+            }
+        } else {
+            if (animation !== undefined) {
+                mesh.animeTimeline.add(animation);
+            }
+        }
+
+        return mesh;
+    },
+
     getCanvas: function getCanvas() {
         var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "world";
 
@@ -67033,39 +67055,46 @@ var framework = {
         }
         return mesh;
     },
-    setupAnimationForMesh: function setupAnimationForMesh(options, mesh) {
+    setupAnimationForMesh: function setupAnimationForMesh(mesh, options) {
         //set up animation for this mesh
         var animationOptions = {
             animationType: options.animationType,
             animationDelay: options.animationDelay,
+            animationDirection: options.animationDirection,
             animationDuration: options.animationDuration,
             animationEasing: options.animationEasing,
             animationElasticity: options.animationElasticity,
             animationKeyframes: options.animationKeyframes,
             animationAsymmetry: options.animationAsymmetry,
+            animationOffset: options.animationOffset,
             animationGrid: options.animationGrid,
             loop: true
         };
+        //START TIMELINE FOR ANIMATION
+        mesh.animeTimeline = _animejs2.default.timeline({
+            autoplay: false,
+            loop: true });
 
-        mesh.animeTimeline = _animejs2.default.timeline({ autoplay: false, loop: true });
         if (options.hasOwnProperty("animation") && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string") {
 
             if (/\,/.test(options.animation)) {
 
                 var seperateAnimations = options.animation.slice().split(",");
-                console.log(seperateAnimations);
                 for (var x = 0; x <= seperateAnimations.length - 1; x++) {
-                    console.log(x);
 
                     var opts = this.optionParser(seperateAnimations[x].trim(), animationOptions, "animation");
-                    mesh.animeTimeline.add(this.createAnime(mesh, opts));
+                    if (opts !== undefined) {
+                        mesh = this.decideTimelineOrder(this.createAnime(mesh, opts), mesh, opts);
+                    }
                 }
             } else {
                 var _opts = this.optionParser(options.animation, animationOptions, "animation");
-                mesh.animeTimeline.add(this.createAnime(mesh, _opts));
+                if (_opts !== undefined) {
+                    mesh = this.decideTimelineOrder(this.createAnime(mesh, _opts), mesh, _opts);
+                }
             }
         } else {
-            mesh.animeTimeline.add(this.createAnime(mesh, animationOptions));
+            mesh = this.decideTimelineOrder(this.createAnime(mesh, animationOptions), mesh, animationOptions);
         }
 
         mesh.animeTimeline.play();
@@ -67108,7 +67137,7 @@ var framework = {
                 group.add(mesh);
             }
             group.name = options.name !== undefined ? options.name : "bundle";
-            this.scenes[sI].add(this.setupAnimationForMesh(options, group));
+            this.scenes[sI].add(this.setupAnimationForMesh(group, options));
         } else {
             var _g = this.createGeometry(options);
             if (_g.type === "Mesh" || _g.type === "Group") {
@@ -67118,7 +67147,7 @@ var framework = {
             }
             mesh.name = options.name !== undefined ? options.name : "";
 
-            this.scenes[sI].add(this.setupAnimationForMesh(options, mesh));
+            this.scenes[sI].add(this.setupAnimationForMesh(mesh, options));
         }
 
         return;
@@ -67128,12 +67157,13 @@ var framework = {
         var type = arguments[2];
 
         //parsers option string into viable data type for running code
-        var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
+        var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry"];
 
         switch (type) {
             case "animation":
                 str.slice().split(" ").forEach(function (val, i, arr) {
                     var word = val.trim();
+
                     if (val.search(/^\d{1}/)) {
                         if (/(ease){1}/.test(word)) {
 
@@ -67144,6 +67174,9 @@ var framework = {
                             }, "");
                         } else if (word === "true") {
                             options[animationOrder[i]] = true;
+                        } else if (word === "asymmetry") {
+                            //allows for some to be grouped together and some to run on their own
+                            options["animationAsymmetry"] = true;
                         } else {
                             options[animationOrder[i]] = word;
                         }
@@ -67155,7 +67188,6 @@ var framework = {
                         }
                     }
                 });
-                console.log(options);
                 return options;
         }
     },
@@ -67315,7 +67347,7 @@ var framework = {
                         name: "title",
                         material: "basic",
                         animationType: "zoom_normal",
-                        animationTime: 5000,
+                        animationDuration: 5000,
                         animationDelay: 1000,
                         animationDirection: "alternate",
                         transparent: true,
@@ -68121,22 +68153,83 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 exports.default = function (mesh) {
-    var _ref;
-
     var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
+    var keyframes = void 0,
+        animTarget = void 0,
+        animProp = void 0,
+        animator = void 0,
+        canPack = true;
 
-    var type = options.animationType !== undefined && options.hasOwnProperty("animationType") ? options.animationType : _defaults2.default.animationType,
+    var asymmetry = options.animationAsymmetry !== undefined && options.hasOwnProperty("animationAsymmetry") ? options.animationAsymmetry : false,
+        type = options.animationType !== undefined && options.hasOwnProperty("animationType") ? options.animationType : _defaults2.default.animationType,
 
     //defaults are handled before they get to this function
-    duration = options.animationDuration !== undefined && options.hasOwnProperty("animationDuration") ? options.animationDuration : _defaults2.default.animationDuration,
+    direction = options.animationDirection !== undefined && options.hasOwnProperty("animationDirection") ? options.animationDirection : _defaults2.default.animationDirection,
+        duration = options.animationDuration !== undefined && options.hasOwnProperty("animationDuration") ? options.animationDuration : _defaults2.default.animationDuration,
         delay = options.animationDelay !== undefined && options.hasOwnProperty("animationDelay") ? options.animationDelay : _defaults2.default.animationDelay,
         easing = options.animationEasing !== undefined && options.hasOwnProperty("animationEasing") ? options.animationEasing : _defaults2.default.animationEasing,
         elasticity = options.animationElasticity !== undefined && options.hasOwnProperty("animationElasticity") ? options.animationElasticity : _defaults2.default.animationElasticity,
         loop = options.loop !== undefined && options.hasOwnProperty("loop") ? options.loop : _defaults2.default.loop,
         offset = options.animationOffset !== undefined && options.hasOwnProperty("animationOffset") ? options.animationOffset : _defaults2.default.animationOffset,
         speed = 2;
-    console.log(type);
+
+    type.trim();
+    type.toLowerCase();
+
+    if (options.animationKeyframes !== undefined && options.hasOwnProperty("animationKeyframes")) {
+
+        if (options.animationKeyframes[type] !== undefined) {
+            if (typeof options.animationKeyframes[type] === "string") {
+                keyframes = parseKeyframes(options.animationKeyframes[type]);
+            } else if (options.animationKeyframes[type] instanceof Array) {
+                var arr = options.animationKeyframes[type];
+                keyframes = arr.map(function (frame, i, allFrames) {
+                    if (frame instanceof Object) {
+                        type = "custom";
+                        var name = Object.keys(frame)[0];
+                        var decision = determineTarget(name, mesh);
+                        if (decision !== undefined) {
+                            animTarget = decision.animTarget;
+                            animProp = decision.animProp;
+                            return { value: frame[animProp] };
+                        }
+                    } else {
+                        return [{ value: frame }];
+                    }
+                });
+            } else {
+                keyframes = undefined;
+            }
+        } else {
+            if (/custom/.test(type)) {
+                canPack = false;
+            } else {
+                keyframes = undefined;
+            }
+        }
+    }
+
+    console.log(keyframes, "Got keyframes");
+
+    var newOptions = {
+        animTarget: animTarget,
+        animProp: animProp,
+        canPack: canPack,
+        rule: undefined,
+        asymmetry: asymmetry,
+        keyframes: keyframes,
+        type: type,
+        direction: direction,
+        duration: duration,
+        delay: delay,
+        easing: easing,
+        elasticity: elasticity,
+        loop: loop,
+        offset: offset,
+        speed: speed
+    };
+
     switch (type) {
         case "atom":
             return function (time) {
@@ -68161,9 +68254,10 @@ exports.default = function (mesh) {
                 }
             };
         case "custom":
-            return _ref = {
-                targets: mesh[options.transform !== undefined ? options.transform : _defaults2.default.transform]
-            }, _defineProperty(_ref, options.transformProp !== undefined ? options.transformProp : _defaults2.default.transformProp, options.transformVal !== undefined ? options.transformVal : _defaults2.default.transformVal), _defineProperty(_ref, "elasticity", elasticity), _defineProperty(_ref, "duration", duration), _defineProperty(_ref, "delay", delay), _defineProperty(_ref, "loop", loop), _ref;
+
+            return packAnimations(mesh, newOptions);
+
+            break;
         case "erratic":
             return function (time) {
                 var mesh = this;
@@ -68199,13 +68293,8 @@ exports.default = function (mesh) {
                 loop: 1
             };
         case "linear":
-            return {
-                targets: mesh.position,
-                x: 30,
-                duration: duration,
-                delay: delay,
-                loop: 1
-            };
+            var distance = 50;
+            return packAnimations(mesh, Object.assign({}, newOptions, { rule: distance, animProp: "x", animTarget: "position" }));
         case "shapeshift":
             return function (time) {
                 var mesh = this;
@@ -68217,14 +68306,9 @@ exports.default = function (mesh) {
                 mesh.geometry.verticesNeedUpdate = true;
             };
         case "spin_basic":
-            return {
-                targets: mesh.rotation,
-                y: Math.PI * 2 / 180 * _defaults2.default.rotationAngle,
-                elasticity: elasticity,
-                duration: duration,
-                offset: offset,
-                loop: 1
-            };
+
+            return packAnimations(mesh, Object.assign({}, newOptions, { rule: _defaults2.default.rotationAngle, animProp: "y", animTarget: "rotation" }));
+
         case "spin_random":
             return (0, _animejs2.default)({
                 targets: mesh.rotation,
@@ -68240,15 +68324,13 @@ exports.default = function (mesh) {
                 }
             });
         case "zoom_beat":
-            var modifier = 20;
-            var size = 10;
-            return (0, _animejs2.default)({
+            return {
                 targets: mesh.position,
-                z: mesh.position.z - size,
+                z: keyframes !== undefined ? keyframes : mesh.position.z - 100,
                 elasticity: elasticity,
                 duration: duration,
-                loop: 1
-            });
+                direction: "alternate"
+            };
         case "zoom_normal":
             return function (time) {
                 var mesh = this;
@@ -68260,7 +68342,7 @@ exports.default = function (mesh) {
                 mesh.position.z = distance * Math.sin(time * (speed / 10)) + mesh.prevPosition.z;
             };
         default:
-            return "not working";
+            return;
     }
 };
 
@@ -68281,6 +68363,79 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+function packAnimations(mesh, options) {
+    var asymmetry = options.asymmetry,
+        keyframes = options.keyframes,
+        animProp = options.animProp,
+        canPack = options.canPack,
+        animTarget = options.animTarget,
+        rule = options.rule,
+        elasticity = options.elasticity,
+        duration = options.duration,
+        offset = options.offset,
+        delay = options.delay;
+
+
+    if (mesh instanceof THREE.Group && asymmetry) {
+
+        var pack = [];
+        for (var n = 0; n <= mesh.children.length - 1; n++) {
+            var obj = mesh.children[n];
+            if (canPack) {
+                var _pack$push;
+
+                pack.push((_pack$push = {
+                    targets: obj[animTarget]
+                }, _defineProperty(_pack$push, animProp, keyframes || rule), _defineProperty(_pack$push, "elasticity", elasticity), _defineProperty(_pack$push, "offset", "-=" + offset * n), _pack$push));
+            }
+        }
+        return pack;
+    } else {
+        var _ref;
+
+        return _ref = {
+            targets: mesh[animTarget]
+        }, _defineProperty(_ref, animProp, keyframes || rule), _defineProperty(_ref, "elasticity", elasticity), _defineProperty(_ref, "offset", offset), _defineProperty(_ref, "duration", duration), _defineProperty(_ref, "delay", delay), _ref;
+    }
+}
+function parseKeyframes(str) {
+    return str.slice().trim().split(" ").map(function (value) {
+        return { value: value };
+    });
+}
+
+function determineTarget(type, mesh) {
+    switch (type) {
+        case "scaleX":
+            if (mesh.type !== "Group" && mesh instanceof Group) {
+                return {
+                    animTarget: "scale",
+                    animProp: "x"
+                };
+            } else {
+                return undefined;
+            }
+            break;
+        case "x":
+            return {
+                animTarget: "position",
+                animProp: "x"
+            };
+        case "y":
+            return {
+                animTarget: "position",
+                animProp: "y"
+            };
+        case "z":
+            return {
+                animTarget: "position",
+                animProp: "z"
+            };
+        default:
+            return;
+    }
+}
 
 /***/ }),
 /* 81 */

@@ -3,11 +3,81 @@ import * as THREE from "three";
 
 import defaultOptions from "./json/defaults.json";
 
-export default function ( mesh, options = {} ) {
+function packAnimations( mesh, options ) {
+    const { asymmetry, keyframes, animProp,  canPack, animTarget, rule, elasticity, duration, offset, delay } = options;
     
-   
-    const type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
+    if ( mesh instanceof THREE.Group && asymmetry ) {
+
+                let pack = [];
+                for ( var n = 0; n <= mesh.children.length -1; n++ ) {
+                    let obj = mesh.children[n];
+                    if ( canPack ) {
+                        pack.push({
+                            targets: obj[ animTarget ],
+                            [ animProp ] : keyframes || rule,
+                            elasticity,
+                            offset: "-="+( offset * n ),
+                        });
+                    }
+                    
+                
+                    
+                }
+                return pack;
+            } else {
+                return {
+                targets: mesh[ animTarget ],
+                [ animProp ] : keyframes || rule,
+                elasticity,
+                offset,
+                duration,
+                delay,
+                
+                } ;
+        }
+}
+function parseKeyframes( str ) {
+    return str.slice().trim().split(" ").map( value => ( { value } ) );
+}
+
+function determineTarget( type, mesh ) {
+    switch( type ) {
+        case "scaleX":
+            if ( mesh.type !== "Group" && mesh instanceof Group ) {
+                return {
+                    animTarget: "scale",
+                    animProp: "x",
+                }
+            } else {
+                return undefined;
+            }
+            break;
+        case "x":
+            return {
+                animTarget: "position",
+                animProp: "x"
+            }
+        case "y":
+            return {
+                animTarget: "position",
+                animProp: "y"
+            }
+        case "z":
+            return {
+                animTarget: "position",
+                animProp: "z"
+            }
+        default:
+            return;
+    }
+}
+export default function ( mesh, options = {} ) {
+    let keyframes, animTarget, animProp, animator, canPack = true;
+ 
+    let asymmetry = options.animationAsymmetry !== undefined && options.hasOwnProperty( "animationAsymmetry" ) ? options.animationAsymmetry : false ,
+          type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
           //defaults are handled before they get to this function
+          direction = options.animationDirection !== undefined && options.hasOwnProperty( "animationDirection" ) ? options.animationDirection : defaultOptions.animationDirection,
           duration = options.animationDuration !== undefined && options.hasOwnProperty( "animationDuration" ) ? options.animationDuration : defaultOptions.animationDuration ,
           delay = options.animationDelay !== undefined && options.hasOwnProperty( "animationDelay" ) ? options.animationDelay : defaultOptions.animationDelay,
           easing = options.animationEasing !== undefined && options.hasOwnProperty( "animationEasing" ) ? options.animationEasing : defaultOptions.animationEasing,
@@ -15,7 +85,69 @@ export default function ( mesh, options = {} ) {
           loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
           offset = options.animationOffset !== undefined && options.hasOwnProperty( "animationOffset" ) ? options.animationOffset : defaultOptions.animationOffset,
           speed = 2;
-    console.log( type );
+    
+    
+    type.trim();
+    type.toLowerCase();
+    
+    
+    if ( options.animationKeyframes !== undefined && options.hasOwnProperty( "animationKeyframes" ) ) {
+        
+        if ( options.animationKeyframes[ type ] !== undefined ) {
+            if ( typeof options.animationKeyframes[ type ] === "string" ) {
+                keyframes = parseKeyframes( options.animationKeyframes[ type ] );
+            } else if ( options.animationKeyframes[ type ] instanceof Array ) {
+                let arr = options.animationKeyframes[ type ];
+                keyframes = arr.map( ( frame, i, allFrames ) => {
+                       if ( frame instanceof Object ) {
+                           type = "custom";
+                           const name = Object.keys( frame )[0];
+                           const decision = determineTarget( name, mesh );
+                           if ( decision !== undefined ) {
+                               animTarget = decision.animTarget;
+                               animProp = decision.animProp;
+                               return { value: frame[ animProp ] } 
+                           } 
+                       } else {
+                           return [{ value: frame }];
+                       }
+                } ); 
+
+            } else {
+                keyframes = undefined;
+            }
+        } else {
+            if ( /custom/.test( type ) ) {
+                canPack = false; 
+                
+            } else {
+                keyframes = undefined;
+            }
+        }
+    }
+    
+    console.log( keyframes, "Got keyframes" );
+    
+    let newOptions = {
+            animTarget,
+            animProp,
+            canPack,
+            rule: undefined,
+            asymmetry,
+            keyframes,
+            type,
+            direction,
+            duration,
+            delay,
+            easing,
+            elasticity,
+            loop,
+            offset,
+            speed
+    };
+    
+    
+    
     switch( type ) {
         case "atom":
             return function ( time ) {
@@ -41,15 +173,11 @@ export default function ( mesh, options = {} ) {
                     }
                 }
             }
-        case "custom" :
-            return {
-                targets: mesh[ options.transform !== undefined ? options.transform : defaultOptions.transform ],
-                [ options.transformProp !== undefined ? options.transformProp : defaultOptions.transformProp ] : options.transformVal !== undefined ? options.transformVal : defaultOptions.transformVal,
-                elasticity,
-                duration,
-                delay,
-                loop,
-            }
+        case "custom" : 
+            
+            return packAnimations( mesh, newOptions );
+            
+            break;
         case "erratic" :
             return function ( time ) {
                 let mesh = this;
@@ -85,13 +213,8 @@ export default function ( mesh, options = {} ) {
                 loop: 1
             }
         case "linear" :
-            return {
-                targets: mesh.position,
-                x: 30,
-                duration,
-                delay,
-                loop: 1,
-            }
+            const distance = 50;
+            return packAnimations( mesh, Object.assign({}, newOptions, { rule : distance, animProp: "x", animTarget: "position" } ) );
         case "shapeshift" :
             return function ( time ) {
                 let mesh = this;
@@ -103,14 +226,9 @@ export default function ( mesh, options = {} ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin_basic" :
-            return {
-                targets: mesh.rotation,
-                y: ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle,
-                elasticity,
-                duration,
-                offset,
-                loop: 1,
-            };
+
+            return packAnimations( mesh, Object.assign({}, newOptions, { rule : defaultOptions.rotationAngle, animProp: "y", animTarget: "rotation" } ) );
+            
         case "spin_random" :
             return anime( {
                 targets: mesh.rotation,
@@ -126,15 +244,13 @@ export default function ( mesh, options = {} ) {
                 }
             } );
         case "zoom_beat" :
-            const modifier = 20;
-            const size = 10;
-            return anime( {
+            return {
                 targets: mesh.position,
-                z: mesh.position.z - size ,
+                z: keyframes !== undefined ? keyframes: mesh.position.z - 100,
                 elasticity,
                 duration,
-                loop: 1,
-            } );
+                direction : "alternate"
+            };
         case "zoom_normal" :
             return function ( time ) {
                 let mesh = this;
@@ -146,6 +262,6 @@ export default function ( mesh, options = {} ) {
                 mesh.position.z = ( distance * Math.sin( time * ( speed / 10 ) ) ) + mesh.prevPosition.z;
             }
         default:
-            return "not working";
+            return;
     }
 }

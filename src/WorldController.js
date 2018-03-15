@@ -99,6 +99,20 @@ const framework = {
         } );
     },
     createMaterial,
+    decideTimelineOrder( animation, mesh, options ) {
+        if ( animation instanceof Array && animation.length > 0 ) {
+            for ( var i = 0; i <= animation.length - 1; i++ ) {
+                console.log( animation );
+                mesh.animeTimeline.add( animation[i] );
+            }
+        } else {
+            if ( animation !== undefined ) {
+                mesh.animeTimeline.add( animation );
+            }
+        }
+        
+        return mesh;
+    },
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
         const canvas = document.querySelector( id+" canvas" );
@@ -176,41 +190,47 @@ const framework = {
         }
         return mesh;
     },
-    setupAnimationForMesh: function ( options, mesh ) {
+    setupAnimationForMesh: function ( mesh, options ) {
         //set up animation for this mesh
                 let animationOptions = {
                     animationType: options.animationType,
                     animationDelay: options.animationDelay,
+                    animationDirection: options.animationDirection,
                     animationDuration: options.animationDuration,
                     animationEasing: options.animationEasing,
                     animationElasticity: options.animationElasticity,
                     animationKeyframes: options.animationKeyframes,
                     animationAsymmetry: options.animationAsymmetry,
+                    animationOffset: options.animationOffset,
                     animationGrid: options.animationGrid,
                     loop: true,
                 };
-                
-                mesh.animeTimeline = anime.timeline( { autoplay: false, loop: true } );
+                //START TIMELINE FOR ANIMATION
+                mesh.animeTimeline = anime.timeline( { 
+                    autoplay: false, 
+                    loop: true } );
+        
                 if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
 
-                    
                     if ( /\,/.test( options.animation ) ) {
              
                         const seperateAnimations = options.animation.slice().split(",");
-                        console.log( seperateAnimations );
                         for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
-                            console.log( x );
-                            
+                        
                             let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
-                            mesh.animeTimeline.add( this.createAnime( mesh, opts ) );
+                            if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                            }
                         }
                     } else {
                         let opts = this.optionParser( options.animation , animationOptions, "animation" );
-                        mesh.animeTimeline.add( this.createAnime( mesh, opts ) );
+                        if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                        }
                     }
                     
                 } else {
-                    mesh.animeTimeline.add( this.createAnime( mesh, animationOptions ) );
+                    mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
                 }
                 
                 mesh.animeTimeline.play();
@@ -254,7 +274,7 @@ const framework = {
                     group.add( mesh );
                 }
                 group.name = options.name !== undefined ? options.name : "bundle";
-                this.scenes[sI].add( this.setupAnimationForMesh( options, group ) );
+                this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
             } else {
                 let g = this.createGeometry( options );
                 if( g.type === "Mesh" || g.type === "Group" ) {
@@ -264,7 +284,7 @@ const framework = {
                 }
                 mesh.name = options.name !== undefined ? options.name : "";
                 
-                this.scenes[sI].add( this.setupAnimationForMesh( options, mesh ) );
+                this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
             }
 
                 
@@ -273,34 +293,38 @@ const framework = {
     },
     optionParser: function ( str, options = {}, type ) {
         //parsers option string into viable data type for running code
-        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
+        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
         
         switch( type ) {
             case "animation":
                 str.slice().split( " " ).forEach( ( val, i, arr ) => {
                         let word = val.trim();
-                        if( val.search( /^\d{1}/ ) ) {
-                            if( /(ease){1}/.test( word ) ) {
-                                
-                                options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
-                                
-                            } else if ( word === "true" ) {
-                                options[ animationOrder[i] ] = true
+                        
+                            if( val.search( /^\d{1}/ ) ) {
+                                if( /(ease){1}/.test( word ) ) {
+
+                                    options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
+
+                                } else if ( word === "true" ) {
+                                    options[ animationOrder[i] ] = true
+                                } else if ( word === "asymmetry" ) {
+                                    //allows for some to be grouped together and some to run on their own
+                                    options [ "animationAsymmetry" ] = true;
+                                } else {
+                                    options[ animationOrder[i] ] = word;
+                                }
+
                             } else {
-                                options[ animationOrder[i] ] = word;
+                                if( /s$/.test( word ) ) {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
+                                } else {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
+                                } 
+
                             }
                         
-                        } else {
-                            if( /s$/.test( word ) ) {
-                                options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
-                            } else {
-                                options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
-                            } 
-                             
-                        }
                 
                     } );
-                console.log( options );
                 return options;
         }
     },
@@ -451,7 +475,7 @@ const framework = {
                         name: "title",
                         material: "basic",
                         animationType: "zoom_normal",
-                        animationTime: 5000,
+                        animationDuration: 5000,
                         animationDelay: 1000,
                         animationDirection: "alternate",
                         transparent: true,
