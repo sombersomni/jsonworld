@@ -47002,7 +47002,7 @@ function verifyPlainObject(value, displayName, methodName) {
 /* 30 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDelay":0,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"}}
+module.exports = {"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDelay":0,"animationKeframes":{},"animationAsymmetry":true,"animationGrid":"basic","animationOffset":0,"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"}}
 
 /***/ }),
 /* 31 */
@@ -47093,11 +47093,15 @@ var config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animation": "erratic 2s ease-in 2000 true alternate 100"
+        "animation": "linear 1s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
     "worldObjects": [{
-        type: "models/model.obj",
-        material: "wireframe"
+        "type": "custom",
+        "material": "wireframe",
+        "count": 9,
+        "gridLayout": [3, 3, 3],
+        "animationAsymmetry": true,
+        "animation": "spin_basic 2s ease-in-sine 2s, linear 5s"
     }],
     "enableShadows": true
 }; //index
@@ -66811,6 +66815,10 @@ var _threeCSG = __webpack_require__(77);
 
 var _threeCSG2 = _interopRequireDefault(_threeCSG);
 
+var _animejs = __webpack_require__(81);
+
+var _animejs2 = _interopRequireDefault(_animejs);
+
 var _defaults = __webpack_require__(30);
 
 var _defaults2 = _interopRequireDefault(_defaults);
@@ -67025,6 +67033,44 @@ var framework = {
         }
         return mesh;
     },
+    setupAnimationForMesh: function setupAnimationForMesh(options, mesh) {
+        //set up animation for this mesh
+        var animationOptions = {
+            animationType: options.animationType,
+            animationDelay: options.animationDelay,
+            animationDuration: options.animationDuration,
+            animationEasing: options.animationEasing,
+            animationElasticity: options.animationElasticity,
+            animationKeyframes: options.animationKeyframes,
+            animationAsymmetry: options.animationAsymmetry,
+            animationGrid: options.animationGrid,
+            loop: true
+        };
+
+        mesh.animeTimeline = _animejs2.default.timeline({ autoplay: false, loop: true });
+        if (options.hasOwnProperty("animation") && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string") {
+
+            if (/\,/.test(options.animation)) {
+
+                var seperateAnimations = options.animation.slice().split(",");
+                console.log(seperateAnimations);
+                for (var x = 0; x <= seperateAnimations.length - 1; x++) {
+                    console.log(x);
+
+                    var opts = this.optionParser(seperateAnimations[x].trim(), animationOptions, "animation");
+                    mesh.animeTimeline.add(this.createAnime(mesh, opts));
+                }
+            } else {
+                var _opts = this.optionParser(options.animation, animationOptions, "animation");
+                mesh.animeTimeline.add(this.createAnime(mesh, _opts));
+            }
+        } else {
+            mesh.animeTimeline.add(this.createAnime(mesh, animationOptions));
+        }
+
+        mesh.animeTimeline.play();
+        return mesh;
+    },
     setupMesh: function setupMesh(options, sI) {
         var m = void 0,
             mesh = void 0;
@@ -67057,12 +67103,12 @@ var framework = {
                 }
 
                 //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                mesh.anime = this.createAnime(mesh, options.animationType);
+
                 mesh.position.set(Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1));
                 group.add(mesh);
             }
-            this.scenes[sI].add(group);
+            group.name = options.name !== undefined ? options.name : "bundle";
+            this.scenes[sI].add(this.setupAnimationForMesh(options, group));
         } else {
             var _g = this.createGeometry(options);
             if (_g.type === "Mesh" || _g.type === "Group") {
@@ -67070,47 +67116,48 @@ var framework = {
             } else {
                 mesh = new THREE.Mesh(_g, m);
             }
-
             mesh.name = options.name !== undefined ? options.name : "";
 
-            //set up animation for this mesh
-            var animationOptions = {
-                animationType: options.animationType,
-                animationDelay: options.animationDelay,
-                animationDuration: options.animationDuration,
-                animationEasing: options.animationEasing,
-                animationElasticity: options.animationElasticity,
-                loop: true
-            };
-
-            if (options.hasOwnProperty("animation") && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string") {
-                var order = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
-                options.animation.slice().split(" ").forEach(function (val, i, arr) {
-                    var word = val.trim();
-                    if (val.search(/^\d{1}/)) {
-                        if (/(ease){1}/.test(word)) {
-                            animationOptions[order[i]] = word;
-                        } else if (word === "true") {
-                            animationOptions[order[i]] = true;
-                        } else {
-                            animationOptions[order[i]] = word;
-                        }
-                    } else {
-                        if (/s$/.test(word)) {
-                            animationOptions[order[i]] = parseInt(word.match(/[0-9]*/)[0], 10) * 1000;
-                        } else {
-                            animationOptions[order[i]] = parseInt(word.match(/[0-9]*/)[0], 10);
-                        }
-                    }
-                });
-            }
-
-            mesh.anime = this.createAnime(mesh, animationOptions);
-            console.log(mesh);
-            this.scenes[sI].add(mesh);
+            this.scenes[sI].add(this.setupAnimationForMesh(options, mesh));
         }
 
         return;
+    },
+    optionParser: function optionParser(str) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var type = arguments[2];
+
+        //parsers option string into viable data type for running code
+        var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
+
+        switch (type) {
+            case "animation":
+                str.slice().split(" ").forEach(function (val, i, arr) {
+                    var word = val.trim();
+                    if (val.search(/^\d{1}/)) {
+                        if (/(ease){1}/.test(word)) {
+
+                            options[animationOrder[i]] = word.slice().split("-").reduce(function (acc, curVal, n) {
+                                return n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, function (match, p1) {
+                                    return p1.toUpperCase();
+                                });
+                            }, "");
+                        } else if (word === "true") {
+                            options[animationOrder[i]] = true;
+                        } else {
+                            options[animationOrder[i]] = word;
+                        }
+                    } else {
+                        if (/s$/.test(word)) {
+                            options[animationOrder[i]] = parseInt(word.match(/[0-9]*/)[0], 10) * 1000;
+                        } else {
+                            options[animationOrder[i]] = parseInt(word.match(/[0-9]*/)[0], 10);
+                        }
+                    }
+                });
+                console.log(options);
+                return options;
+        }
     },
     setupScene: function setupScene() {
         var _this3 = this;
@@ -67212,7 +67259,9 @@ var framework = {
                     var scenePromise = _this4.setupScene(_this4.worldObjects, controllers);
                     scenePromise.then(function (animationType) {
                         var preloader = _this4.scene.getObjectByName("preloader");
-                        preloader.anime = _this4.createAnime(preloader, { animationType: animationType });
+                        //clears the timeline for a new batch of animations
+                        preloader.animeTimeline = _animejs2.default.timeline({});
+                        preloader.animeTimeline.add(_this4.createAnime(preloader, { animationType: animationType }));
                         window.setTimeout(function () {
                             _progressEmitter2.default.emit("worldmessage", { message: "" });
                             _this4.scene = _this4.scenes[_this4.scenes.length - 1];
@@ -67228,10 +67277,13 @@ var framework = {
                 scenePromise.then(function (animationType) {
                     var preloader = _this4.scene.getObjectByName("preloader");
                     window.setTimeout(function () {
-                        preloader.anime = _this4.createAnime(preloader, { animationType: animationType });
+                        //clears the timeline for a new batch of animations
+                        preloader.animeTimeline = _animejs2.default.timeline({});
+                        preloader.animeTimeline.add(_this4.createAnime(preloader, { animationType: animationType }));
                         _progressEmitter2.default.emit("worldmessage", { message: "" });
                         _this4.scene = _this4.scenes[_this4.scenes.length - 1];
-                    }, 3000);
+                        console.log(_this4.scene);
+                    }, delay);
                 });
             });
         }
@@ -67308,20 +67360,23 @@ var framework = {
                     console.warn( "can't calculate object parameters" );
                 }
                 */
-
-                if (typeof obj.anime === "function") {
-                    obj.anime(time, obj.name);
-                } else {
-                    obj.material.needsUpdate = true;
-                }
-            } else if (obj.type.toLowerCase() === "group") {
-                obj.children.forEach(function (m) {
-                    if (typeof obj.anime === "function") {
-                        m.anime(time, obj.name);
-                    } else {
-                        m.material.needsUpdate = true;
-                    }
-                });
+                /*
+                                if( typeof obj.anime === "function" ) {
+                                    obj.anime( time, obj.name );
+                                } else {
+                                    obj.material.needsUpdate = true;
+                                }
+                            }
+                            else if ( obj.type.toLowerCase() === "group" ) {
+                                obj.children.forEach( ( m ) => {
+                                    if( typeof obj.anime === "function" ) {
+                                        m.anime( time, obj.name );
+                                    } else {
+                                        m.material.needsUpdate = true;
+                                    }
+                                } );
+                            }
+                            */
             }
         });
     },
@@ -68065,8 +68120,12 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-exports.default = function (mesh, options) {
-    console.log(options);
+exports.default = function (mesh) {
+    var _ref;
+
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+
     var type = options.animationType !== undefined && options.hasOwnProperty("animationType") ? options.animationType : _defaults2.default.animationType,
 
     //defaults are handled before they get to this function
@@ -68075,6 +68134,7 @@ exports.default = function (mesh, options) {
         easing = options.animationEasing !== undefined && options.hasOwnProperty("animationEasing") ? options.animationEasing : _defaults2.default.animationEasing,
         elasticity = options.animationElasticity !== undefined && options.hasOwnProperty("animationElasticity") ? options.animationElasticity : _defaults2.default.animationElasticity,
         loop = options.loop !== undefined && options.hasOwnProperty("loop") ? options.loop : _defaults2.default.loop,
+        offset = options.animationOffset !== undefined && options.hasOwnProperty("animationOffset") ? options.animationOffset : _defaults2.default.animationOffset,
         speed = 2;
     console.log(type);
     switch (type) {
@@ -68100,6 +68160,10 @@ exports.default = function (mesh, options) {
                     }
                 }
             };
+        case "custom":
+            return _ref = {
+                targets: mesh[options.transform !== undefined ? options.transform : _defaults2.default.transform]
+            }, _defineProperty(_ref, options.transformProp !== undefined ? options.transformProp : _defaults2.default.transformProp, options.transformVal !== undefined ? options.transformVal : _defaults2.default.transformVal), _defineProperty(_ref, "elasticity", elasticity), _defineProperty(_ref, "duration", duration), _defineProperty(_ref, "delay", delay), _defineProperty(_ref, "loop", loop), _ref;
         case "erratic":
             return function (time) {
                 var mesh = this;
@@ -68127,13 +68191,21 @@ exports.default = function (mesh, options) {
                 mesh.geometry.verticesNeedUpdate = true;
             };
         case "fade":
-            return (0, _animejs2.default)({
+            return {
                 targets: mesh.material,
                 opacity: 0,
                 duration: duration,
                 delay: delay,
                 loop: 1
-            });
+            };
+        case "linear":
+            return {
+                targets: mesh.position,
+                x: 30,
+                duration: duration,
+                delay: delay,
+                loop: 1
+            };
         case "shapeshift":
             return function (time) {
                 var mesh = this;
@@ -68145,13 +68217,14 @@ exports.default = function (mesh, options) {
                 mesh.geometry.verticesNeedUpdate = true;
             };
         case "spin_basic":
-            return (0, _animejs2.default)({
+            return {
                 targets: mesh.rotation,
-                y: Math.PI * 2,
-                elasticity: 100,
-                duration: 5000,
-                loop: true
-            });
+                y: Math.PI * 2 / 180 * _defaults2.default.rotationAngle,
+                elasticity: elasticity,
+                duration: duration,
+                offset: offset,
+                loop: 1
+            };
         case "spin_random":
             return (0, _animejs2.default)({
                 targets: mesh.rotation,
@@ -68167,13 +68240,14 @@ exports.default = function (mesh, options) {
                 }
             });
         case "zoom_beat":
+            var modifier = 20;
+            var size = 10;
             return (0, _animejs2.default)({
                 targets: mesh.position,
-                z: mesh.position.z - 20,
-                elasticity: 100 / speed,
-                direction: "alternate",
-                duration: 1000 / speed,
-                loop: true
+                z: mesh.position.z - size,
+                elasticity: elasticity,
+                duration: duration,
+                loop: 1
             });
         case "zoom_normal":
             return function (time) {
@@ -68205,6 +68279,8 @@ var _defaults2 = _interopRequireDefault(_defaults);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 /***/ }),
 /* 81 */

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import ThreeBSP from "./csg/threeCSG.js";
 let OBJLoader = require('three-obj-loader');
 OBJLoader(THREE);
-
+import anime from "animejs";
 var MTLLoader = require('three-mtl-loader');
 
 // JSON
@@ -176,6 +176,46 @@ const framework = {
         }
         return mesh;
     },
+    setupAnimationForMesh: function ( options, mesh ) {
+        //set up animation for this mesh
+                let animationOptions = {
+                    animationType: options.animationType,
+                    animationDelay: options.animationDelay,
+                    animationDuration: options.animationDuration,
+                    animationEasing: options.animationEasing,
+                    animationElasticity: options.animationElasticity,
+                    animationKeyframes: options.animationKeyframes,
+                    animationAsymmetry: options.animationAsymmetry,
+                    animationGrid: options.animationGrid,
+                    loop: true,
+                };
+                
+                mesh.animeTimeline = anime.timeline( { autoplay: false, loop: true } );
+                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
+
+                    
+                    if ( /\,/.test( options.animation ) ) {
+             
+                        const seperateAnimations = options.animation.slice().split(",");
+                        console.log( seperateAnimations );
+                        for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
+                            console.log( x );
+                            
+                            let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
+                            mesh.animeTimeline.add( this.createAnime( mesh, opts ) );
+                        }
+                    } else {
+                        let opts = this.optionParser( options.animation , animationOptions, "animation" );
+                        mesh.animeTimeline.add( this.createAnime( mesh, opts ) );
+                    }
+                    
+                } else {
+                    mesh.animeTimeline.add( this.createAnime( mesh, animationOptions ) );
+                }
+                
+                mesh.animeTimeline.play();
+                return mesh;
+    },
     setupMesh: function ( options, sI ) {
         let m, mesh;
         //@params sI - the index of the scene
@@ -207,14 +247,14 @@ const framework = {
                     }
 
                     //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                    mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                    mesh.anime = this.createAnime( mesh, options.animationType );
+                    
                     mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
                     group.add( mesh );
                 }
-                this.scenes[sI].add( group );
+                group.name = options.name !== undefined ? options.name : "bundle";
+                this.scenes[sI].add( this.setupAnimationForMesh( options, group ) );
             } else {
                 let g = this.createGeometry( options );
                 if( g.type === "Mesh" || g.type === "Group" ) {
@@ -222,53 +262,47 @@ const framework = {
                 } else {
                     mesh = new THREE.Mesh( g, m );
                 }
-
-
                 mesh.name = options.name !== undefined ? options.name : "";
                 
+                this.scenes[sI].add( this.setupAnimationForMesh( options, mesh ) );
+            }
+
                 
-                //set up animation for this mesh
-                let animationOptions = {
-                    animationType: options.animationType,
-                    animationDelay: options.animationDelay,
-                    animationDuration: options.animationDuration,
-                    animationEasing: options.animationEasing,
-                    animationElasticity: options.animationElasticity,
-                    loop: true,
-                };
-                
-                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
-                    const order = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
-                    options.animation.slice().split( " " ).forEach( ( val, i, arr ) => {
+
+            return;
+    },
+    optionParser: function ( str, options = {}, type ) {
+        //parsers option string into viable data type for running code
+        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity"];
+        
+        switch( type ) {
+            case "animation":
+                str.slice().split( " " ).forEach( ( val, i, arr ) => {
                         let word = val.trim();
                         if( val.search( /^\d{1}/ ) ) {
                             if( /(ease){1}/.test( word ) ) {
-                                animationOptions[ order[i] ] = word;
+                                
+                                options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
+                                
                             } else if ( word === "true" ) {
-                                animationOptions[ order[i] ] = true
+                                options[ animationOrder[i] ] = true
                             } else {
-                                animationOptions[ order[i] ] = word;
+                                options[ animationOrder[i] ] = word;
                             }
                         
                         } else {
                             if( /s$/.test( word ) ) {
-                                animationOptions[ order[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
+                                options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
                             } else {
-                                animationOptions[ order[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
+                                options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
                             } 
                              
                         }
                 
                     } );
-                } 
-                
-                
-                mesh.anime = this.createAnime( mesh, animationOptions );
-                console.log( mesh);
-                this.scenes[ sI ].add( mesh );
-            }
-
-            return;
+                console.log( options );
+                return options;
+        }
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed
@@ -352,8 +386,7 @@ const framework = {
         if ( this.options.hasOwnProperty( "sounds") && this.options.sounds !== undefined ) {
             
             const audioPromise = initializeAudio( this.sounds );
-            
-            
+    
             preloaderPromise.then( message => {
                 progressEmitter.emit( "worldmessage", { message } );
                 audioPromise.then( controllers => {
@@ -361,7 +394,9 @@ const framework = {
                         const scenePromise = this.setupScene( this.worldObjects, controllers );
                         scenePromise.then( animationType => { 
                             let preloader = this.scene.getObjectByName( "preloader" );
-                            preloader.anime = this.createAnime( preloader, { animationType } );
+                            //clears the timeline for a new batch of animations
+                            preloader.animeTimeline = anime.timeline( {} );
+                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
                             window.setTimeout( () => {
                                 progressEmitter.emit( "worldmessage", { message: "" } );
                                 this.scene = this.scenes[ this.scenes.length - 1 ];
@@ -378,10 +413,13 @@ const framework = {
                     scenePromise.then( animationType => {
                         let preloader = this.scene.getObjectByName( "preloader" );
                         window.setTimeout( () => {
-                            preloader.anime = this.createAnime( preloader, { animationType });
+                           //clears the timeline for a new batch of animations
+                            preloader.animeTimeline = anime.timeline( {} );
+                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
                             progressEmitter.emit( "worldmessage", { message: "" } );
                             this.scene = this.scenes[ this.scenes.length - 1 ];
-                        }, 3000 );
+                            console.log( this.scene );
+                        }, delay );
                     } )
                 } )            
             
@@ -461,7 +499,7 @@ const framework = {
                     console.warn( "can't calculate object parameters" );
                 }
                 */
-
+/*
                 if( typeof obj.anime === "function" ) {
                     obj.anime( time, obj.name );
                 } else {
@@ -476,6 +514,8 @@ const framework = {
                         m.material.needsUpdate = true;
                     }
                 } );
+            }
+            */
             }
         });
     },

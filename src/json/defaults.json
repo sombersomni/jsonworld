@@ -4,6 +4,12 @@
     "animationEasing" : "easeInSine",
     "animationElasticity" : 100,
     "animationDelay" : 0,
+    "animationKeframes" : {},
+    "animationAsymmetry" : true,
+    "animationGrid" : "basic",
+    "animationOffset" : 0,
+    "gridLayout" : [5, 5, 5],
+    "rotationAngle": 360,
     "loop" : true,
     "preloader" : {
         "type": "dodecahedron",

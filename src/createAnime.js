@@ -3,8 +3,9 @@ import * as THREE from "three";
 
 import defaultOptions from "./json/defaults.json";
 
-export default function ( mesh, options ) {
-    console.log( options );
+export default function ( mesh, options = {} ) {
+    
+   
     const type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
           //defaults are handled before they get to this function
           duration = options.animationDuration !== undefined && options.hasOwnProperty( "animationDuration" ) ? options.animationDuration : defaultOptions.animationDuration ,
@@ -12,6 +13,7 @@ export default function ( mesh, options ) {
           easing = options.animationEasing !== undefined && options.hasOwnProperty( "animationEasing" ) ? options.animationEasing : defaultOptions.animationEasing,
           elasticity = options.animationElasticity !== undefined && options.hasOwnProperty( "animationElasticity" ) ? options.animationElasticity : defaultOptions.animationElasticity,
           loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
+          offset = options.animationOffset !== undefined && options.hasOwnProperty( "animationOffset" ) ? options.animationOffset : defaultOptions.animationOffset,
           speed = 2;
     console.log( type );
     switch( type ) {
@@ -38,6 +40,15 @@ export default function ( mesh, options ) {
                         //console.log( mesh );
                     }
                 }
+            }
+        case "custom" :
+            return {
+                targets: mesh[ options.transform !== undefined ? options.transform : defaultOptions.transform ],
+                [ options.transformProp !== undefined ? options.transformProp : defaultOptions.transformProp ] : options.transformVal !== undefined ? options.transformVal : defaultOptions.transformVal,
+                elasticity,
+                duration,
+                delay,
+                loop,
             }
         case "erratic" :
             return function ( time ) {
@@ -66,13 +77,21 @@ export default function ( mesh, options ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "fade" :
-            return anime( {
+            return {
                 targets: mesh.material,
                 opacity: 0,
                 duration,
                 delay,
                 loop: 1
-            } );
+            }
+        case "linear" :
+            return {
+                targets: mesh.position,
+                x: 30,
+                duration,
+                delay,
+                loop: 1,
+            }
         case "shapeshift" :
             return function ( time ) {
                 let mesh = this;
@@ -84,13 +103,14 @@ export default function ( mesh, options ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin_basic" :
-            return anime( {
+            return {
                 targets: mesh.rotation,
-                y: Math.PI * 2,
-                elasticity: 100,
-                duration: 5000,
-                loop: true
-            } );
+                y: ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle,
+                elasticity,
+                duration,
+                offset,
+                loop: 1,
+            };
         case "spin_random" :
             return anime( {
                 targets: mesh.rotation,
@@ -106,13 +126,14 @@ export default function ( mesh, options ) {
                 }
             } );
         case "zoom_beat" :
+            const modifier = 20;
+            const size = 10;
             return anime( {
                 targets: mesh.position,
-                z: mesh.position.z - 20,
-                elasticity: 100 / speed,
-                direction: "alternate",
-                duration: 1000 / speed,
-                loop: true
+                z: mesh.position.z - size ,
+                elasticity,
+                duration,
+                loop: 1,
             } );
         case "zoom_normal" :
             return function ( time ) {

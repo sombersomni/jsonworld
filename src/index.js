@@ -24,12 +24,16 @@ const config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animation": "erratic 2s ease-in 2000 true alternate 100"
+        "animation": "linear 1s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            type: "models/model.obj",
-            material: "wireframe"
+            "type": "custom",
+            "material": "wireframe",
+            "count": 9,
+            "gridLayout": [ 3, 3, 3 ],
+            "animationAsymmetry": true,
+            "animation": "spin_basic 2s ease-in-sine 2s, linear 5s"
         }
     ],
     "enableShadows": true
