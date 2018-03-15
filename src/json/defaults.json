@@ -1,9 +1,21 @@
-const defaultOptions = {
-    
-    delay: 1000,
-    preloader : {
-        "message" : "building a better world. Please wait"
+{
+    "animationType" : "spin_basic",
+    "animationDuration" : 1000,
+    "animationEasing" : "easeInSine",
+    "animationElasticity" : 100,
+    "animationDirection" : "alternate",
+    "animationDelay" : 0,
+    "animationKeframes" : {},
+    "animationGrid" : "basic",
+    "animationOffset" : 100,
+    "animTarget" : "position",
+    "animProp" : "x",
+    "animVal" : 50,
+    "gridLayout" : [5, 5, 5],
+    "rotationAngle": 360,
+    "loop" : true,
+    "preloader" : {
+        "type": "dodecahedron",
+        "message" : "building a better world"
     }
 }
-
-export defaultOptions;

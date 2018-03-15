@@ -2,7 +2,7 @@ import * as THREE from "three";
 import ThreeBSP from "./csg/threeCSG.js";
 let OBJLoader = require('three-obj-loader');
 OBJLoader(THREE);
-
+import anime from "animejs";
 var MTLLoader = require('three-mtl-loader');
 
 // JSON
@@ -73,11 +73,11 @@ const framework = {
     createGeometry,
     createPreloader: function ( options ) {
         
-        return new Promise( ( res, rej ) =>{
+        return new Promise( ( res, rej ) => {
                 
                 options.name = "preloader";
                 this.setupMesh( options, this.scenes.length - 1 );
-                res( options.hasOwnProperty( "message" ) && options.message !== undefined ? defaultOptions.preloader.message );
+                res( options.hasOwnProperty( "message" ) && options.message !== undefined ? options.message: defaultOptions.preloader.message );
         } );
     },
     createFont: function ( fontJSON, title = "hi" ) {
@@ -99,6 +99,20 @@ const framework = {
         } );
     },
     createMaterial,
+    decideTimelineOrder( animation, mesh, options ) {
+        if ( animation instanceof Array && animation.length > 0 ) {
+            for ( var i = 0; i <= animation.length - 1; i++ ) {
+                console.log( animation );
+                mesh.animeTimeline.add( animation[i] );
+            }
+        } else {
+            if ( animation !== undefined ) {
+                mesh.animeTimeline.add( animation );
+            }
+        }
+        
+        return mesh;
+    },
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
         const canvas = document.querySelector( id+" canvas" );
@@ -176,10 +190,57 @@ const framework = {
         }
         return mesh;
     },
+    setupAnimationForMesh: function ( mesh, options ) {
+        //set up animation for this mesh
+                let animationOptions = {
+                    animationType: options.animationType,
+                    animationDelay: options.animationDelay,
+                    animationDirection: options.animationDirection,
+                    animationDuration: options.animationDuration,
+                    animationEasing: options.animationEasing,
+                    animationElasticity: options.animationElasticity,
+                    animationKeyframes: options.animationKeyframes,
+                    animationAsymmetry: options.animationAsymmetry,
+                    animationOffset: options.animationOffset,
+                    animationGrid: options.animationGrid,
+                    loop: true,
+                };
+                //START TIMELINE FOR ANIMATION
+                mesh.animeTimeline = anime.timeline( { 
+                    autoplay: false, 
+                    loop: true } );
+        
+                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
+
+                    if ( /\,/.test( options.animation ) ) {
+             
+                        const seperateAnimations = options.animation.slice().split(",");
+                        for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
+                        
+                            let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
+                            if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                            }
+                        }
+                    } else {
+                        let opts = this.optionParser( options.animation , animationOptions, "animation" );
+                        if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                        }
+                    }
+                    
+                } else {
+                    mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
+                }
+                
+                mesh.animeTimeline.play();
+                return mesh;
+    },
     setupMesh: function ( options, sI ) {
         let m, mesh;
         //@params sI - the index of the scene
         /*
+        @params m - stands for material 
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
@@ -206,14 +267,14 @@ const framework = {
                     }
 
                     //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                    mesh.name = options.name !== undefined ? options.name + i.toString() : "";
-                    mesh.anime = this.createAnime( mesh, options.animationType );
+                    
                     mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
                         Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
                     group.add( mesh );
                 }
-                this.scenes[sI].add( group );
+                group.name = options.name !== undefined ? options.name : "bundle";
+                this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
             } else {
                 let g = this.createGeometry( options );
                 if( g.type === "Mesh" || g.type === "Group" ) {
@@ -221,15 +282,51 @@ const framework = {
                 } else {
                     mesh = new THREE.Mesh( g, m );
                 }
-
-
                 mesh.name = options.name !== undefined ? options.name : "";
-                mesh.anime = this.createAnime( mesh, options.animationType );
-                console.log( mesh );
-                this.scenes[ sI ].add( mesh );
+                
+                this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
             }
 
+                
+
             return;
+    },
+    optionParser: function ( str, options = {}, type ) {
+        //parsers option string into viable data type for running code
+        const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
+        
+        switch( type ) {
+            case "animation":
+                str.slice().split( " " ).forEach( ( val, i, arr ) => {
+                        let word = val.trim();
+                        
+                            if( val.search( /^\d{1}/ ) ) {
+                                if( /(ease){1}/.test( word ) ) {
+
+                                    options[ animationOrder[i] ] = word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "");
+
+                                } else if ( word === "true" ) {
+                                    options[ animationOrder[i] ] = true
+                                } else if ( word === "asymmetry" ) {
+                                    //allows for some to be grouped together and some to run on their own
+                                    options [ "animationAsymmetry" ] = true;
+                                } else {
+                                    options[ animationOrder[i] ] = word;
+                                }
+
+                            } else {
+                                if( /s$/.test( word ) ) {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000;
+                                } else {
+                                    options[ animationOrder[i] ] = parseInt( word.match(/[0-9]*/)[0], 10 );
+                                } 
+
+                            }
+                        
+                
+                    } );
+                return options;
+        }
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed
@@ -239,6 +336,12 @@ const framework = {
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
             let light = new THREE.DirectionalLight( 0xffffff, 2 );
             light.position.set( 0, 1000, 0 );
+            if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
+                light.castShadow = true;
+                //debug shadow camera
+                const shadowCamera = new THREE.CameraHelper( light.shadow.camera );
+                this.scenes[ this.scenes.length -1 ].add( shadowCamera );
+            }
             this.scenes[ this.scenes.length - 1 ].add( light );
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
@@ -250,7 +353,7 @@ const framework = {
                 this.setupMesh( options, this.scenes.length - 1 );
                 res( "fade" );
             } else {
-                rej( "there are no options to make a scene" );
+                return;
             }
         } );
         
@@ -298,7 +401,7 @@ const framework = {
                 if ( title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined ) {
                     title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
                 }
-                title.anime = this.createAnime( title, this.options.menu.animation );
+                title.anime = this.createAnime( title, this.options.menu );
             }
         }
        
@@ -307,8 +410,7 @@ const framework = {
         if ( this.options.hasOwnProperty( "sounds") && this.options.sounds !== undefined ) {
             
             const audioPromise = initializeAudio( this.sounds );
-            
-            
+    
             preloaderPromise.then( message => {
                 progressEmitter.emit( "worldmessage", { message } );
                 audioPromise.then( controllers => {
@@ -316,16 +418,17 @@ const framework = {
                         const scenePromise = this.setupScene( this.worldObjects, controllers );
                         scenePromise.then( animationType => { 
                             let preloader = this.scene.getObjectByName( "preloader" );
-                            preloader.anime = this.createAnime( preloader, animationType );
+                            //clears the timeline for a new batch of animations
+                            preloader.animeTimeline = anime.timeline( {} );
+                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
                             window.setTimeout( () => {
                                 progressEmitter.emit( "worldmessage", { message: "" } );
                                 this.scene = this.scenes[ this.scenes.length - 1 ];
                             }, delay );
-                        } );
-                    } );
-                } );
-            } );
-            
+                        } )
+                    } )
+                } )
+    
         } else {
                 preloaderPromise.then( message => {
                     progressEmitter.emit( "worldmessage", { message } );
@@ -333,13 +436,16 @@ const framework = {
                     
                     scenePromise.then( animationType => {
                         let preloader = this.scene.getObjectByName( "preloader" );
-                        preloader.anime = this.createAnime( preloader, animationType );
                         window.setTimeout( () => {
+                           //clears the timeline for a new batch of animations
+                            preloader.animeTimeline = anime.timeline( {} );
+                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
                             progressEmitter.emit( "worldmessage", { message: "" } );
                             this.scene = this.scenes[ this.scenes.length - 1 ];
-                        }, 3000 );
-                    } );
-                } );               
+                            console.log( this.scene );
+                        }, delay );
+                    } )
+                } )            
             
         }
 
@@ -363,16 +469,22 @@ const framework = {
             
             if (isImgLink) {
                 new THREE.TextureLoader().load( menu.title, (tex) => {
-
+                    
                     const options = {
                         type: "plane",
                         name: "title",
                         material: "basic",
-                        animation: "zoom_normal",
+                        animationType: "zoom_normal",
+                        animationDuration: 5000,
+                        animationDelay: 1000,
+                        animationDirection: "alternate",
+                        transparent: true,
+                        loop: true,
                         color: new THREE.Color(),
-                        size: [ tex.image.naturalWidth, tex.image.naturalHeight  ],
+                        size: [ tex.image.naturalWidth, tex.image.naturalHeight, 0 ],
                         texture: tex
                     };
+                    
                     this.setupMesh( options, this.scenes.length - 1 );
                     //calculate title mesh so if img is too large it will fit inside the camera viewW
                     let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
@@ -411,7 +523,7 @@ const framework = {
                     console.warn( "can't calculate object parameters" );
                 }
                 */
-
+/*
                 if( typeof obj.anime === "function" ) {
                     obj.anime( time, obj.name );
                 } else {
@@ -426,6 +538,8 @@ const framework = {
                         m.material.needsUpdate = true;
                     }
                 } );
+            }
+            */
             }
         });
     },
