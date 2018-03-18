@@ -1,5 +1,5 @@
 {
-    "animationAsymmetry": true,
+    "animationAsymmetry": false,
     "animationType" : "spin_basic",
     "animationDuration" : 1000,
     "animationEasing" : "easeInSine",

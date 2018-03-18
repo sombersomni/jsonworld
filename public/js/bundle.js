@@ -47044,7 +47044,7 @@ function(a){a=P(a);for(var c=v.length;c--;)for(var d=v[c],b=d.animations,f=b.len
 /* 31 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":true,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"},"sceneTransition":"fade-out"}
+module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"},"sceneTransition":"fade-out"}
 
 /***/ }),
 /* 32 */
@@ -47144,10 +47144,10 @@ var config = {
         "count": 10,
         "size": [20, 60, 20],
         "gridLayout": [3, 3, 3],
-        "animation": "_increaseHeight 2s",
+        "animation": "_moveRandomly 4s",
         "animationAsymmetry": true,
         "animationKeyframes": {
-            "_increaseHeight": [{ scaleY: 2 }]
+            "_moveRandomly": [{ x: 100 }, { y: 40 }, { x: 50 }, { y: 100 }]
         },
         "animationGrid": "basic",
         "shadow": true,
@@ -67015,7 +67015,7 @@ var framework = {
             for (var i = 0; i <= animation.length - 1; i++) {
                 console.log(animation[i]);
                 mesh.animeTimeline.add(animation[i]);
-                //console.log( mesh );
+                mesh.animeTimeline.children[i].play();
             }
         } else if (animation instanceof Function) {
             //mesh.animationManager.push( animation );
@@ -67163,6 +67163,8 @@ var framework = {
             loop: true
         };
         //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
+
+        //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
         mesh.animeTimeline = _animejs2.default.timeline({
             autoplay: true,
             loop: true });
@@ -68458,20 +68460,11 @@ function packAnimations(mesh, options) {
 
     var animation = {
         targets: mesh[animTarget],
-        autoplay: true,
         elasticity: elasticity,
-        offset: offset,
-        duration: duration,
-        delay: delay,
-        began: began,
-        complete: complete,
-        run: run,
-        finished: finished
-
+        offset: offset
     };
 
     if (keyframes instanceof Array) {
-
         keyframes.forEach(function (f) {
             /* if you have multiple props that fit your target type you can use
             them within a singe keyframe */
@@ -68479,28 +68472,29 @@ function packAnimations(mesh, options) {
             if (f instanceof Array) {
                 f.forEach(function (each) {
                     //asign each keyframe for each property
-
-                    animation[each.animProp] = { value: each.value };
+                    animation[each.animProp] = [];
+                    animation[each.animProp].push({ value: each.value });
                 });
             } else {
-
-                animation[f.animProp] = { value: f.value };
+                animation[f.animProp] = [];
+                animation[f.animProp].push({ value: f.value });
             }
         });
     } else if (keyframes instanceof Object) {
-        animation[keyframes.animProp] = { value: keyframes.value };
+        animation[keyframes.animProp] = [{ value: keyframes.value }];
     } else {
         throw new Error("keyframes must be either objects, or an array of objects with its set properties");
     }
 
-    if (mesh.type === "Group") {
+    if (mesh.type === "Group" && asymmetry) {
         console.log(mesh, "start packing all children");
         var pack = [];
         for (var n = 0; n <= mesh.children.length - 1; n++) {
             var obj = mesh.children[n];
+
             if (canPack) {
                 animation.targets = obj[animTarget];
-                console.log(obj);
+                animation.offset = n * 100;
                 pack.push(animation);
             }
         }

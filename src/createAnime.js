@@ -15,20 +15,11 @@ function packAnimations( mesh, options ) {
     
     let animation = {
         targets: mesh[ animTarget ],
-        autoplay: true,
         elasticity,
-        offset,
-        duration,
-        delay,
-        began,
-        complete,
-        run,
-        finished
-        
+        offset
     } ;
     
     if ( keyframes instanceof Array ) {
-        
         keyframes.forEach( f => {
             /* if you have multiple props that fit your target type you can use
             them within a singe keyframe */
@@ -36,31 +27,33 @@ function packAnimations( mesh, options ) {
             if ( f instanceof Array ) {
                 f.forEach( each => {
                     //asign each keyframe for each property
-                    
-                    animation[ each.animProp ] = { value: each.value };
+                    animation[ each.animProp ] = [];
+                    animation[ each.animProp ].push( { value: each.value } );
                 } );
             } else {
-                
-                animation[ f.animProp ] = { value: f.value };
+                animation[ f.animProp ] = [];
+                animation[ f.animProp ].push( { value: f.value } );
             }
             
         } );
     } else if ( keyframes instanceof Object ) {
-        animation[ keyframes.animProp ] = { value: keyframes.value };
+        animation[ keyframes.animProp ] = [{ value: keyframes.value }];
     } else {
         throw new Error( "keyframes must be either objects, or an array of objects with its set properties" );
     }
 
-    if ( mesh.type === "Group" ) {
+    if ( mesh.type === "Group" && asymmetry ) {
         console.log( mesh, "start packing all children" );
                 let pack = [];
                 for ( var n = 0; n <= mesh.children.length -1; n++ ) {
                     let obj = mesh.children[n];
-                    if ( canPack ) {
-                        animation.targets = obj[animTarget];
-                        console.log( obj );
-                        pack.push( animation );
-                    }
+                        
+                        if ( canPack ) {
+                            animation.targets = obj[ animTarget ];
+                            animation.offset = n * 100;
+                            pack.push( animation );
+                        }
+                
         
                 }
                 return pack;

@@ -106,8 +106,9 @@ const framework = {
             for ( var i = 0; i <= animation.length - 1; i++ ) {
                 console.log( animation[i] );
                 mesh.animeTimeline.add( animation[i] );
-                //console.log( mesh );
+                mesh.animeTimeline.children[i].play();
             }
+            
         } else if ( animation instanceof Function ) {
             //mesh.animationManager.push( animation );
         } else {
@@ -246,6 +247,8 @@ const framework = {
                     loop: true,
                 };
                 //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
+        
+                //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
                 mesh.animeTimeline = anime.timeline( { 
                     autoplay: true, 
                     loop: true } );

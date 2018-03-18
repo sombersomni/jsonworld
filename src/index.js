@@ -34,10 +34,10 @@ const config = {
             "count" : 10,
             "size" : [ 20, 60, 20 ],
             "gridLayout": [ 3, 3, 3 ],
-            "animation": "_increaseHeight 2s",
+            "animation": "_moveRandomly 4s",
             "animationAsymmetry": true,
             "animationKeyframes" : {
-                "_increaseHeight" : [ { scaleY: 2 } ],
+                "_moveRandomly" : [ { x: 100 }, { y: 40 }, { x: 50 }, { y: 100 } ]
             },
             "animationGrid": "basic",
             "shadow": true,
