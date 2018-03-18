@@ -100,17 +100,18 @@ const framework = {
     },
     createMaterial,
     decideTimelineOrder( animation, mesh, options ) {
+        
+        //takes the mesh and adds a animation timeline to the root object
         if ( animation instanceof Array && animation.length > 0 ) {
             for ( var i = 0; i <= animation.length - 1; i++ ) {
-                console.log( animation );
+                console.log( animation[i] );
                 mesh.animeTimeline.add( animation[i] );
+                //console.log( mesh );
             }
         } else if ( animation instanceof Function ) {
-            mesh.animationManager.push( animation );
+            //mesh.animationManager.push( animation );
         } else {
-            if ( animation !== undefined ) {
                 mesh.animeTimeline.add( animation );
-            }
         }
         
         return mesh;
@@ -246,10 +247,9 @@ const framework = {
                 };
                 //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
                 mesh.animeTimeline = anime.timeline( { 
-                    autoplay: false, 
+                    autoplay: true, 
                     loop: true } );
         
-                mesh.animationManager = [];
         
                 if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
 
@@ -271,6 +271,7 @@ const framework = {
                     }
                     
                 } else {
+                    
                     mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
                 }
                 
@@ -345,7 +346,7 @@ const framework = {
             this.scenes.push( new THREE.Scene() );
             this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-            let light = new THREE.DirectionalLight( 0xffffff, 2 );
+            let light = new THREE.DirectionalLight( 0xffffff, 10 );
             //light.position.set( 0, 10000, 0 );
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 light.castShadow = true;
@@ -383,11 +384,12 @@ const framework = {
         return renderer;
     },
     setupFog: function ( options = {} ) {
+        //sets ups the scenes fog and if there are no defined properties it will use defaults
         let fog;
         const opt = options.fog !== undefined ? options.fog : {};
         const camOpt = options.camera !== undefined ? options.camera : {};
         const color = opt.color !== undefined ? colorInterpreter( opt.color )  :  new THREE.Color();
-        const density = opt.density !== undefined ? opt.density : .0025;
+        const density = opt.density !== undefined ? opt.density : .0010;
         const far = camOpt.far !== undefined ? camOpt.far : 1000;
         const type =  opt.type !== undefined ? opt.type : "exponential";
         const near = camOpt.near !== undefined ? camOpt.near : .01;
@@ -463,7 +465,7 @@ const framework = {
 
     },
     start: function () {
-        console.log( ThreeBSP );
+        
         this.setupScene( {} );
         this.scene = this.scenes[ 0 ];
         //start event listeners
@@ -525,13 +527,8 @@ const framework = {
     },
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {
-            if( obj instanceof THREE.Mesh ) {
-                obj.animationManager.forEach( animation => {
-                    animation.call( this, time, obj.id );
-                } );
-            }
         
-        });
+        } );
     },
     runScene: function () {
         requestAnimationFrame( this.runScene );

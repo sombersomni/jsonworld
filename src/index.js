@@ -16,7 +16,7 @@ const config = {
     },
 	"fog": {
 		"type": "exponential",
-		"color": "1 0 0",
+		"color": "1 .3 .3",
 
 	},
 	"font": "fonts/AlphaMack_AOE_Regular.json",
@@ -24,26 +24,24 @@ const config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animation": "spin_basic 5s"
+        "animation": "spin-basic 5s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            "type": "dodecahedron",
-            "material": "wireframe",
-            "color" : 0x33cc00,
+            "type": "box",
+            "material": "standard",
+            "color" : 0xffaa00,
+            "count" : 10,
+            "size" : [ 20, 60, 20 ],
             "gridLayout": [ 3, 3, 3 ],
-            "animation": "erratic, spin_basic 2s, custom_moveUp 5s",
-            "animationGrid": "basic",
-            "animationKeyframes": {
-                "erratic" : "10 20 40",
-                "linear": "50 100 -50 -80 50", //you can also define each value in string notation like css,
-                "custom-make-big": [ { scaleX: 2 }, { scaleX: 3 } ], //with custom animations you need to define what you want to change in the animation
-                //you can use "scale" like the property above, or "rotation, position, opacity and a range of others"
-                //if key of object is not defined in our dictionary of useable properties, a default position x
-                "custom_moveUp": [ { y: Math.random() * 100 }, { y: Math.random() * 100 }, { y: Math.random() * 100 }, { y: Math.random() * 100 } ], //you can also only have one value if needed you can use random numbers
-                "spin_random" : "10 30 -20 360"
+            "animation": "_increaseHeight 2s",
+            "animationAsymmetry": true,
+            "animationKeyframes" : {
+                "_increaseHeight" : [ { scaleY: 2 } ],
             },
-            "shadow": true
+            "animationGrid": "basic",
+            "shadow": true,
+            "development": true
         }
     ],
     "enableShadows": true
