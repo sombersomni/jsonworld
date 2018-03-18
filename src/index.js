@@ -31,13 +31,14 @@ const config = {
             "type": "box",
             "material": "standard",
             "color" : 0xffaa00,
-            "count" : 10,
+            "count" : 1000,
+            "positionRelativeTo" : "self",
             "size" : [ 20, 60, 20 ],
             "gridLayout": [ 3, 3, 3 ],
-            "animation": "_moveRandomly 4s",
+            "animation": "_moveRandomly 10s",
             "animationAsymmetry": true,
             "animationKeyframes" : {
-                "_moveRandomly" : [ { x: 100 }, { y: 40 }, { x: 50 }, { y: 100 } ]
+                "_moveRandomly" : [ { x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 } ]
             },
             "animationGrid": "basic",
             "shadow": true,

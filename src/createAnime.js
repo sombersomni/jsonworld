@@ -11,26 +11,31 @@ function convertKeyframesToRadians( keyframes ) {
 }
 
 function packAnimations( mesh, options ) {
-    const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset } = options;
+    const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset, positionRelativeTo } = options;
     
     let animation = {
-        targets: mesh[ animTarget ],
         elasticity,
         offset
     } ;
     
+    console.log( mesh );
     if ( keyframes instanceof Array ) {
         keyframes.forEach( f => {
             /* if you have multiple props that fit your target type you can use
             them within a singe keyframe */
-            
+            console.log( f );
             if ( f instanceof Array ) {
+                //made an array outside the push loop so the keyframes won't overwrite each other
                 f.forEach( each => {
-                    //asign each keyframe for each property
-                    animation[ each.animProp ] = [];
+                   // assign each keyframe for each property
+                    
+                    if ( animation[ each.animProp ] === undefined) {
+                        animation[ each.animProp ] = [];
+                    }
                     animation[ each.animProp ].push( { value: each.value } );
                 } );
             } else {
+                
                 animation[ f.animProp ] = [];
                 animation[ f.animProp ].push( { value: f.value } );
             }
@@ -49,16 +54,17 @@ function packAnimations( mesh, options ) {
                     let obj = mesh.children[n];
                         
                         if ( canPack ) {
-                            animation.targets = obj[ animTarget ];
-                            animation.offset = n * 100;
-                            pack.push( animation );
+                            let newAnimation = Object.assign( {}, animation, { targets: obj[ animTarget ], 
+                                                                              offset: n * offset } );
+                            pack.push( newAnimation );
                         }
                 
         
                 }
                 return pack;
     } else {
-                return animation;
+        let newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ] } );
+        return newAnimation;
     }
 }
 function parseKeyframes( str ) {
@@ -147,6 +153,7 @@ export default function ( mesh, options = {} ) {
           elasticity = options.animationElasticity !== undefined && options.hasOwnProperty( "animationElasticity" ) ? options.animationElasticity : defaultOptions.animationElasticity,
           loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
           offset = options.animationOffset !== undefined && options.hasOwnProperty( "animationOffset" ) ? options.animationOffset : defaultOptions.animationOffset,
+          positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty( "positionRelativeTo" ) ? options.positionRelativeTo : defaultOptions.positionRelativeTo,
           speed = 2;
     
     type.trim();
@@ -239,6 +246,7 @@ export default function ( mesh, options = {} ) {
             elasticity,
             loop,
             offset,
+            positionRelativeTo,
             speed
     };
     

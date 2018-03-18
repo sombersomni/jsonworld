@@ -47044,7 +47044,7 @@ function(a){a=P(a);for(var c=v.length;c--;)for(var d=v[c],b=d.animations,f=b.len
 /* 31 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"},"sceneTransition":"fade-out"}
+module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"gridLayout":[5,5,5],"rotationAngle":360,"loop":true,"preloader":{"type":"dodecahedron","message":"building a better world"},"positionRelativeTo":"world","sceneTransition":"fade-out"}
 
 /***/ }),
 /* 32 */
@@ -47141,13 +47141,14 @@ var config = {
         "type": "box",
         "material": "standard",
         "color": 0xffaa00,
-        "count": 10,
+        "count": 1000,
+        "positionRelativeTo": "self",
         "size": [20, 60, 20],
         "gridLayout": [3, 3, 3],
-        "animation": "_moveRandomly 4s",
+        "animation": "_moveRandomly 10s",
         "animationAsymmetry": true,
         "animationKeyframes": {
-            "_moveRandomly": [{ x: 100 }, { y: 40 }, { x: 50 }, { y: 100 }]
+            "_moveRandomly": [{ x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 }]
         },
         "animationGrid": "basic",
         "shadow": true,
@@ -67160,6 +67161,7 @@ var framework = {
             animationAsymmetry: options.animationAsymmetry,
             animationOffset: options.animationOffset,
             animationGrid: options.animationGrid,
+            positionRelativeTo: options.positionRelativeTo,
             loop: true
         };
         //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
@@ -68205,6 +68207,7 @@ exports.default = function (mesh) {
         elasticity = options.animationElasticity !== undefined && options.hasOwnProperty("animationElasticity") ? options.animationElasticity : _defaults2.default.animationElasticity,
         loop = options.loop !== undefined && options.hasOwnProperty("loop") ? options.loop : _defaults2.default.loop,
         offset = options.animationOffset !== undefined && options.hasOwnProperty("animationOffset") ? options.animationOffset : _defaults2.default.animationOffset,
+        positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty("positionRelativeTo") ? options.positionRelativeTo : _defaults2.default.positionRelativeTo,
         speed = 2;
 
     type.trim();
@@ -68291,6 +68294,7 @@ exports.default = function (mesh) {
         elasticity: elasticity,
         loop: loop,
         offset: offset,
+        positionRelativeTo: positionRelativeTo,
         speed: speed
     };
 
@@ -68455,27 +68459,33 @@ function packAnimations(mesh, options) {
         finished = options.finished,
         keyframes = options.keyframes,
         run = options.run,
-        offset = options.offset;
+        offset = options.offset,
+        positionRelativeTo = options.positionRelativeTo;
 
 
     var animation = {
-        targets: mesh[animTarget],
         elasticity: elasticity,
         offset: offset
     };
 
+    console.log(mesh);
     if (keyframes instanceof Array) {
         keyframes.forEach(function (f) {
             /* if you have multiple props that fit your target type you can use
             them within a singe keyframe */
-
+            console.log(f);
             if (f instanceof Array) {
+                //made an array outside the push loop so the keyframes won't overwrite each other
                 f.forEach(function (each) {
-                    //asign each keyframe for each property
-                    animation[each.animProp] = [];
+                    // assign each keyframe for each property
+
+                    if (animation[each.animProp] === undefined) {
+                        animation[each.animProp] = [];
+                    }
                     animation[each.animProp].push({ value: each.value });
                 });
             } else {
+
                 animation[f.animProp] = [];
                 animation[f.animProp].push({ value: f.value });
             }
@@ -68493,14 +68503,15 @@ function packAnimations(mesh, options) {
             var obj = mesh.children[n];
 
             if (canPack) {
-                animation.targets = obj[animTarget];
-                animation.offset = n * 100;
-                pack.push(animation);
+                var newAnimation = Object.assign({}, animation, { targets: obj[animTarget],
+                    offset: n * offset });
+                pack.push(newAnimation);
             }
         }
         return pack;
     } else {
-        return animation;
+        var _newAnimation = Object.assign({}, animation, { targets: mesh[animTarget] });
+        return _newAnimation;
     }
 }
 function parseKeyframes(str) {

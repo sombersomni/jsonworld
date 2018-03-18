@@ -244,6 +244,7 @@ const framework = {
                     animationAsymmetry: options.animationAsymmetry,
                     animationOffset: options.animationOffset,
                     animationGrid: options.animationGrid,
+                    positionRelativeTo: options.positionRelativeTo,
                     loop: true,
                 };
                 //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
