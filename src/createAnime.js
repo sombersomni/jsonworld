@@ -3,77 +3,146 @@ import * as THREE from "three";
 
 import defaultOptions from "./json/defaults.json";
 
-function packAnimations( mesh, options ) {
-    const { asymmetry, keyframes, animProp,  canPack, animTarget, rule, elasticity, duration, offset, delay } = options;
-    
-    if ( mesh instanceof THREE.Group && asymmetry ) {
+function convertKeyframesToRadians( keyframes ) {
+    console.log( keyframes, "radians" );
+    return keyframes.map( frame => {
+        return { value: frame.value * ( Math.PI * 2 / 180 ) }
+    } );
+}
 
+function packAnimations( mesh, options ) {
+    const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset, positionRelativeTo } = options;
+    
+    let animation = {
+        elasticity,
+        offset
+    } ;
+    
+    console.log( mesh );
+    if ( keyframes instanceof Array ) {
+        keyframes.forEach( f => {
+            /* if you have multiple props that fit your target type you can use
+            them within a singe keyframe */
+            console.log( f );
+            if ( f instanceof Array ) {
+                //made an array outside the push loop so the keyframes won't overwrite each other
+                f.forEach( each => {
+                   // assign each keyframe for each property
+                    
+                    if ( animation[ each.animProp ] === undefined) {
+                        animation[ each.animProp ] = [];
+                    }
+                    animation[ each.animProp ].push( { value: each.value } );
+                } );
+            } else {
+                
+                animation[ f.animProp ] = [];
+                animation[ f.animProp ].push( { value: f.value } );
+            }
+            
+        } );
+    } else if ( keyframes instanceof Object ) {
+        animation[ keyframes.animProp ] = [{ value: keyframes.value }];
+    } else {
+        throw new Error( "keyframes must be either objects, or an array of objects with its set properties" );
+    }
+
+    if ( mesh.type === "Group" && asymmetry ) {
+        console.log( mesh, "start packing all children" );
                 let pack = [];
                 for ( var n = 0; n <= mesh.children.length -1; n++ ) {
                     let obj = mesh.children[n];
-                    if ( canPack ) {
-                        pack.push({
-                            targets: obj[ animTarget ],
-                            [ animProp ] : keyframes || rule,
-                            elasticity,
-                            offset: "-="+( offset * n ),
-                        });
-                    }
-                    
+                        
+                        if ( canPack ) {
+                            let newAnimation = Object.assign( {}, animation, { targets: obj[ animTarget ], 
+                                                                              offset: n * offset } );
+                            pack.push( newAnimation );
+                        }
                 
-                    
+        
                 }
                 return pack;
-            } else {
-                return {
-                targets: mesh[ animTarget ],
-                [ animProp ] : keyframes || rule,
-                elasticity,
-                offset,
-                duration,
-                delay,
-                
-                } ;
-        }
+    } else {
+        let newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ] } );
+        return newAnimation;
+    }
 }
 function parseKeyframes( str ) {
     return str.slice().trim().split(" ").map( value => ( { value } ) );
 }
 
 function determineTarget( type, mesh ) {
-    switch( type ) {
-        case "scaleX":
-            if ( mesh.type !== "Group" && mesh instanceof Group ) {
+    
+    try {
+        switch( type ) {
+            case "opacity" :
+                
+                return {
+                    animTarget: "material",
+                    animProp: "opacity"
+                    
+                };
+            case "rotationX" :
+                return {
+                    animTarget: "rotation",
+                    animProp: "x",
+                };
+
+            case "rotationY" :
+                return {
+                    animTarget: "rotation",
+                    animProp: "y",
+                };
+            case "rotationZ" :
+                return {
+                    animTarget: "rotation",
+                    animProp: "z",
+                };
+            case "scaleX" :
                 return {
                     animTarget: "scale",
                     animProp: "x",
+                };
+
+            case "scaleY" :
+                return {
+                    animTarget: "scale",
+                    animProp: "y",
+                };
+
+            case "scaleZ" :
+                return {
+                    animTarget: "scale",
+                    animProp: "z",
+                };
+            case "x" :
+                return {
+                    animTarget: "position",
+                    animProp: "x"
                 }
-            } else {
-                return undefined;
-            }
-            break;
-        case "x":
-            return {
-                animTarget: "position",
-                animProp: "x"
-            }
-        case "y":
-            return {
-                animTarget: "position",
-                animProp: "y"
-            }
-        case "z":
-            return {
-                animTarget: "position",
-                animProp: "z"
-            }
-        default:
-            return;
+            case "y" :
+                return {
+                    animTarget: "position",
+                    animProp: "y"
+                }
+            case "z" :
+                return {
+                    animTarget: "position",
+                    animProp: "z"
+                }
+            default:
+                
+                throw new Error( "you need to pick the correct property name or your spelling is off" );
+                return;
+        }
+    } catch( err ) {
+        
+        console.warn( err );
     }
 }
 export default function ( mesh, options = {} ) {
     let keyframes, animTarget, animProp, animator, canPack = true;
- 
+
     let asymmetry = options.animationAsymmetry !== undefined && options.hasOwnProperty( "animationAsymmetry" ) ? options.animationAsymmetry : false ,
           type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
           //defaults are handled before they get to this function
@@ -84,55 +153,89 @@ export default function ( mesh, options = {} ) {
           elasticity = options.animationElasticity !== undefined && options.hasOwnProperty( "animationElasticity" ) ? options.animationElasticity : defaultOptions.animationElasticity,
           loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
           offset = options.animationOffset !== undefined && options.hasOwnProperty( "animationOffset" ) ? options.animationOffset : defaultOptions.animationOffset,
+          positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty( "positionRelativeTo" ) ? options.positionRelativeTo : defaultOptions.positionRelativeTo,
           speed = 2;
-    
     
     type.trim();
     type.toLowerCase();
     
-    
+    //seperate keyframes and make it compatible for use in anime timeline
     if ( options.animationKeyframes !== undefined && options.hasOwnProperty( "animationKeyframes" ) ) {
         
-        if ( options.animationKeyframes[ type ] !== undefined ) {
-            if ( typeof options.animationKeyframes[ type ] === "string" ) {
-                keyframes = parseKeyframes( options.animationKeyframes[ type ] );
-            } else if ( options.animationKeyframes[ type ] instanceof Array ) {
-                let arr = options.animationKeyframes[ type ];
-                keyframes = arr.map( ( frame, i, allFrames ) => {
-                       if ( frame instanceof Object ) {
-                           type = "custom";
-                           const name = Object.keys( frame )[0];
-                           const decision = determineTarget( name, mesh );
-                           if ( decision !== undefined ) {
-                               animTarget = decision.animTarget;
-                               animProp = decision.animProp;
-                               return { value: frame[ animProp ] } 
-                           } 
-                       } else {
-                           return [{ value: frame }];
-                       }
-                } ); 
+        try {
+          if ( options.animationKeyframes[ type ] !== undefined ) {
+                if ( typeof options.animationKeyframes[ type ] === "string" ) {
+                    keyframes = parseKeyframes( options.animationKeyframes[ type ] );
+                } else if ( options.animationKeyframes[ type ] instanceof Array ) {
+                    let arr = options.animationKeyframes[ type ];
+                    keyframes = arr.map( ( frame, i, allFrames ) => {
+                           if ( frame instanceof Object ) {
+                               type = "custom";     
+                               let eachProp = [];
+                               Object.keys( frame ).forEach( ( key ) => {
+                                   /* 
+                                        we go through each property in the animation
+                                   frame object in order to assign multiple changes in one keyframe
 
+                                   */
+
+                                   const decision = determineTarget( key , mesh );
+
+                                      if ( decision !== undefined ) {
+                                           animTarget = decision.animTarget;
+
+                                           let value = frame[ key ];
+                                          
+                                          if ( Number.isNaN( value ) ) {
+                                              throw new TypeError( defaultOptions.errors.FRAMEVALUE );
+                                          }
+                                          
+                                           eachProp.push( { 
+                                               animProp: decision.animProp,
+                                               value
+                                           } );
+
+                                       } 
+                               } );
+
+                                   return eachProp;
+
+                           } else {
+                               
+                                          if ( Number.isNaN( frame ) ) {
+                                              throw new TypeError( defaultOptions.errors.FRAMEVALUE );
+                                          }
+                                           
+                               return [ { animProp: decision.animProp, value: frame } ];
+                           }
+                    } ); 
+
+                } else {
+                    keyframes = undefined;
+                }
             } else {
-                keyframes = undefined;
-            }
-        } else {
-            if ( /custom/.test( type ) ) {
-                canPack = false; 
-                
-            } else {
-                keyframes = undefined;
-            }
+                console.log( type );
+                if ( /^[\_]{1}/.test( type ) ) {
+                    canPack = false; 
+
+                } else {
+                    console.log( keyframes );
+                    keyframes = undefined;
+                }
+            }  
+        } catch( err ) {
+            console.log( err );
         }
+        
     }
-    
-    console.log( keyframes, "Got keyframes" );
     
     let newOptions = {
             animTarget,
-            animProp,
             canPack,
-            rule: undefined,
+            complete: ( info ) => { },
+            finished: ( info ) => { },
+            run: ( info ) => { },
+            began: ( info ) => { },
             asymmetry,
             keyframes,
             type,
@@ -143,10 +246,11 @@ export default function ( mesh, options = {} ) {
             elasticity,
             loop,
             offset,
+            positionRelativeTo,
             speed
     };
     
-    
+    console.log( newOptions );
     
     switch( type ) {
         case "atom":
@@ -175,17 +279,16 @@ export default function ( mesh, options = {} ) {
             }
         case "custom" : 
             
-            return packAnimations( mesh, newOptions );
-            
-            break;
+            console.log( newOptions, "custom anim" );
+            return packAnimations( mesh, Object.assign( {}, newOptions ) );
         case "erratic" :
-            return function ( time ) {
-                let mesh = this;
+            return ( time, id ) => {
+                let mesh = this.scene.getObjectById( id );
                 const growthRate = 1.25,
                     length = mesh.geometry.vertices.length,
-                    radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2,
-                    rand = Math.round( Math.random() * length - 1 );
-                //every 5 seconds execute
+                    radius = mesh.geometry.parameters.radius || mesh.geometry.parameters.width / 2 || 10,
+                    rand = Math.round( Math.random() * length );
+                //every second execute lerp coordinate change
                 if( Math.round( time ) % 1 === 0 ) {
                     mesh.geometry.currentVectorIndex = rand;
                     mesh.geometry.currentVector = mesh.geometry.vertices[ mesh.geometry.currentVectorIndex ];
@@ -195,7 +298,7 @@ export default function ( mesh, options = {} ) {
                     const x = mesh.geometry.currentVector.x,
                         y = mesh.geometry.currentVector.y,
                         z = mesh.geometry.currentVector.z;
-                    if( Math.abs( x ) < radius * 2 && Math.abs( y ) < radius * 2 && Math.abs( z ) < radius * 2 ) {
+                    if( Math.abs( x ) < radius * 3 && Math.abs( y ) < radius * 3 && Math.abs( z ) < radius * 3 ) {
                         mesh.geometry.vertices[ cIndex ].lerp( new THREE.Vector3( x * growthRate, y * growthRate, z * growthRate ), Math.random() );
                     } else {
                         mesh.geometry.vertices[ cIndex ].lerp( new THREE.Vector3( x / growthRate, y / growthRate, z / growthRate ), Math.random() );
@@ -204,17 +307,26 @@ export default function ( mesh, options = {} ) {
                 mesh.rotation.y += .01;
                 mesh.geometry.verticesNeedUpdate = true;
             }
-        case "fade" :
-            return {
-                targets: mesh.material,
-                opacity: 0,
-                duration,
-                delay,
-                loop: 1
-            }
+            case "test" :
+            return () => console.log( this );
+        case "fade-in" :
+            
+            newOptions.animTarget = "material";
+            newOptions.keyframes = { animProp: "opacity", value: 1 };
+            return packAnimations( mesh, newOptions );
+    
+        case "fade-out" :
+            
+            newOptions.animTarget = "material";
+            newOptions.keyframes = { animProp: "opacity", value: 0 };
+            return packAnimations( mesh, newOptions );
+    
         case "linear" :
-            const distance = 50;
-            return packAnimations( mesh, Object.assign({}, newOptions, { rule : distance, animProp: "x", animTarget: "position" } ) );
+            
+            newOptions.animTarget = "position";
+            newOptions.keyframes = { animProp: "x", value: 400 };
+            return packAnimations( mesh, newOptions );
+            
         case "shapeshift" :
             return function ( time ) {
                 let mesh = this;
@@ -225,33 +337,31 @@ export default function ( mesh, options = {} ) {
                 }
                 mesh.geometry.verticesNeedUpdate = true;
             }
-        case "spin_basic" :
-
-            return packAnimations( mesh, Object.assign({}, newOptions, { rule : defaultOptions.rotationAngle, animProp: "y", animTarget: "rotation" } ) );
+        case "spin-basic" :
             
-        case "spin_random" :
-            return anime( {
-                targets: mesh.rotation,
-                y: Math.PI * 2,
-                elasticity: 100 / speed,
-                duration: 5000 / speed,
-                loop: 1,
-                complete: function( anim ) {
-                    const axis = "xyz";
-                    const random = Math.round( Math.random() * 3 - 1 );
-                    anim.animations[0].property = axis.charAt( random );
-                    anim.restart();
-                }
-            } );
-        case "zoom_beat" :
-            return {
-                targets: mesh.position,
-                z: keyframes !== undefined ? keyframes: mesh.position.z - 100,
-                elasticity,
-                duration,
-                direction : "alternate"
-            };
-        case "zoom_normal" :
+            newOptions.animTarget = "rotation";
+            newOptions.keyframes = { animProp: "y", value: ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle };
+            
+            return packAnimations( mesh, Object.assign( {}, newOptions ) );
+            
+        case "spin-random" :
+            
+            return packAnimations( mesh, Object.assign( {}, newOptions, { keyframes: keyframes !== undefined ? convertKeyframesToRadians( keyframes ) : ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle, 
+                    animProp: "y", 
+                    animTarget: "rotation", 
+                    complete: function( anim ) {
+                        const axis = "xyz";
+                        const random = Math.round( Math.random() * 3 - 1 );
+                        anim.animations[0].property = axis.charAt( random );
+                   } } ) );
+
+        case "zoom-beat" :
+            
+            newOptions.animTarget = "position";
+            newOptions.keyframes = keyframes !== undefined ? keyframes: { animProp: "z", value: mesh.position.z + 100 };
+            return packAnimations( mesh, newOptions );
+            
+        case "zoom-normal" :
             return function ( time ) {
                 let mesh = this;
                 const distance = 20;

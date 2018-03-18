@@ -10,11 +10,11 @@ class World extends Component {
 	constructor ( props ) {
 		super( props );
 
-		this.state = {
-			message: "click the screen to start.",
-		};
-
 		this.world = new WorldController( this.props.config );
+        this.state = {
+			message: "click the screen to start.",
+            currentUUID: this.world.scene.uuid
+		};
 	}
 	createLinks ( links ) {
 		var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
@@ -44,6 +44,7 @@ class World extends Component {
 			<div id = "world">
 					{ config.hasOwnProperty( "menu" ) && config.menu.links !== undefined ? this.createLinks( config.menu.links ) : null }
 				<canvas></canvas>
+                <div> { this.state.currentUUID } </div>
                 <Progress message = { this.state.message } />
 				
 			</div>

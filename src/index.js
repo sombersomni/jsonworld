@@ -16,7 +16,7 @@ const config = {
     },
 	"fog": {
 		"type": "exponential",
-		"color": "1 0 0",
+		"color": "1 .3 .3",
 
 	},
 	"font": "fonts/AlphaMack_AOE_Regular.json",
@@ -24,23 +24,25 @@ const config = {
         "type": "sphere",
         "material": "wireframe",
         "size": 20,
-        "animation": "spin_basic 5s"
+        "animation": "spin-basic 5s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            "type": "custom",
-            "material": "wireframe",
-            "count": 100,
+            "type": "box",
+            "material": "standard",
+            "color" : 0xffaa00,
+            "count" : 1000,
+            "positionRelativeTo" : "self",
+            "size" : [ 20, 60, 20 ],
             "gridLayout": [ 3, 3, 3 ],
-            "animation": "linear 2s asymmetry, spin_basic 2s, custom_moveUp 3s asymmetry, blah 2s, zoom_beat 4s ease-in-sine 1s 2 alternate",
+            "animation": "_moveRandomly 10s",
+            "animationAsymmetry": true,
+            "animationKeyframes" : {
+                "_moveRandomly" : [ { x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 } ]
+            },
             "animationGrid": "basic",
-            "animationKeyframes": {
-                "linear": "50 100 -50 0", //you can also define each value in string notation like css,
-                "custom-make-big": [ { scaleX: 2 }, { scaleX: 3 } ], //with custom animations you need to define what you want to change in the animation
-                //you can use "scale" like the property above, or "rotation, position, opacity and a range of others"
-                //if key of object is not defined in our dictionary of useable properties, a default position x
-                "custom_moveUp": [ { y: Math.random() * 100 } ] //you can also only have one value if needed you can use random numbers
-            }
+            "shadow": true,
+            "development": true
         }
     ],
     "enableShadows": true

@@ -100,15 +100,19 @@ const framework = {
     },
     createMaterial,
     decideTimelineOrder( animation, mesh, options ) {
+        
+        //takes the mesh and adds a animation timeline to the root object
         if ( animation instanceof Array && animation.length > 0 ) {
             for ( var i = 0; i <= animation.length - 1; i++ ) {
-                console.log( animation );
+                console.log( animation[i] );
                 mesh.animeTimeline.add( animation[i] );
+                mesh.animeTimeline.children[i].play();
             }
+            
+        } else if ( animation instanceof Function ) {
+            //mesh.animationManager.push( animation );
         } else {
-            if ( animation !== undefined ) {
                 mesh.animeTimeline.add( animation );
-            }
         }
         
         return mesh;
@@ -190,107 +194,6 @@ const framework = {
         }
         return mesh;
     },
-    setupAnimationForMesh: function ( mesh, options ) {
-        //set up animation for this mesh
-                let animationOptions = {
-                    animationType: options.animationType,
-                    animationDelay: options.animationDelay,
-                    animationDirection: options.animationDirection,
-                    animationDuration: options.animationDuration,
-                    animationEasing: options.animationEasing,
-                    animationElasticity: options.animationElasticity,
-                    animationKeyframes: options.animationKeyframes,
-                    animationAsymmetry: options.animationAsymmetry,
-                    animationOffset: options.animationOffset,
-                    animationGrid: options.animationGrid,
-                    loop: true,
-                };
-                //START TIMELINE FOR ANIMATION
-                mesh.animeTimeline = anime.timeline( { 
-                    autoplay: false, 
-                    loop: true } );
-        
-                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
-
-                    if ( /\,/.test( options.animation ) ) {
-             
-                        const seperateAnimations = options.animation.slice().split(",");
-                        for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
-                        
-                            let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
-                            if ( opts !== undefined ) {
-                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
-                            }
-                        }
-                    } else {
-                        let opts = this.optionParser( options.animation , animationOptions, "animation" );
-                        if ( opts !== undefined ) {
-                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
-                        }
-                    }
-                    
-                } else {
-                    mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
-                }
-                
-                mesh.animeTimeline.play();
-                return mesh;
-    },
-    setupMesh: function ( options, sI ) {
-        let m, mesh;
-        //@params sI - the index of the scene
-        /*
-        @params m - stands for material 
-        const isTypeLoader = options.type.search(/[\.obj]{1}/);
-        const isMaterialURL = options.material.search(/(\.mtl){1}/);
-        */
-        
-                m = this.createMaterial( options );
-                if ( options.count !== undefined && options.count > 1 ) {
-                let group = new THREE.Group();
-                for ( let i = 0; i <= options.count - 1; i++ ) {
-                    let g = this.createGeometry( options );
-                    if ( g.type === "Mesh" || g.type === "Group" ) {
-                        mesh = g;
-                    } else {
-                        m = this.createMaterial(options);
-                        if ( g instanceof Array && g.length > 0 ) {
-
-                            mesh = new THREE.Group();
-                            for ( let x = 0; x <= g.length - 1; x++ ) {
-
-                                mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
-                            }
-                        } else {
-                            mesh = new THREE.Mesh( g, m );
-                        }
-                    }
-
-                    //mesh.material.color = new THREE.Color( i/options.count, .5, .5 );
-                    
-                    mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
-                    group.add( mesh );
-                }
-                group.name = options.name !== undefined ? options.name : "bundle";
-                this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
-            } else {
-                let g = this.createGeometry( options );
-                if( g.type === "Mesh" || g.type === "Group" ) {
-                    mesh = g;
-                } else {
-                    mesh = new THREE.Mesh( g, m );
-                }
-                mesh.name = options.name !== undefined ? options.name : "";
-                
-                this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
-            }
-
-                
-
-            return;
-    },
     optionParser: function ( str, options = {}, type ) {
         //parsers option string into viable data type for running code
         const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
@@ -328,14 +231,127 @@ const framework = {
                 return options;
         }
     },
+    setupAnimationForMesh: function ( mesh, options ) {
+        //set up animation for this mesh
+                let animationOptions = {
+                    animationType: options.animationType,
+                    animationDelay: options.animationDelay,
+                    animationDirection: options.animationDirection,
+                    animationDuration: options.animationDuration,
+                    animationEasing: options.animationEasing,
+                    animationElasticity: options.animationElasticity,
+                    animationKeyframes: options.animationKeyframes,
+                    animationAsymmetry: options.animationAsymmetry,
+                    animationOffset: options.animationOffset,
+                    animationGrid: options.animationGrid,
+                    positionRelativeTo: options.positionRelativeTo,
+                    loop: true,
+                };
+                //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
+        
+                //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
+                mesh.animeTimeline = anime.timeline( { 
+                    autoplay: true, 
+                    loop: true } );
+        
+        
+                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
+
+                    if ( /\,/.test( options.animation ) ) {
+             
+                        const seperateAnimations = options.animation.slice().split(",");
+                        for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
+                        
+                            let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
+                            if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                            }
+                        }
+                    } else {
+                        let opts = this.optionParser( options.animation , animationOptions, "animation" );
+                        if ( opts !== undefined ) {
+                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                        }
+                    }
+                    
+                } else {
+                    
+                    mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
+                }
+                
+                mesh.animeTimeline.play();
+                return mesh;
+    },
+    setupMesh: function ( options, sI ) {
+        let m, mesh;
+        //@params sI - the index of the scene
+        /*
+        @params m - stands for material 
+        const isTypeLoader = options.type.search(/[\.obj]{1}/);
+        const isMaterialURL = options.material.search(/(\.mtl){1}/);
+        */
+        
+                m = this.createMaterial( options );
+                if ( options.count !== undefined && options.count > 1 ) {
+                let group = new THREE.Group();
+                for ( let i = 0; i <= options.count - 1; i++ ) {
+                    let g = this.createGeometry( options );
+                    if ( g.type === "Mesh" || g.type === "Group" ) {
+                        mesh = g;
+                    } else {
+                        m = this.createMaterial(options);
+                        if ( g instanceof Array && g.length > 0 ) {
+
+                            mesh = new THREE.Group();
+                            for ( let x = 0; x <= g.length - 1; x++ ) {
+
+                                mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
+                            }
+                        } else {
+                            mesh = new THREE.Mesh( g, m );
+                        }
+                    }
+                    //create a grid to place each object correctly so no objects touch or collide 
+                    mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
+                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
+                    
+                    if ( options.hasOwnProperty( "shadow" ) && options.shadow ) {
+                        mesh.receiveShadow = true;
+                        mesh.castShadow = true;
+                    }
+                    group.add( mesh );
+                }
+                group.name = options.name !== undefined ? options.name : "bundle";
+                this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
+            } else {
+                let g = this.createGeometry( options );
+                if( g.type === "Mesh" || g.type === "Group" ) {
+                    mesh = g;
+                } else {
+                    mesh = new THREE.Mesh( g, m );
+                }
+                if ( options.hasOwnProperty( "shadow" ) && options.shadow ) {
+                    mesh.receiveShadow = true;
+                    mesh.castShadow = true;
+                }
+                mesh.name = options.name !== undefined ? options.name : "";
+                
+                this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
+            }
+
+                
+
+            return;
+    },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed
         return new Promise ( ( res, rej ) => { 
             this.scenes.push( new THREE.Scene() );
             this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-            let light = new THREE.DirectionalLight( 0xffffff, 2 );
-            light.position.set( 0, 1000, 0 );
+            let light = new THREE.DirectionalLight( 0xffffff, 10 );
+            //light.position.set( 0, 10000, 0 );
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 light.castShadow = true;
                 //debug shadow camera
@@ -343,15 +359,16 @@ const framework = {
                 this.scenes[ this.scenes.length -1 ].add( shadowCamera );
             }
             this.scenes[ this.scenes.length - 1 ].add( light );
+            this.scenes[ this.scenes.length - 1 ].add( new THREE.PointLight( 0x00ff00, 1, 100 ) );
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
                     this.setupMesh( o, this.scenes.length - 1 );
                 });
                 //sends an animation type for scene transition
-                res( "fade" );
+                res( defaultOptions.sceneTransition );
             } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
                 this.setupMesh( options, this.scenes.length - 1 );
-                res( "fade" );
+                res( defaultOptions.sceneTransition );
             } else {
                 return;
             }
@@ -371,11 +388,12 @@ const framework = {
         return renderer;
     },
     setupFog: function ( options = {} ) {
+        //sets ups the scenes fog and if there are no defined properties it will use defaults
         let fog;
         const opt = options.fog !== undefined ? options.fog : {};
         const camOpt = options.camera !== undefined ? options.camera : {};
         const color = opt.color !== undefined ? colorInterpreter( opt.color )  :  new THREE.Color();
-        const density = opt.density !== undefined ? opt.density : .0025;
+        const density = opt.density !== undefined ? opt.density : .0010;
         const far = camOpt.far !== undefined ? camOpt.far : 1000;
         const type =  opt.type !== undefined ? opt.type : "exponential";
         const near = camOpt.near !== undefined ? camOpt.near : .01;
@@ -451,7 +469,7 @@ const framework = {
 
     },
     start: function () {
-        console.log( ThreeBSP );
+        
         this.setupScene( {} );
         this.scene = this.scenes[ 0 ];
         //start event listeners
@@ -513,35 +531,8 @@ const framework = {
     },
     runAnimations: function ( time ) {
         this.scene.children.forEach( ( obj ) => {
-            if( obj.type.toLowerCase() === "mesh" ) {
-                /*
-                if ( obj.geometry.parameters.hasOwnProperty( "width" ) && obj.geometry.parameters.hasOwnProperty( "height" ) ) {
-                    const camData = calculateCameraView( obj.position.z, this.camera );
-                } else if ( obj.geometry.parameters.hasOwnProperty( "radius" ) ) {
-                    const camData = calculateCameraView( obj.position.z, this.camera );
-                } else {
-                    console.warn( "can't calculate object parameters" );
-                }
-                */
-/*
-                if( typeof obj.anime === "function" ) {
-                    obj.anime( time, obj.name );
-                } else {
-                    obj.material.needsUpdate = true;
-                }
-            }
-            else if ( obj.type.toLowerCase() === "group" ) {
-                obj.children.forEach( ( m ) => {
-                    if( typeof obj.anime === "function" ) {
-                        m.anime( time, obj.name );
-                    } else {
-                        m.material.needsUpdate = true;
-                    }
-                } );
-            }
-            */
-            }
-        });
+        
+        } );
     },
     runScene: function () {
         requestAnimationFrame( this.runScene );
@@ -549,11 +540,6 @@ const framework = {
         var elaspedTime = this.clock.getElapsedTime();
         this.runAnimations( elaspedTime );
 
-
-        /*
-        this.camera.aspect = window.innerWidth/ window.innerHeight;
-        this.camera.updateProjectionMatrix();
-        */
         this.renderer.render( this.scene, this.camera );
     }
 };
