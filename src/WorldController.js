@@ -364,7 +364,7 @@ const framework = {
             this.scenes.push( new THREE.Scene() );
             this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
             this.scenes[ this.scenes.length - 1 ].fog = this.fog;
-            let light = new THREE.DirectionalLight( 0xffffff, 10 );
+            let light = new THREE.DirectionalLight( 0xffffff, 5 );
             //light.position.set( 0, 10000, 0 );
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 light.castShadow = true;
@@ -376,12 +376,37 @@ const framework = {
             this.scenes[ this.scenes.length - 1 ].add( new THREE.PointLight( 0x00ff00, 1, 100 ) );
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
-                    this.setupMesh( o, this.scenes.length - 1 );
+                    if ( Object.keys( o ).length > 0 ) {
+                        if ( o.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( o.texture ) ) {
+                            
+                            new THREE.TextureLoader().load( o.texture, ( texture ) => {
+                                console.log( texture );
+                                o.texture = texture;
+                                o.texture
+                                this.setupMesh( o, this.scenes.length - 1 ); 
+                            } );
+                            
+                        } else {
+                            this.setupMesh( o, this.scenes.length - 1 ); 
+                        }
+                    }
                 });
                 //sends an animation type for scene transition
                 res( defaultOptions.sceneTransition );
             } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
-                this.setupMesh( options, this.scenes.length - 1 );
+                
+                if ( options.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( options.texture) ) {
+                            console.log( options );
+                            new THREE.TextureLoader().load( options.texture, ( texture ) => {
+                                console.log( texture );
+                                options.texture = texture;
+                                options.size = [ texture.image.naturalWidth, texture.image.naturalHeight ]
+                                this.setupMesh( options, this.scenes.length - 1 ); 
+                            } );
+                            
+                        } else {
+                            this.setupMesh( options, this.scenes.length - 1 ); 
+                        }
                 res( defaultOptions.sceneTransition );
             } else {
                 return;
@@ -553,31 +578,12 @@ const framework = {
                     
                     if ( obj.animationManager === undefined ) {
                         obj.animationManager = {
-                            speed: 10,
+                            speed: 4,
                             
                         };
                     }
                     
-                    if ( exploreRow ) {
-                        const index = 0 //pick a row
-                        const isRow = true,
-                              isUniform = true;
-                        const rowOrCol =  true ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
-                        for ( let start = 0; start <= rowOrCol; start++ ) {
-                            if( isRow ) {
-                                //effect only a specific row
-                                const newIndex = start + ( ( rowOrCol + 1 ) * index )
-                                
-                                if ( obj.animationManager.originalPosition === undefined ) {
-                                    obj.animationManager.originalPosition = obj.position.clone();
-                                }
-                                obj.geometry.vertices[ newIndex ].z = ( Math.sin( time * ( isUniform ? 1 : start ) ) * 20 ) + obj.animationManager.originalPosition.z;
-                            } else {
-                                console.log( ( rowOrCol * start ) + index + start ) 
-                            }
-                            
-                        }
-                    }
+                    //obj.rotation.x += .01;
                     
                     
                 }

@@ -47127,7 +47127,7 @@ var config = {
     },
     "fog": {
         "type": "exponential",
-        "color": "1 .3 .3"
+        "color": "1 .6 .6"
 
     },
     "font": "fonts/AlphaMack_AOE_Regular.json",
@@ -47139,14 +47139,15 @@ var config = {
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
     "worldObjects": [{
         "type": "plane",
-        "segments": 4,
-        "material": "wireframe",
+        "texture": "imgs/usflag.png",
+        "segments": 256,
+        "material": "standard",
         "color": 0xffaa00,
         "positionRelativeTo": "self",
-        "size": [200, 200],
-        "development": true
+        "size": [200, 200]
     }],
-    "enableShadows": true
+    "enableShadows": true,
+    "development": true
 }; //index
 
 
@@ -67273,7 +67274,7 @@ var framework = {
             _this3.scenes.push(new THREE.Scene());
             _this3.scenes[_this3.scenes.length - 1].name = _this3.scenes.length === 1 ? "menu" : "main";
             _this3.scenes[_this3.scenes.length - 1].fog = _this3.fog;
-            var light = new THREE.DirectionalLight(0xffffff, 10);
+            var light = new THREE.DirectionalLight(0xffffff, 5);
             //light.position.set( 0, 10000, 0 );
             if (_this3.options.hasOwnProperty("enableShadows") && _this3.options.enableShadows) {
                 light.castShadow = true;
@@ -67285,12 +67286,35 @@ var framework = {
             _this3.scenes[_this3.scenes.length - 1].add(new THREE.PointLight(0x00ff00, 1, 100));
             if (options instanceof Array) {
                 options.forEach(function (o) {
-                    _this3.setupMesh(o, _this3.scenes.length - 1);
+                    if (Object.keys(o).length > 0) {
+                        if (o.hasOwnProperty("texture") && /[jpg|png|gif]{1}$/.test(o.texture)) {
+
+                            new THREE.TextureLoader().load(o.texture, function (texture) {
+                                console.log(texture);
+                                o.texture = texture;
+                                o.texture;
+                                _this3.setupMesh(o, _this3.scenes.length - 1);
+                            });
+                        } else {
+                            _this3.setupMesh(o, _this3.scenes.length - 1);
+                        }
+                    }
                 });
                 //sends an animation type for scene transition
                 res(_defaults2.default.sceneTransition);
             } else if (Object.keys(options).length > 0 && options.constructor === Object) {
-                _this3.setupMesh(options, _this3.scenes.length - 1);
+
+                if (options.hasOwnProperty("texture") && /[jpg|png|gif]{1}$/.test(options.texture)) {
+                    console.log(options);
+                    new THREE.TextureLoader().load(options.texture, function (texture) {
+                        console.log(texture);
+                        options.texture = texture;
+                        options.size = [texture.image.naturalWidth, texture.image.naturalHeight];
+                        _this3.setupMesh(options, _this3.scenes.length - 1);
+                    });
+                } else {
+                    _this3.setupMesh(options, _this3.scenes.length - 1);
+                }
                 res(_defaults2.default.sceneTransition);
             } else {
                 return;
@@ -67464,30 +67488,13 @@ var framework = {
 
                     if (obj.animationManager === undefined) {
                         obj.animationManager = {
-                            speed: 10
+                            speed: 4
 
                         };
                     }
 
-                    if (exploreRow) {
-                        var index = 0; //pick a row
-                        var isRow = true,
-                            isUniform = true;
-                        var rowOrCol = true ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
-                        for (var start = 0; start <= rowOrCol; start++) {
-                            if (isRow) {
-                                //effect only a specific row
-                                var newIndex = start + (rowOrCol + 1) * index;
+                    //obj.rotation.x += .01;
 
-                                if (obj.animationManager.originalPosition === undefined) {
-                                    obj.animationManager.originalPosition = obj.position.clone();
-                                }
-                                obj.geometry.vertices[newIndex].z = Math.sin(time * (isUniform ? 1 : start)) * 20 + obj.animationManager.originalPosition.z;
-                            } else {
-                                console.log(rowOrCol * start + index + start);
-                            }
-                        }
-                    }
                 }
             }
         });
@@ -68446,6 +68453,34 @@ exports.default = function (mesh) {
                     anim.animations[0].property = axis.charAt(random);
                 } }));
 
+        case "wavy":
+
+            return function (time) {
+                var obj = this;
+                if (exploreRow) {
+                    var isRow = true;
+                    var isUniform = true;
+                    var waveRadius = 20;
+                    for (var index = 0; index <= obj.geometry.parameters.heightSegments; index++) {
+                        var rowOrCol = isRow ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
+
+                        for (var start = 0; start <= rowOrCol; start++) {
+                            if (isRow) {
+                                //effect only a specific row
+                                var newIndex = start + (rowOrCol + 1) * index;
+
+                                if (obj.animationManager.originalPosition === undefined) {
+                                    obj.animationManager.originalPosition = obj.position.clone();
+                                }
+                                obj.geometry.vertices[newIndex].z = Math.sin((time + index / obj.geometry.parameters.heightSegments + (isUniform ? 1 : start)) * obj.animationManager.speed) * waveRadius + obj.animationManager.originalPosition.z;
+                            } else {
+                                console.log(rowOrCol * start + index + start);
+                            }
+                        }
+                    }
+                }
+            };
+
         case "zoom-beat":
 
             newOptions.animTarget = "position";
@@ -68898,10 +68933,11 @@ exports.default = function () {
         case "standard":
             return new THREE.MeshStandardMaterial({
                 color: color,
-                roughness: 0,
+                roughness: 100,
                 metalness: 0,
                 side: THREE.DoubleSide,
-                transparent: true });
+                transparent: true,
+                map: map });
         case "wireframe":
             return new THREE.MeshNormalMaterial({
                 transparent: true,

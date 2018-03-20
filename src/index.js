@@ -16,7 +16,7 @@ const config = {
     },
 	"fog": {
 		"type": "exponential",
-		"color": "1 .3 .3",
+		"color": "1 .6 .6",
 
 	},
 	"font": "fonts/AlphaMack_AOE_Regular.json",
@@ -29,15 +29,16 @@ const config = {
 	"worldObjects": [
         {
             "type": "plane",
-            "segments": 4,
-            "material": "wireframe",
+            "texture": "imgs/usflag.png",
+            "segments": 256,
+            "material": "standard",
             "color" : 0xffaa00,
             "positionRelativeTo" : "self",
             "size" : [ 200, 200 ],
-            "development": true
         }
     ],
-    "enableShadows": true
+    "enableShadows": true,
+    "development": true
 };
 
 
