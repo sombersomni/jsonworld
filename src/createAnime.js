@@ -288,20 +288,6 @@ export default function ( mesh, options = {} ) {
             
             return this.packAnimations( mesh, Object.assign( {}, newOptions ) );
             
-        case "spin-random" :
-            /*
-            return packAnimations( mesh, Object.assign( {}, newOptions, { keyframes: keyframes !== undefined ? convertKeyframesToRadians( keyframes ) : ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle, 
-                    animProp: "y", 
-                    animTarget: "rotation", 
-                    complete: function( anim ) {
-                        const axis = "xyz";
-                        const random = Math.round( Math.random() * 3 - 1 );
-                        anim.animations[0].property = axis.charAt( random );
-                   } } ) );
-<<<<<<< HEAD
-                   */
-=======
-            
         case "wavy":
             
             return function ( time ) {
@@ -332,7 +318,6 @@ export default function ( mesh, options = {} ) {
                         
                     }
             }
->>>>>>> minorTweaks
 
         case "zoom-beat" :
             

@@ -33,25 +33,8 @@ const config = {
             "segments": 256,
             "material": "standard",
             "color" : 0xffaa00,
-<<<<<<< HEAD
-            "count" : 1000,
-            "moveRelativeTo" : "self",
-            "position": [ 100, 0, -200 ],
-            "size" : [ 20, 60, 20 ],
-            "gridLayout": [ 3, 3, 3 ],
-            "animation": "_moveRandomly 10s",
-            "animationAsymmetry": true,
-            "animationKeyframes" : {
-                "_moveRandomly" : [ { x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 } ]
-            },
-            "animationGrid": "basic",
-            "shadow": true,
-            "development": true
-=======
             "positionRelativeTo" : "self",
-            "size" : [ 200, 200 ],
->>>>>>> minorTweaks
-        }
+     }
     ],
     "enableShadows": true,
     "development": true

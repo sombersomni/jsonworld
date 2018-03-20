@@ -462,9 +462,9 @@ const framework = {
                         if ( o.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( o.texture ) ) {
                             
                             new THREE.TextureLoader().load( o.texture, ( texture ) => {
-                                console.log( texture );
+                                
                                 o.texture = texture;
-                                o.texture
+                                o.size = [ texture.image.naturalWidth / 2, texture.image.naturalHeight / 2]
                                 this.setupMesh( o, this.scenes.length - 1 ); 
                             } );
                             
@@ -478,11 +478,11 @@ const framework = {
             } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
                 
                 if ( options.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( options.texture) ) {
-                            console.log( options );
+                    
                             new THREE.TextureLoader().load( options.texture, ( texture ) => {
                                 console.log( texture );
                                 options.texture = texture;
-                                options.size = [ texture.image.naturalWidth, texture.image.naturalHeight ]
+                                options.size = [ texture.image.naturalWidth / 2, texture.image.naturalHeight / 2 ];
                                 this.setupMesh( options, this.scenes.length - 1 ); 
                             } );
                             
@@ -665,7 +665,7 @@ const framework = {
                         };
                     }
                     
-                    //obj.rotation.x += .01;
+                    obj.rotation.x += .01;
                     
                     
                 }

@@ -19,9 +19,9 @@ In our *config.json*, we our going to start building our world. Let's start with
 ```json
 
 {
-    worldObjects: [
+    "worldObjects": [
         { 
-            type : "box"
+            "type" : "box"
         }
     ]
 }
