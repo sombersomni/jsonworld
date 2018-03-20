@@ -231,6 +231,76 @@ const framework = {
                 return options;
         }
     },
+    packAnimations: function ( mesh, options ) {
+        const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset, moveRelativeTo } = options;
+
+        let animation = {
+            elasticity,
+            offset
+        } ;
+
+        //modifies the value being passed originally for the keyframe
+        //returns a function to pass the value through
+
+        let modifierOptions = {
+            moveRelativeTo,
+
+        }
+        
+        let modifier;
+
+        if ( keyframes instanceof Array ) {
+            keyframes.forEach( f => {
+                /* if you have multiple props that fit your target type you can use
+                them within a singe keyframe */
+                console.log( f );
+                if ( f instanceof Array ) {
+                    //made an array outside the push loop so the keyframes won't overwrite each other
+                    f.forEach( each => {
+                       // assign each keyframe for each property
+
+                        if ( animation[ each.animProp ] === undefined) {
+                            animation[ each.animProp ] = [];
+                            modifier = this.setupModifier( mesh, each.animProp, animTarget, modifierOptions );   
+                        }
+                        
+                        animation[ each.animProp ].push( { value: modifier( each.value ) } );
+                    } );
+                } else {
+
+                    animation[ f.animProp ] = [];
+                    modifier = this.setupModifier( mesh, f.animProp, animTarget, modifierOptions );  
+                    animation[ f.animProp ].push( { value: modifier( f.value ) } );
+                }
+
+            } );
+        } else if ( keyframes instanceof Object ) {
+            modifier = this.setupModifier( mesh, keyframes.animProp, animTarget, modifierOptions );  
+            animation[ keyframes.animProp ] = [ { value: modifier( keyframes.value ) } ];
+        } else {
+            throw new Error( "keyframes must be either objects, or an array of objects with its set properties" );
+        }
+
+        if ( mesh.type === "Group" && asymmetry ) {
+            console.log( mesh, "start packing all children" );
+                    let pack = [];
+                    for ( var n = 0; n <= mesh.children.length -1; n++ ) {
+                        let obj = mesh.children[n];
+
+                            if ( canPack ) {
+                                let newAnimation = Object.assign( {}, animation, { targets: obj[ animTarget ], 
+                                                                                  offset: n * offset } );
+                                pack.push( newAnimation );
+                            }
+
+
+                    }
+                    return pack;
+        } else {
+            let newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ] } );
+            return newAnimation;
+        }
+    },
     setupAnimationForMesh: function ( mesh, options ) {
         //set up animation for this mesh
                 let animationOptions = {
@@ -244,7 +314,7 @@ const framework = {
                     animationAsymmetry: options.animationAsymmetry,
                     animationOffset: options.animationOffset,
                     animationGrid: options.animationGrid,
-                    positionRelativeTo: options.positionRelativeTo,
+                    moveRelativeTo: options.moveRelativeTo,
                     loop: true,
                 };
                 //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
@@ -340,9 +410,21 @@ const framework = {
                 this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
             }
 
-                
-
             return;
+    },
+    setupModifier: function( mesh, animProp, target, options ) {
+        switch( target ) {
+            case "position":
+                
+                if ( options.moveRelativeTo === "self" ) {
+                    //the object moves based on its own position
+                    return ( value ) => value + mesh.position[ animProp ];
+                } else {
+                    return ( value ) => value + this.scene.position[ animProp ];
+                }
+            default:
+                return ( value ) => value;
+        }
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed

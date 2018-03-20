@@ -21,6 +21,6 @@
         "type": "dodecahedron",
         "message" : "building a better world"
     },
-    "positionRelativeTo": "world",
+    "moveRelativeTo": "world",
     "sceneTransition" : "fade-out"
 }
