@@ -298,7 +298,41 @@ export default function ( mesh, options = {} ) {
                         const random = Math.round( Math.random() * 3 - 1 );
                         anim.animations[0].property = axis.charAt( random );
                    } } ) );
+<<<<<<< HEAD
                    */
+=======
+            
+        case "wavy":
+            
+            return function ( time ) {
+                    let obj = this;
+                    if ( exploreRow ) {
+                        const isRow = true;
+                        const isUniform = true;
+                        const waveRadius = 20;
+                        for ( let index = 0; index <= obj.geometry.parameters.heightSegments ; index++ ){
+                           const rowOrCol =  isRow ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
+                    
+                            for ( let start = 0; start <= rowOrCol; start++ ) {
+                                if( isRow ) {
+                                    //effect only a specific row
+                                    const newIndex = start + ( ( rowOrCol + 1 ) * index )
+
+                                    if ( obj.animationManager.originalPosition === undefined ) {
+                                        obj.animationManager.originalPosition = obj.position.clone();
+                                    }
+                                    obj.geometry.vertices[ newIndex ].z = ( Math.sin( ( ( time + index / obj.geometry.parameters.heightSegments + ( isUniform ? 1 : start  ) ) * obj.animationManager.speed ) ) * waveRadius ) + obj.animationManager.originalPosition.z;
+                                } else {
+                                    console.log( ( rowOrCol * start ) + index + start ) 
+                                }
+
+                            } 
+                        }
+                            
+                        
+                    }
+            }
+>>>>>>> minorTweaks
 
         case "zoom-beat" :
             

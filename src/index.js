@@ -16,7 +16,7 @@ const config = {
     },
 	"fog": {
 		"type": "exponential",
-		"color": "1 .3 .3",
+		"color": "1 .6 .6",
 
 	},
 	"font": "fonts/AlphaMack_AOE_Regular.json",
@@ -28,9 +28,12 @@ const config = {
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            "type": "box",
+            "type": "plane",
+            "texture": "imgs/usflag.png",
+            "segments": 256,
             "material": "standard",
             "color" : 0xffaa00,
+<<<<<<< HEAD
             "count" : 1000,
             "moveRelativeTo" : "self",
             "position": [ 100, 0, -200 ],
@@ -44,9 +47,14 @@ const config = {
             "animationGrid": "basic",
             "shadow": true,
             "development": true
+=======
+            "positionRelativeTo" : "self",
+            "size" : [ 200, 200 ],
+>>>>>>> minorTweaks
         }
     ],
-    "enableShadows": true
+    "enableShadows": true,
+    "development": true
 };
 
 

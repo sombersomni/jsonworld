@@ -32,10 +32,11 @@ export default function ( options = {} ) {
         case "standard" :
             return new THREE.MeshStandardMaterial( {
                 color,
-                roughness: 0,
+                roughness: 100,
                 metalness: 0,
                 side: THREE.DoubleSide,
-                transparent: true } );
+                transparent: true,
+                map } );
         case "wireframe" :
             return new THREE.MeshNormalMaterial( {
                 transparent: true,
