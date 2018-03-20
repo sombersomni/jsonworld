@@ -28,20 +28,12 @@ const config = {
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
 	"worldObjects": [
         {
-            "type": "box",
-            "material": "standard",
+            "type": "plane",
+            "segments": 4,
+            "material": "wireframe",
             "color" : 0xffaa00,
-            "count" : 1000,
             "positionRelativeTo" : "self",
-            "size" : [ 20, 60, 20 ],
-            "gridLayout": [ 3, 3, 3 ],
-            "animation": "_moveRandomly 10s",
-            "animationAsymmetry": true,
-            "animationKeyframes" : {
-                "_moveRandomly" : [ { x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 } ]
-            },
-            "animationGrid": "basic",
-            "shadow": true,
+            "size" : [ 200, 200 ],
             "development": true
         }
     ],

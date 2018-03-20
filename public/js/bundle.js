@@ -47138,20 +47138,12 @@ var config = {
         "animation": "spin-basic 5s"
     }, // pick a preloader for when the app starts downloading sounds and builds 3D world
     "worldObjects": [{
-        "type": "box",
-        "material": "standard",
+        "type": "plane",
+        "segments": 4,
+        "material": "wireframe",
         "color": 0xffaa00,
-        "count": 1000,
         "positionRelativeTo": "self",
-        "size": [20, 60, 20],
-        "gridLayout": [3, 3, 3],
-        "animation": "_moveRandomly 10s",
-        "animationAsymmetry": true,
-        "animationKeyframes": {
-            "_moveRandomly": [{ x: 100, y: -10 }, { y: 40 }, { x: 50 }, { y: 100 }]
-        },
-        "animationGrid": "basic",
-        "shadow": true,
+        "size": [200, 200],
         "development": true
     }],
     "enableShadows": true
@@ -66924,7 +66916,13 @@ var MTLLoader = __webpack_require__(87);
 //UTILS
 
 
+var isMesh = false;
+
 function WorldController(options) {
+
+    //constants 
+    this.SLOWDOWN_POWER = 3;
+
     this.options = options;
     this.preloader = options.preloader;
     this.sounds = options.sounds;
@@ -66936,6 +66934,8 @@ function WorldController(options) {
     this.cameras = [];
     this.fonts = [];
     this.scenes = [];
+    this.hashed = [];
+    this.counter = 0;
     //
 
     this.canvas = this.getCanvas();
@@ -67251,7 +67251,13 @@ var framework = {
             }
             mesh.name = options.name !== undefined ? options.name : "";
 
-            this.scenes[sI].add(this.setupAnimationForMesh(mesh, options));
+            if (options.animation !== undefined || options.animationType !== undefined) {
+
+                this.scenes[sI].add(this.setupAnimationForMesh(mesh, options));
+            } else {
+
+                this.scenes[sI].add(mesh);
+            }
         }
 
         return;
@@ -67447,7 +67453,44 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
-        this.scene.children.forEach(function (obj) {});
+        var _this6 = this;
+
+        this.scene.children.forEach(function (obj) {
+            if (obj.geometry !== undefined) {
+                obj.geometry.verticesNeedUpdate = true;
+                if (obj.geometry.type === "PlaneGeometry") {
+                    var exploreRow = true;
+                    var slowdown = 1 / Math.pow(time, _this6.SLOWDOWN_POWER);
+
+                    if (obj.animationManager === undefined) {
+                        obj.animationManager = {
+                            speed: 10
+
+                        };
+                    }
+
+                    if (exploreRow) {
+                        var index = 0; //pick a row
+                        var isRow = true,
+                            isUniform = true;
+                        var rowOrCol = true ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
+                        for (var start = 0; start <= rowOrCol; start++) {
+                            if (isRow) {
+                                //effect only a specific row
+                                var newIndex = start + (rowOrCol + 1) * index;
+
+                                if (obj.animationManager.originalPosition === undefined) {
+                                    obj.animationManager.originalPosition = obj.position.clone();
+                                }
+                                obj.geometry.vertices[newIndex].z = Math.sin(time * (isUniform ? 1 : start)) * 20 + obj.animationManager.originalPosition.z;
+                            } else {
+                                console.log(rowOrCol * start + index + start);
+                            }
+                        }
+                    }
+                }
+            }
+        });
     },
     runScene: function runScene() {
         requestAnimationFrame(this.runScene);
@@ -68669,10 +68712,10 @@ exports.default = function () {
             //creates plane geometry
             if (numCheck) {
                 //uses a single number for sizing
-                return new THREE.PlaneGeometry(size, size, segments);
+                return new THREE.PlaneGeometry(size, size, segments, segments);
             } else {
                 //uses the first value which should be width
-                return new THREE.PlaneGeometry(size[0], size[1], segments);
+                return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
             }
             break;
         case "sphere":

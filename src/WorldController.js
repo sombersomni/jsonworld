@@ -20,8 +20,13 @@ import createMaterial from "./createMaterial.js";
 import initializeAudio from "./audioInitializer.js";
 import progressEmitter from "./events/progressEmitter";
 
+let isMesh = false;
 
 function WorldController (options) {
+    
+    //constants 
+    this.SLOWDOWN_POWER = 3;
+    
     this.options = options;
     this.preloader = options.preloader;
     this.sounds = options.sounds;
@@ -33,6 +38,8 @@ function WorldController (options) {
     this.cameras = [];
     this.fonts = [];
     this.scenes = [];
+    this.hashed = [];
+    this.counter = 0;
     //
 
     this.canvas = this.getCanvas();
@@ -337,7 +344,14 @@ const framework = {
                 }
                 mesh.name = options.name !== undefined ? options.name : "";
                 
-                this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
+                if ( options.animation !== undefined || options.animationType !== undefined ) {
+                    
+                    this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
+                } else {
+                    
+                    this.scenes[sI].add( mesh );
+                }
+                
             }
 
                 
@@ -530,8 +544,44 @@ const framework = {
 
     },
     runAnimations: function ( time ) {
-        this.scene.children.forEach( ( obj ) => {
-        
+        this.scene.children.forEach( obj => {
+            if ( obj.geometry !== undefined ) {
+                obj.geometry.verticesNeedUpdate = true;
+                if ( obj.geometry.type === "PlaneGeometry" ) {
+                    let exploreRow = true;
+                    const slowdown = 1 / Math.pow( time, this.SLOWDOWN_POWER );
+                    
+                    if ( obj.animationManager === undefined ) {
+                        obj.animationManager = {
+                            speed: 10,
+                            
+                        };
+                    }
+                    
+                    if ( exploreRow ) {
+                        const index = 0 //pick a row
+                        const isRow = true,
+                              isUniform = true;
+                        const rowOrCol =  true ? obj.geometry.parameters.widthSegments : obj.geometry.parameters.heightSements;
+                        for ( let start = 0; start <= rowOrCol; start++ ) {
+                            if( isRow ) {
+                                //effect only a specific row
+                                const newIndex = start + ( ( rowOrCol + 1 ) * index )
+                                
+                                if ( obj.animationManager.originalPosition === undefined ) {
+                                    obj.animationManager.originalPosition = obj.position.clone();
+                                }
+                                obj.geometry.vertices[ newIndex ].z = ( Math.sin( time * ( isUniform ? 1 : start ) ) * 20 ) + obj.animationManager.originalPosition.z;
+                            } else {
+                                console.log( ( rowOrCol * start ) + index + start ) 
+                            }
+                            
+                        }
+                    }
+                    
+                    
+                }
+            }
         } );
     },
     runScene: function () {

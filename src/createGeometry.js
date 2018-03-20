@@ -69,10 +69,10 @@ export default function (options = {} ) {
             //creates plane geometry
             if ( numCheck) {
                 //uses a single number for sizing
-                return new THREE.PlaneGeometry( size, size, segments );
+                return new THREE.PlaneGeometry( size, size, segments, segments);
             } else {
                 //uses the first value which should be width
-                return new THREE.PlaneGeometry( size[0], size[1], segments );
+                return new THREE.PlaneGeometry( size[0], size[1], segments, segments );
             }
             break;
         case "sphere":
