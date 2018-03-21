@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#000000","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"emissiveColor":"white","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"white","sunIntensity":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"positionRelativeTo":"world","roughness":50,"sceneTransition":"fade-out","segments":8,"size":25,"shininess":50,"wireframeLineWidth":2}
+module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#000000","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"emissiveColor":"white","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"white","sunIntensity":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"positionRelativeTo":"world","roughness":50,"sceneTransition":"fade-out","segments":8,"size":25,"shininess":50,"wireframeLinecap":"round","wireframeLineWidth":2}
 
 /***/ }),
 /* 7 */
@@ -46092,7 +46092,7 @@ var config = {
         "size": [50, 50, 50],
         "position": "100 0 0",
         "color": "white",
-        "count": 5,
+        "count": 50,
         "shadow": true,
         "material": "lambert",
         "texture": "imgs/create.jpg"
@@ -64097,33 +64097,40 @@ var framework = {
                 rej("can't compute radius for object");
             }
         });
-        var type = options.layoutType !== undefined ? options.layoutType : _defaults2.default.layoutType,
-            margin = options.margin !== undefined ? options.margin : _defaults2.default.margin;
+        var type = options.layoutType !== undefined ? options.layoutType : _defaults2.default.layoutType;
+
+        var margin = options.margin !== undefined ? options.margin : _defaults2.default.margin;
+
+        console.log(margin);
+
+        if (typeof margin === "string") {
+            console.log(margin);
+            margin = this.optionParser(margin, undefined, "margin");
+        }
 
         if (mesh.type === "Mesh") {
 
-            if (index == 0) {
-                mesh.position.set(0, 0, 0);
-                return mesh;
-            } else {
+            p.then(function (data) {
 
-                p.then(function (data) {
-                    var radius = mesh.geometry.boundingSphere.radius,
-                        center = mesh.geometry.boundingSphere.center;
+                var radius = mesh.geometry.boundingSphere.radius,
+                    center = mesh.geometry.boundingSphere.center;
 
-                    switch (type) {
+                switch (type) {
 
-                        case "basic":
+                    case "basic":
 
-                            var leftRIght = index % 2 === 0 ? -1 : 1;
-                            mesh.position.set(leftRIght * Math.floor(index / 2) * (radius + 10 - mesh.position.x), 0, 0);
-                            return mesh;
+                        var leftRight = index % 2 === 0 ? -1 : 1;
 
-                        default:
-                            return mesh;
-                    }
-                });
-            }
+                        var newX = leftRight * Math.floor(index / 2) * (radius + 10 - mesh.position.x) + leftRight * margin * (index + 1);
+
+                        console.log(newX);
+                        mesh.position.set(newX, 0, 0);
+                        return mesh;
+
+                    default:
+                        return mesh;
+                }
+            });
         }
 
         return mesh;
@@ -64198,7 +64205,7 @@ var framework = {
     },
     optionParser: function optionParser(target) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-        var type = arguments[2];
+        var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "default";
 
         //parsers option string into viable data type for running code
         var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry"];
@@ -64238,6 +64245,14 @@ var framework = {
             case "color":
 
                 return (0, _colorInterpreter2.default)(target);
+
+            case "margin":
+
+                //matches numbers and returns an array of values
+                var arr = target.match(/[0-9]+/);
+
+                console.log(arr);
+            //for ( var x = 0; x <= target)
             default:
                 return target.slice().split(" ").map(function (each) {
                     return parseInt(each.trim(), 10);
@@ -65921,14 +65936,11 @@ exports.default = function () {
     //console.log( size, position );
 
     if (typeof size === "string") {
-        console.log("is working");
-        size = this.optionParser(size, options, "size");
-        console.log(size);
+        size = this.optionParser(size);;
     }
 
     if (typeof position === "string") {
-        position = this.optionParser(position, options, "position");
-        console.log(position);
+        position = this.optionParser(position);
     }
 
     //bool checks
@@ -66173,7 +66185,8 @@ exports.default = function () {
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
         side = options.side !== undefined ? options.side : THREE.DoubleSide,
         transparent = options.transparent !== undefined ? options.transparent : false,
-        wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth : _defaults2.default.wireframeLineWidth;
+        wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth : _defaults2.default.wireframeLineWidth,
+        wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : _defaults2.default.wireframeLinecap;
 
     var matOpts = {
         color: color,
@@ -66182,8 +66195,7 @@ exports.default = function () {
         map: map,
         overdraw: overdraw,
         side: side,
-        transparent: transparent,
-        wireframeLineWidth: wireframeLineWidth
+        transparent: transparent
     };
     switch (material) {
         case "basic":
@@ -66212,7 +66224,9 @@ exports.default = function () {
         case "wireframe":
             return new THREE.MeshNormalMaterial({
                 transparent: true,
-                wireframe: true });
+                wireframe: true,
+                wireframeLineWidth: wireframeLineWidth,
+                wireframeLinecap: wireframeLinecap });
         default:
             return new THREE.MeshBasicMaterial({ color: color });
 

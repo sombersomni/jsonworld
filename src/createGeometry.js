@@ -15,14 +15,11 @@ export default function (options = {} ) {
     //console.log( size, position );
     
     if ( typeof size === "string" ) {
-        console.log( "is working" );
-        size = this.optionParser( size, options, "size" );
-        console.log( size );
+        size = this.optionParser( size );;
     }
     
     if ( typeof position === "string" ) {
-        position = this.optionParser( position, options, "position" );
-        console.log( position );
+        position = this.optionParser( position );
     }
     
     //bool checks

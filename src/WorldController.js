@@ -159,34 +159,40 @@ const framework = {
                 rej( "can't compute radius for object" );
             }
         } );
-        const type = options.layoutType !== undefined ? options.layoutType : defaultOptions.layoutType,
-              margin = options.margin !== undefined ? options.margin : defaultOptions.margin;
+        const type = options.layoutType !== undefined ? options.layoutType : defaultOptions.layoutType;
+        
+        let margin = options.margin !== undefined ? options.margin : defaultOptions.margin;
+        
+        console.log( margin );
+        
+        if ( typeof margin === "string" ) {
+            console.log( margin );
+            margin = this.optionParser( margin, undefined, "margin" );
+        }
         
         if ( mesh.type === "Mesh" ) {
             
-            if ( index == 0 ) {
-                mesh.position.set( 0, 0, 0 );
-                return mesh;
-            } else {
-                
-                 p.then( data => {
+            p.then( data => {
+                     
                       const radius = mesh.geometry.boundingSphere.radius,
                       center = mesh.geometry.boundingSphere.center;
                     
-                      switch( type ) {
+                switch( type ) {
 
                         case "basic":
 
-                            const leftRIght = index % 2 === 0 ? -1 : 1;
-                            mesh.position.set( leftRIght * Math.floor( index / 2 ) *  ( radius + 10 - mesh.position.x  ) , 0, 0 );
+                            const leftRight = index % 2 === 0 ? -1 : 1;
+                              
+                            const newX = leftRight * Math.floor( index / 2 ) *  ( radius + 10 - mesh.position.x  ) + ( leftRight * margin * ( index + 1 ) );
+                              
+                            console.log( newX );
+                            mesh.position.set( newX , 0, 0 );
                             return mesh;
 
                         default:
                             return mesh;
                 }
-                } );
-                
-            }
+            } );
         }
         
         return mesh;
@@ -256,7 +262,7 @@ const framework = {
         }
         return mesh;
     },
-    optionParser: function ( target, options = {}, type ) {
+    optionParser: function ( target, options = {}, type = "default" ) {
         //parsers option string into viable data type for running code
         const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
         
@@ -296,6 +302,14 @@ const framework = {
             case "color" : 
                 
                 return colorInterpreter( target );
+                
+            case "margin" :
+                
+                //matches numbers and returns an array of values
+                let arr = target.match( /[0-9]+/ );
+                
+                console.log( arr );
+                //for ( var x = 0; x <= target)
             default:
                 return target.slice().split( " " ).map( each => parseInt( each.trim(), 10 ) );
                 

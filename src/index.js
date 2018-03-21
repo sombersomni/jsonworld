@@ -11,7 +11,7 @@ const config = {
             "size" : [ 50, 50, 50 ],
             "position" : "100 0 0", 
             "color" : "white",
-            "count" : 5,
+            "count" : 50,
             "shadow" : true,
             "material" : "lambert",
             "texture" : "imgs/create.jpg"

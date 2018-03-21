@@ -37,5 +37,6 @@
     "segments" : 8,
     "size" : 25,
     "shininess" : 50,
+    "wireframeLinecap" : "round",
     "wireframeLineWidth" : 2
 }
