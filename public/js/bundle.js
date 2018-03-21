@@ -46120,7 +46120,7 @@ function(a){a=P(a);for(var c=v.length;c--;)for(var d=v[c],b=d.animations,f=b.len
 /* 31 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#000000","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"emissiveColor":"white","gridLayout":[5,5,5],"rotationAngle":360,"sunColor":"white","sunIntensity":1,"loop":true,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"positionRelativeTo":"world","roughness":50,"sceneTransition":"fade-out","segments":8,"size":25,"shininess":50}
+module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#000000","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"emissiveColor":"white","gridLayout":[5,5,5],"grid":"basic","rotationAngle":360,"sunColor":"white","sunIntensity":1,"loop":true,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"positionRelativeTo":"world","roughness":50,"sceneTransition":"fade-out","segments":8,"size":25,"shininess":50,"wireframeLineWidth":2}
 
 /***/ }),
 /* 32 */
@@ -46192,12 +46192,15 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var config = {
     "worldObjects": [{
-        "type": "sphere",
-        "size": 20,
+        "grid": "basic",
+        "type": "box",
+        "size": [50, 50, 50],
         "position": "100 0 0",
-        "color": "red",
+        "color": "white",
         "count": 5,
-        "shadow": true
+        "shadow": true,
+        "material": "lambert",
+        "texture": "imgs/create.jpg"
 
     }]
 }; //index
@@ -64073,6 +64076,12 @@ function WorldController(options) {
 
     //packages for storing
     this.audioControllers = [];
+    this.animationManager = {
+        all: []
+    };
+    this.objManager = {
+        all: []
+    };
     this.cameras = [];
     this.fonts = [];
     this.scenes = [];
@@ -64184,6 +64193,53 @@ var framework = {
         } else {
             return canvas;
         }
+    },
+    gridMeshPosition: function gridMeshPosition(mesh, options, index) {
+        //gets the radius from the bounding sphere to reflect the objects collision area
+
+        var p = new Promise(function (res, rej) {
+
+            mesh.geometry.computeBoundingSphere();
+            if (mesh.geometry.boundingSphere !== undefined) {
+                res(mesh.geometry.boundingSphere);
+            } else if (mesh.geometry.parameters.radius !== undefined) {
+                res(mesh.geometry.parameters.radius);
+            } else if (mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom) {
+                res(Math.max(mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom));
+            } else if (mesh.geometry.parameters.width) {
+                res(mesh.geometry.parameters.width / 2);
+            } else {
+                rej("can't compute radius for object");
+            }
+        });
+        var grid = options.grid !== undefined ? options.grid : _defaults2.default.grid;
+        if (mesh.type === "Mesh") {
+
+            if (index == 0) {
+                mesh.position.set(0, 0, 0);
+                return mesh;
+            } else {
+
+                p.then(function (data) {
+                    var radius = mesh.geometry.boundingSphere.radius,
+                        center = mesh.geometry.boundingSphere.center;
+
+                    switch (grid) {
+
+                        case "basic":
+
+                            var leftRIght = index % 2 === 0 ? -1 : 1;
+                            mesh.position.set(leftRIght * Math.floor(index / 2) * (radius + 10 - mesh.position.x), 0, 0);
+                            return mesh;
+
+                        default:
+                            return mesh;
+                    }
+                });
+            }
+        }
+
+        return mesh;
     },
     fitOnScreen: function fitOnScreen(mesh, w, h) {
         var n = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
@@ -64446,22 +64502,11 @@ var framework = {
         m = this.createMaterial(options);
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
-            for (var _i = 0; _i <= options.count - 1; _i++) {
+            for (var i = 0; i <= options.count - 1; i++) {
                 var g = this.createGeometry(options);
-                /*
-                    if ( g instanceof Array && g.length > 0 ) {
-                          mesh = new THREE.Group();
-                        for ( let x = 0; x <= g.length - 1; x++ ) {
-                              mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
-                        }
-                    } else {
-                        
-                        
-                    }
-                    */
-                mesh = new THREE.Mesh(g, m);
                 //create a grid to place each object correctly so no objects touch or collide 
-                mesh.position.set(Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1), Math.random() * (options.count * 10) + options.count * 10 / 2 * (0 - 1));
+
+                mesh = this.gridMeshPosition(new THREE.Mesh(g, m), options, i);
 
                 if (options.hasOwnProperty("shadow") && options.shadow) {
                     mesh.receiveShadow = true;
@@ -64479,37 +64524,41 @@ var framework = {
                 this.scenes[sI].add(group);
             }
         } else {
+
             var _g = this.createGeometry(options);
-            if (_g.type === "Mesh" || _g.type === "Group") {
-                mesh = _g;
-            } else {
-                mesh = new THREE.Mesh(_g, m);
-            }
+            mesh = new THREE.Mesh(_g, m);
+
             if (options.hasOwnProperty("shadow") && options.shadow == true) {
+
                 mesh.receiveShadow = true;
                 mesh.castShadow = true;
             }
-            if (/gradient/.test(options.color)) {
 
-                if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
+            /*
+            if ( /gradient/.test( options.color ) ) {
+                            
+                if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
                     mesh.material.needsUpdate = true;
-                    var faceIndices = ["a", "b", "c"];
-                    for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
-
+                    const faceIndices = [ "a", "b", "c" ];
+                    for ( let a = 0; a <= mesh.geometry.faces.length - 1; a++ ) {
+                        
+                        
                         mesh.material.vertexColors = THREE.VertexColors;
-
-                        var f = mesh.geometry.faces[a];
-                        for (var i = 0; i <= faceIndices.length - 1; i++) {
-                            var vertexIndex = f[faceIndices[i]];
-                            var p = mesh.geometry.vertices[vertexIndex];
-                            console.log(vertexIndex);
-                            var color = new THREE.Color(0xffffff);
-                            console.log(p);
-                            mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
+                        
+                        let f = mesh.geometry.faces[ a ];
+                        for ( var i = 0; i <= faceIndices.length - 1; i++ ) {
+                            let vertexIndex = f[ faceIndices[ i ] ];
+                            const p = mesh.geometry.vertices[vertexIndex];
+                            console.log( vertexIndex );
+                            let color = new THREE.Color( 0xffffff );
+                            console.log( p );
+                            mesh.geometry.faces[a].vertexColors[i] = color.setRGB( a / mesh.geometry.faces.length, 1, 1 );
+                            
                         }
                     }
-                }
-            }
+                  }
+            
+            } */
 
             mesh.name = options.name !== undefined ? options.name : "";
 
@@ -66162,7 +66211,8 @@ exports.default = function () {
         roughness = options.roughness !== undefined ? options.roughness : _defaults2.default.roughness,
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
         side = options.side !== undefined ? options.side : THREE.DoubleSide,
-        transparent = options.transparent !== undefined ? options.transparent : false;
+        transparent = options.transparent !== undefined ? options.transparent : false,
+        wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth : _defaults2.default.wireframeLineWidth;
 
     var matOpts = {
         color: color,
@@ -66171,7 +66221,8 @@ exports.default = function () {
         map: map,
         overdraw: overdraw,
         side: side,
-        transparent: transparent
+        transparent: transparent,
+        wireframeLineWidth: wireframeLineWidth
     };
     switch (material) {
         case "basic":
@@ -66181,6 +66232,8 @@ exports.default = function () {
                 color: color,
                 side: THREE.DoubleSide
             });
+        case "lambert":
+            return new THREE.MeshLambertMaterial(Object.assign({}, matOpts));
         case "toon":
             return new THREE.MeshToonMaterial({
                 color: color,

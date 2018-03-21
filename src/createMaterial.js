@@ -8,10 +8,12 @@ export default function ( options = {} ) {
           material = options.hasOwnProperty( "material" ) && options.material !== undefined ? options.material : "default",
           map = options.texture !== undefined ? options.texture : null, 
           overdraw = options.overdraw !== undefined ? options.overdraw : defaultOptions.overdraw,
-          roughness = options.roughness !== undefined ? options.roughness: defaultOptions.roughness,
-          shininess = options.roughness !== undefined ? options.overdraw: defaultOptions.shininess,
+          roughness = options.roughness !== undefined ? options.roughness : defaultOptions.roughness,
+          shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,
           side = options.side !== undefined ? options.side : THREE.DoubleSide,
-          transparent = options.transparent !== undefined ? options.transparent : false;
+          transparent = options.transparent !== undefined ? options.transparent : false,
+          wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth: defaultOptions.wireframeLineWidth;
+          
     
     const matOpts = {
         color,
@@ -20,7 +22,8 @@ export default function ( options = {} ) {
         map,
         overdraw,
         side,
-        transparent
+        transparent,
+        wireframeLineWidth
     }
     switch( material ) {
         case "basic" :
@@ -30,6 +33,8 @@ export default function ( options = {} ) {
             color: color,
             side: THREE.DoubleSide
         } );
+        case "lambert": 
+            return new THREE.MeshLambertMaterial( Object.assign( {}, matOpts ) );
         case "toon" :
             return new THREE.MeshToonMaterial( {
                 color,

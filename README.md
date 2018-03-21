@@ -79,10 +79,10 @@ It's cool to see a 3D object, but it's not all that impressive. The syntax for d
 {
     "worldObjects" : [
         {
-            "type" : "sphere", 
-            "size" : "10 100 10",
+            "type" : "box", 
+            "size" : "50 50 50",
             "position" : "100 0 0",
-            "color" : "red", 
+            "color" : "white", 
             "count" : 5, 
             "shadow" : true
         }
@@ -113,7 +113,30 @@ Material Type| Description
 [phong](https://threejs.org/docs/#api/materials/MeshPhongMaterial) | similar to standard, but more for creating shiny surfaces like glass or ceramic
 [lambert](https://threejs.org/docs/#api/materials/MeshLambertMaterial) | similar to phong, but more for creating dull surfaces like wood or rubber
 wireframe | shows each triangle ( face ) using lines that make up your images shape. Great for debugging
+[line](https://threejs.org/docs/#api/materials/LineBasicMaterial) | only for when you draw lines into 3D space.
 [toon](https://threejs.org/docs/#api/materials/MeshToonMaterial) | similar to standard, but makes your object look more like a cartoon or cel-shaded
 custom | if you know how to write advanced shader scripts or find some to import, you can use this type to give your object an even more unique look.
 
+Let's add our material. We will move to javascript so we can focus on evolving our boxes into a *Metal Gear Solid Crate*. We want a dull texture for our skin, so we will use the *lambert* material:
 
+```javascript
+    
+    const MGSCrate = {
+        type: "box",
+        size: "50 50 50",
+        position : "100 0 0",
+        color : "white", 
+        count : 5, 
+        shadow : true,
+        "material" : "lambert",
+        "texture" : "crate.png",
+        
+    }
+    
+```
+
+**Material** brings out the shadows and highlights of the objects skin, but the newly added **Texture** wraps an image around the object to give it a little more realistic feel.
+
+
+## POSITIONING OBJECTS IN THE WORLD
+Some options are left to default at jsonworld's core in order to avoid over complicating things for you, but that doesn't mean you're limited. 

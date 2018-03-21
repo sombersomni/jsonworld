@@ -17,6 +17,7 @@
     },
     "emissiveColor" : "white",
     "gridLayout" : [5, 5, 5],
+    "grid": "basic",
     "rotationAngle": 360,
     "sunColor" : "white",
     "sunIntensity" : 1,
@@ -34,5 +35,6 @@
     "sceneTransition" : "fade-out",
     "segments" : 8,
     "size" : 25,
-    "shininess" : 50
+    "shininess" : 50,
+    "wireframeLineWidth" : 2
 }

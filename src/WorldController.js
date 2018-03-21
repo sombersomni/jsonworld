@@ -35,6 +35,12 @@ function WorldController (options) {
 
     //packages for storing
     this.audioControllers = [];
+    this.animationManager = {
+        all : []
+    };
+    this.objManager = {
+        all : []
+    };
     this.cameras = [];
     this.fonts = [];
     this.scenes = [];
@@ -134,6 +140,54 @@ const framework = {
         } else {
             return canvas;
         }
+    },
+    gridMeshPosition: function ( mesh, options, index ) {
+        //gets the radius from the bounding sphere to reflect the objects collision area
+        
+        const p = new Promise( ( res, rej ) => {
+            
+            mesh.geometry.computeBoundingSphere();
+            if ( mesh.geometry.boundingSphere !== undefined ) {
+                res( mesh.geometry.boundingSphere );
+            } else if ( mesh.geometry.parameters.radius !== undefined ) {
+                res( mesh.geometry.parameters.radius );
+            } else if ( mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom ) {
+                res( Math.max( mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom ) );
+            } else if ( mesh.geometry.parameters.width ) {
+                res( mesh.geometry.parameters.width / 2 );
+            } else {
+                rej( "can't compute radius for object" );
+            }
+        } );
+        const grid = options.grid !== undefined ? options.grid : defaultOptions.grid;
+        if ( mesh.type === "Mesh" ) {
+            
+            if ( index == 0 ) {
+                mesh.position.set( 0, 0, 0 );
+                return mesh;
+            } else {
+                
+                 p.then( data => {
+                      const radius = mesh.geometry.boundingSphere.radius,
+                      center = mesh.geometry.boundingSphere.center;
+                    
+                      switch( grid ) {
+
+                        case "basic":
+
+                            const leftRIght = index % 2 === 0 ? -1 : 1;
+                            mesh.position.set( leftRIght * Math.floor( index / 2 ) *  ( radius + 10 - mesh.position.x ) , 0, 0 );
+                            return mesh;
+
+                        default:
+                            return mesh;
+                }
+                } );
+                
+            }
+        }
+        
+        return mesh;
     },
     fitOnScreen: function ( mesh, w, h, n = 2 ) {
         const data = calculateCameraView( mesh.position.z, this.camera );
@@ -379,27 +433,12 @@ const framework = {
         
                 m = this.createMaterial( options );
                 if ( options.count !== undefined && options.count > 1 ) {
-                let group = new THREE.Group();
+                const group = new THREE.Group();
                 for ( let i = 0; i <= options.count - 1; i++ ) {
-                    let g = this.createGeometry( options );
-                    /*
-                        if ( g instanceof Array && g.length > 0 ) {
-
-                            mesh = new THREE.Group();
-                            for ( let x = 0; x <= g.length - 1; x++ ) {
-
-                                mesh.add( this.handleMultiGeometries( g[x], m, options.material === "line" ? true : false ) );
-                            }
-                        } else {
-                            
-                            
-                        }
-                        */
-                     mesh = new THREE.Mesh( g, m );
+                    const g = this.createGeometry( options );
                     //create a grid to place each object correctly so no objects touch or collide 
-                    mesh.position.set( Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1 ) ),
-                        Math.random() * ( options.count * 10 ) + ( options.count * 10 /2 * ( 0 - 1) ) );
+                     
+                     mesh = this.gridMeshPosition( new THREE.Mesh( g, m ), options, i );
                     
                     if ( options.hasOwnProperty( "shadow" ) && options.shadow ) {
                         mesh.receiveShadow = true;
@@ -417,16 +456,17 @@ const framework = {
                     this.scenes[sI].add( group );
                 }
             } else {
-                let g = this.createGeometry( options );
-                if( g.type === "Mesh" || g.type === "Group" ) {
-                    mesh = g;
-                } else {
-                    mesh = new THREE.Mesh( g, m );
-                }
+                
+                const g = this.createGeometry( options );
+                mesh = new THREE.Mesh( g, m );
+                
                 if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
+                    
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
+                
+                /*
                 if ( /gradient/.test( options.color ) ) {
                                 
                     if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
@@ -450,7 +490,8 @@ const framework = {
                         }
 
                     }
-                }
+                
+                } */
                 
                 mesh.name = options.name !== undefined ? options.name : "";
                 

@@ -6,12 +6,15 @@ import World from "./components/World.js";
 const config = {
     "worldObjects" : [
         {
-            "type" : "sphere",
-            "size" : 20,
+            "grid" : "basic",
+            "type" : "box",
+            "size" : [ 50, 50, 50 ],
             "position" : "100 0 0", 
-            "color" : "red",
+            "color" : "white",
             "count" : 5,
-            "shadow" : true
+            "shadow" : true,
+            "material" : "lambert",
+            "texture" : "imgs/create.jpg"
             
         }
     ]
