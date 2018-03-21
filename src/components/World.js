@@ -41,23 +41,13 @@ class World extends Component {
 	render () {
 		const { config } = this.props;
 		return (
-			<div id = "world">
+			<div>
 					{ config.hasOwnProperty( "menu" ) && config.menu.links !== undefined ? this.createLinks( config.menu.links ) : null }
 				<canvas></canvas>
-                <div> { this.state.currentUUID } </div>
                 <Progress message = { this.state.message } />
 				
 			</div>
 		);
-	}
-	preloadTextures( textures ) {
-		//wait for textures to load before starting anything
-		return new Promise( ( res ) => {
-			new THREE.TextureLoader().load( "imgs/logo.png", texture => {
-				texture.name = "logo_texture";
-			    res( texture );
-			} );
-		} );
 	}
 }
 

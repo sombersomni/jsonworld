@@ -3,9 +3,12 @@ import stringToArray from "./stringToArray.js";
 
 export default function ( color ) {
     if ( typeof color === "string" ) {
-        let c = color.toLowerCase();
+        
+        let c = color.toLowerCase().trim();
         if ( /^[a-z]+/.test( c ) ) {
+            
             return new THREE.Color( c );
+            
         } else if ( /^[#]{1}/.test( c ) ) {
             let hex = c.slice( 1 );
             let a = hex.match( /\w{2}/g );

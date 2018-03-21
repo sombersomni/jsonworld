@@ -1,24 +1,45 @@
 import * as THREE from "three";
 
+import defaultOptions from "./json/defaults.json";
+
 import proceduralTree from "./utils/proceduralTree";
 
 export default function (options = {} ) {
     //goes through every geometry type plus custom ones
-    const segments = options.segments !== undefined ? options.segments : 8,
-        type = options.type !== undefined ? options.type : "default",
-        size = options.size !== undefined ? options.size: 1,
-        numCheck = typeof options.size === "number";
+    const segments = options.segments !== undefined ? options.segments : defaultOptions.segments,
+        type = options.type !== undefined ? options.type : "default";
+    let size = options.size !== undefined ? options.size: defaultOptions.size,
+        position = options.position !== undefined ? options.position: defaultOptions.objectPosition;
+    
+    
+    //console.log( size, position );
+    
+    if ( typeof size === "string" ) {
+        console.log( "is working" );
+        size = this.optionParser( size, options, "size" );
+        console.log( size );
+    }
+    
+    if ( typeof position === "string" ) {
+        position = this.optionParser( position, options, "position" );
+        console.log( position );
+    }
+    
+    //bool checks
+    const arrCheck = size instanceof Array;
+    
     //CHOICES
     switch( type ) {
         case "box":
-            if ( numCheck ) {
+            console.log( !arrCheck );
+            if ( !arrCheck ) {
                 return new THREE.BoxGeometry( size, size, size );
             } else {
                 return new THREE.BoxGeometry( size[0], size[1], size[2] );
             }
             break;
         case "cylinder" :
-            if ( numCheck ) {
+            if ( !arrCheck ) {
                 return new THREE.CylinderGeometry( size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
             } else {
                 return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
@@ -26,7 +47,7 @@ export default function (options = {} ) {
            break; 
         case "dodecahedron" :
             //creates dodecahedron geometry
-            if ( numCheck ){
+            if ( !arrCheck ){
                 return new THREE.DodecahedronGeometry( size );  
             } else {
                 return new THREE.DodecahedronGeometry( size[0] );
@@ -67,7 +88,7 @@ export default function (options = {} ) {
             break;
         case "plane" :
             //creates plane geometry
-            if ( numCheck) {
+            if ( !arrheck) {
                 //uses a single number for sizing
                 return new THREE.PlaneGeometry( size, size, segments, segments);
             } else {
@@ -75,9 +96,16 @@ export default function (options = {} ) {
                 return new THREE.PlaneGeometry( size[0], size[1], segments, segments );
             }
             break;
+        case "icosahedron": 
+            if( !arrCheck ) {
+                return new THREE.IcosahedronGeometry( size, 0 );
+            } else {
+                
+                return new THREE.IcosahedronGeometry( size[0], 0 );
+            }
         case "sphere":
             //creates a sphere geometry
-            if ( numCheck ) {
+            if ( !arrCheck ) {
                 return new THREE.SphereGeometry( size, segments, segments );
             } else {
                 return new THREE.SphereGeometry( size[0], segments, segments );
@@ -87,7 +115,7 @@ export default function (options = {} ) {
 
             return proceduralTree();
         default:
-            return new THREE.BoxGeometry( 25, 25, 25 );
+            return new THREE.BoxGeometry( size, size, size );
     }
 }
 

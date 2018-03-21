@@ -97,9 +97,10 @@ export default function ( mesh, options = {} ) {
           elasticity = options.animationElasticity !== undefined && options.hasOwnProperty( "animationElasticity" ) ? options.animationElasticity : defaultOptions.animationElasticity,
           loop = options.loop !== undefined && options.hasOwnProperty( "loop" ) ? options.loop : defaultOptions.loop,
           offset = options.animationOffset !== undefined && options.hasOwnProperty( "animationOffset" ) ? options.animationOffset : defaultOptions.animationOffset,
-          moveRelativeTo = options.moveRelativeTo !== undefined && options.hasOwnProperty( "moveRelativeTo" ) ? options.moveRelativeTo : defaultOptions.moveRelativeTo,
+          positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty( "positionRelativeTo" ) ? options.positionRelativeTo : defaultOptions.positionRelativeTo,
           speed = 2;
     
+    console.log( duration );
     type.trim();
     type.toLowerCase();
     
@@ -190,7 +191,7 @@ export default function ( mesh, options = {} ) {
             elasticity,
             loop,
             offset,
-            moveRelativeTo,
+            positionRelativeTo,
             speed
     };
     
