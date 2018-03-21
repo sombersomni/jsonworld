@@ -159,7 +159,9 @@ const framework = {
                 rej( "can't compute radius for object" );
             }
         } );
-        const grid = options.grid !== undefined ? options.grid : defaultOptions.grid;
+        const type = options.layoutType !== undefined ? options.layoutType : defaultOptions.layoutType,
+              margin = options.margin !== undefined ? options.margin : defaultOptions.margin;
+        
         if ( mesh.type === "Mesh" ) {
             
             if ( index == 0 ) {
@@ -171,12 +173,12 @@ const framework = {
                       const radius = mesh.geometry.boundingSphere.radius,
                       center = mesh.geometry.boundingSphere.center;
                     
-                      switch( grid ) {
+                      switch( type ) {
 
                         case "basic":
 
                             const leftRIght = index % 2 === 0 ? -1 : 1;
-                            mesh.position.set( leftRIght * Math.floor( index / 2 ) *  ( radius + 10 - mesh.position.x ) , 0, 0 );
+                            mesh.position.set( leftRIght * Math.floor( index / 2 ) *  ( radius + 10 - mesh.position.x  ) , 0, 0 );
                             return mesh;
 
                         default:

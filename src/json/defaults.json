@@ -16,12 +16,13 @@
         "FRAMEVALUE": "your keyframe value needs to be a number"
     },
     "emissiveColor" : "white",
-    "gridLayout" : [5, 5, 5],
-    "grid": "basic",
+    "layout" : [5, 5, 5],
+    "layoutType": "basic",
     "rotationAngle": 360,
     "sunColor" : "white",
     "sunIntensity" : 1,
     "loop" : true,
+    "margin" : 50,
     "preloader" : {
         "type": "dodecahedron",
         "position": "0 100 100",

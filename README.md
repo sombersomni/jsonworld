@@ -112,7 +112,7 @@ Material Type| Description
 [standard](https://threejs.org/docs/#api/materials/MeshStandardMaterial) | applys a color, shading, light emission from object and accepts images for textures. **Best for most situations**
 [phong](https://threejs.org/docs/#api/materials/MeshPhongMaterial) | similar to standard, but more for creating shiny surfaces like glass or ceramic
 [lambert](https://threejs.org/docs/#api/materials/MeshLambertMaterial) | similar to phong, but more for creating dull surfaces like wood or rubber
-wireframe | shows each triangle ( face ) using lines that make up your images shape. Great for debugging
+wireframe | shows each triangle ( face ) that makes up your whole image shape. Great for debugging
 [line](https://threejs.org/docs/#api/materials/LineBasicMaterial) | only for when you draw lines into 3D space.
 [toon](https://threejs.org/docs/#api/materials/MeshToonMaterial) | similar to standard, but makes your object look more like a cartoon or cel-shaded
 custom | if you know how to write advanced shader scripts or find some to import, you can use this type to give your object an even more unique look.
@@ -138,5 +138,30 @@ Let's add our material. We will move to javascript so we can focus on evolving o
 **Material** brings out the shadows and highlights of the objects skin, but the newly added **Texture** wraps an image around the object to give it a little more realistic feel.
 
 
-## POSITIONING OBJECTS IN THE WORLD
+## Positioning Objects
+
+Positioning objects in world space may seem difficult at first, but as you add more and more objects into the world, it will become easier for you to understand. Luckily, jsonworld uses similar concepts to *CSS3's positioning syntax* such as "margin" and "border". This helps keep it easier for people who are likely making the move from 2D to 3D, and simply want to make their designs come to life. 
+
+Imagine your screen is a giant graph where up and down is the *y axis* and left and rigth is the *x axis*. The only new axis we're adding is the z-axis, back and forth. The world * camera * is set to 200 on the z and 200 on the y, while staying center on the x. This keeps things in view since all objects by default will start a ( 0, 0 , 0 ). If you create a bunch of objects all at once without considering where they will be, you can end up stacking objects on top of each other. JSONWORLD will try to prevent this by automatically checking where it can place an object without colliding into each other. But you want to probably handle where things go on the screen yourself.
+
+```javascript
+    //continuing from inside MSGCrate object
+ const MSGCrate = {
+    /* code */
+    texture : "crate.png",
+    margin : "100 100 50 50 0 0 ",
+    "layout" : "basic",
+    ""
+    
+    
+    
+}
+
+
+
+
+
+```
+
+
 Some options are left to default at jsonworld's core in order to avoid over complicating things for you, but that doesn't mean you're limited. 
