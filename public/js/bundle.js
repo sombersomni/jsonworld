@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"#F9AE0D","sunIntensity":1.5,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","roughness":10,"sceneTransition":"fade-out","segments":8,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
+module.exports = {"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"#F9AE0D","sunIntensity":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","roughness":10,"sceneTransition":"fade-out","segments":8,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
 
 /***/ }),
 /* 7 */
@@ -46085,6 +46085,8 @@ var _World2 = _interopRequireDefault(_World);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var wallColor = "yellow"; //index
+
 var config = {
     "antialias": true,
     "enableShadows": true,
@@ -46093,12 +46095,12 @@ var config = {
         "grid": "basic",
         "layoutLimit": "10 10 10",
         "margin": "20 0 0",
-        "padding": 25,
+        "padding": 10,
         "type": "box",
         "size": [50, 50, 50],
         "position": [0, 0, 0],
         "color": "white",
-        "count": 1000,
+        "count": 149,
         "shadow": true,
         "material": "lambert",
         "modifiers": {
@@ -46106,20 +46108,23 @@ var config = {
                 return m + 2;
             }
         },
-        "texture": "imgs/create.jpg"
+        "texture": "imgs/create.jpg",
+        "animation": "_floatUp asymmetry",
+        "animationKeyframes": {
+            "_floatUp": [{ y: 1000 }]
+        }
 
     }, {
         "name": "floor",
         "type": "plane",
-        "color": "#ff0000",
+        "color": wallColor,
         "material": "phong",
         "size": "10000 10000",
-        "rotation": "90 0 0",
-        "position": [0, -150, 0],
+        "rotation": "45 0 0",
+        "position": [0, -200, 0],
         "shadow": true
     }]
-}; //index
-
+};
 
 var Main = function Main() {
     return _react2.default.createElement(
@@ -63521,7 +63526,7 @@ var World = function (_Component) {
 		value: function componentDidMount() {
 			var _this2 = this;
 
-			_progressEmitter2.default.on("worldmessage", function (e) {
+			_progressEmitter2.default.on("world-message", function (e) {
 				_this2.setState({ message: e.message });
 			});
 			this.world.start();
@@ -64030,6 +64035,9 @@ var framework = {
         this.camera.rotation.y = speedX * -1;
         this.camera.rotation.x = speedY * -1;
     },
+    convertToRadians: function convertToRadians(value) {
+        return Math.PI * 2 / 180 * value;
+    },
     createAnime: _createAnime2.default,
     createGeometry: _createGeometry2.default,
     createPreloader: function createPreloader() {
@@ -64068,23 +64076,33 @@ var framework = {
         });
     },
     createMaterial: _createMaterial2.default,
-    decideTimelineOrder: function decideTimelineOrder(animation, mesh, options) {
+    decideTimelineOrder: function decideTimelineOrder(animation, mesh) {
+        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-        //takes the mesh and adds a animation timeline to the root object
-        if (animation instanceof Array && animation.length > 0) {
-            for (var i = 0; i <= animation.length - 1; i++) {
-                // console.log( animation[i] );
-                mesh.animeTimeline.add(animation[i]);
-            }
-        } else if (animation instanceof Function) {
-            //mesh.animationManager.push( animation );
-        } else {
-            mesh.animeTimeline.add(animation);
+        try {
+            if (mesh.id !== undefined) {
+                var obj = this.objManager.all[mesh.id];
+                //takes the mesh and adds a animation timeline to the root object
+                if (animation instanceof Array) {
+                    for (var i = 0; i <= animation.length - 1; i++) {
+                        // console.log( animation[i] );
+                        console.log(obj, "this is the group decision");
+                        obj.animeTimeline.add(animation[i]);
+                    }
+                } else if (animation instanceof Function) {
+
+                    this.animationManager.all[mesh.id].push(animation);
+                } else {
+                    console.log(obj, "this is default decision");
+
+                    obj.animeTimeline.add(animation);
+                }
+            } else throw new Error("you need a mesh id to create animation timelines ");
+        } catch (err) {
+
+            console.warn(err.message);
         }
-
-        return mesh;
     },
-
     getCanvas: function getCanvas() {
         var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "world";
 
@@ -64178,10 +64196,13 @@ var framework = {
 
                                     var newRadius = radius + padding;
 
+                                    //the calculations below create a layout based on your presets in the Layout Limit. 
+                                    //If your count is over the limit, your count will override it.
+
                                     newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * newRadius + calculatedMargin;
 
                                     newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * newRadius;
-                                    console.log(index, Math.floor(index / (layoutLimit[2] * layoutLimit[0])));
+
                                     newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * newRadius * -1;
                                 } else {
                                     newX = leftRight * Math.floor((index + 1) / 2) * (radius + padding - mesh.position.x) + leftRight * margin * (index + 1);
@@ -64251,7 +64272,7 @@ var framework = {
 
         }
 
-        camera.position.set(0, 200, 500);
+        camera.position.set(0, 200, 200);
 
         if (this.cameras.length > 0) {
             camera.name = "cam_" + this.cameras.length.toString();
@@ -64279,33 +64300,34 @@ var framework = {
         //parsers option string into viable data type for running code
         var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry"];
 
+        type.trim();
         switch (type) {
 
             case "animation":
                 target.slice().split(" ").forEach(function (val, i, arr) {
                     var word = val.trim();
 
-                    if (val.search(/^\d{1}/)) {
+                    if (/^\d{1}/.test(word)) {
                         if (/(ease){1}/.test(word)) {
 
-                            return Object.assign({}, options, _defineProperty({}, animationOrder[i], word.slice().split("-").reduce(function (acc, curVal, n) {
+                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word.slice().split("-").reduce(function (acc, curVal, n) {
                                 return n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, function (match, p1) {
                                     return p1.toUpperCase();
                                 });
                             }, "")));
                         } else if (word === "true") {
-                            return Object.assign({}, options, _defineProperty({}, animationOrder[i], true));
+                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], true));
                         } else if (word === "asymmetry") {
                             //allows for some to be grouped together and some to run on their own
-                            return Object.assign({}, options, _defineProperty({}, "animationAsymmetry", true));
+                            options = Object.assign({}, options, _defineProperty({}, "animationAsymmetry", true));
                         } else {
-                            return Object.assign({}, options, _defineProperty({}, animationOrder[i], word));
+                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word));
                         }
                     } else {
                         if (/s$/.test(word)) {
-                            return Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10) * 1000));
+                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10) * 1000));
                         } else {
-                            return Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10)));
+                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10)));
                         }
                     }
                 });
@@ -64317,7 +64339,7 @@ var framework = {
 
             default:
                 return target.slice().split(" ").map(function (each) {
-                    return parseInt(each.trim(), 10);
+                    return parseInt(each, 10);
                 });
 
         }
@@ -64422,11 +64444,9 @@ var framework = {
         //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
 
         //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
-        mesh.animeTimeline = _animejs2.default.timeline({
-            autoplay: true,
-            loop: true });
 
-        if (options.hasOwnProperty("animation") && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string") {
+
+        if (options.hasOwnProperty("animation") && options.animation !== undefined && typeof options.animation === "string") {
 
             if (/\,/.test(options.animation)) {
 
@@ -64435,21 +64455,20 @@ var framework = {
 
                     var opts = this.optionParser(seperateAnimations[x].trim(), animationOptions, "animation");
                     if (opts !== undefined) {
-                        mesh = this.decideTimelineOrder(this.createAnime(mesh, opts), mesh, opts);
+                        this.decideTimelineOrder(this.createAnime(mesh, opts), mesh, opts);
                     }
                 }
             } else {
                 var _opts = this.optionParser(options.animation, animationOptions, "animation");
                 if (_opts !== undefined) {
-                    mesh = this.decideTimelineOrder(this.createAnime(mesh, _opts), mesh, _opts);
+                    this.decideTimelineOrder(this.createAnime(mesh, _opts), mesh, _opts);
                 }
             }
         } else {
 
-            mesh = this.decideTimelineOrder(this.createAnime(mesh, animationOptions), mesh, animationOptions);
+            this.decideTimelineOrder(this.createAnime(mesh, animationOptions), mesh, animationOptions);
         }
 
-        mesh.animeTimeline.play();
         return mesh;
     },
     setupMesh: function setupMesh(options, sI) {
@@ -64476,11 +64495,13 @@ var framework = {
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
+
                 group.add(mesh);
             }
             group.name = options.name !== undefined ? options.name : "bundle";
 
-            group.position.set(0, 0, 0);
+            this.setupWorldClone(group);
+
             if (options.animation !== undefined || options.animationType !== undefined) {
 
                 this.scenes[sI].add(this.setupAnimationForMesh(group, options));
@@ -64527,6 +64548,8 @@ var framework = {
 
             mesh.name = options.name !== undefined ? options.name : "";
 
+            this.setupWorldClone(mesh);
+
             mesh = this.setObjectTransforms(mesh, options);
 
             if (options.animation !== undefined || options.animationType !== undefined) {
@@ -64540,17 +64563,43 @@ var framework = {
 
         return;
     },
-    setObjectTransforms: function setObjectTransforms(mesh, options) {
+    setObjectTransforms: function setObjectTransforms(mesh) {
+        var _this4 = this;
 
-        console.log(mesh);
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
-        mesh.rotation.x = -1 * Math.PI / 2;
-        mesh.position.set(0, -60, 0);
+
+        try {
+
+            ["position", "rotation", "scale"].forEach(function (type) {
+                if (options.hasOwnProperty(type) && options[type] !== undefined) {
+
+                    var transform = void 0;
+                    if (options[type] instanceof Array) {
+
+                        transform = options[type];
+                    } else if (typeof options[type] === "string") {
+
+                        transform = _this4.optionParser(options[type]);
+                    } else {
+                        transform = [options[type], options[type], options[type]];
+                    }
+
+                    mesh[type]["set"](type === "rotation" ? _this4.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this4.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this4.convertToRadians(transform[2]) : transform[2]);
+                    console.log(transform, mesh);
+                }
+            });
+
+            return mesh;
+        } catch (err) {
+
+            console.log(err.message);
+        }
 
         return mesh;
     },
     setupModifier: function setupModifier(mesh, animProp, target, options) {
-        var _this4 = this;
+        var _this5 = this;
 
         switch (target) {
             case "position":
@@ -64562,7 +64611,7 @@ var framework = {
                     };
                 } else {
                     return function (value) {
-                        return value + _this4.scene.position[animProp];
+                        return value + _this5.scene.position[animProp];
                     };
                 }
             default:
@@ -64572,7 +64621,7 @@ var framework = {
         }
     },
     setupScene: function setupScene() {
-        var _this5 = this;
+        var _this6 = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -64581,21 +64630,25 @@ var framework = {
         var intensity = this.options.sunIntensity !== undefined ? this.options.sunIntensity : _defaults2.default.sunIntensity,
             sunColor = this.options.sunColor !== undefined ? this.options.sunColor : _defaults2.default.sunColor;
         return new Promise(function (res, rej) {
-            _this5.scenes.push(new THREE.Scene());
-            _this5.scenes[_this5.scenes.length - 1].name = _this5.scenes.length === 1 ? "menu" : "main";
-            _this5.scenes[_this5.scenes.length - 1].fog = _this5.fog;
+            _this6.scenes.push(new THREE.Scene());
+            _this6.scenes[_this6.scenes.length - 1].name = _this6.scenes.length === 1 ? "menu" : "main";
+            _this6.scenes[_this6.scenes.length - 1].fog = _this6.fog;
             //creates the sun light for the whole world
             var sunlight = new THREE.DirectionalLight(sunColor, intensity);
             sunlight.name = "sunlight";
             sunlight.position.set(0, 100000, 0);
 
-            if (_this5.options.hasOwnProperty("enableShadows") && _this5.options.enableShadows) {
+            if (_this6.options.hasOwnProperty("enableShadows") && _this6.options.enableShadows) {
                 sunlight.castShadow = true;
+                sunlight.shadow.mapSize.width = 512;
+                sunlight.shadow.mapSize.height = 512;
+                sunlight.shadow.camera.far = _defaults2.default.cameraFar;
+                sunlight.shadow.camera.near = _defaults2.default.cameraNear;
                 //debug shadow camera
                 var shadowCamera = new THREE.CameraHelper(sunlight.shadow.camera);
-                _this5.scenes[_this5.scenes.length - 1].add(shadowCamera);
+                _this6.scenes[_this6.scenes.length - 1].add(shadowCamera);
             }
-            _this5.scenes[_this5.scenes.length - 1].add(sunlight);
+            _this6.scenes[_this6.scenes.length - 1].add(sunlight);
 
             if (options instanceof Array) {
                 options.forEach(function (o) {
@@ -64606,10 +64659,10 @@ var framework = {
 
                                 o = Object.assign({}, o, { size: o.size !== undefined ? o.size : [texture.image.naturalWidth / 2, texture.image.naturalHeight / 2, 0],
                                     texture: texture });
-                                _this5.setupMesh(o, _this5.scenes.length - 1);
+                                _this6.setupMesh(o, _this6.scenes.length - 1);
                             });
                         } else {
-                            _this5.setupMesh(o, _this5.scenes.length - 1);
+                            _this6.setupMesh(o, _this6.scenes.length - 1);
                         }
                     }
                 });
@@ -64625,7 +64678,7 @@ var framework = {
                             texture: texture });
                     });
                 } else {
-                    _this5.setupMesh(options, _this5.scenes.length - 1);
+                    _this6.setupMesh(options, _this6.scenes.length - 1);
                 }
                 res(_defaults2.default.sceneTransition);
             } else {
@@ -64647,6 +64700,10 @@ var framework = {
         renderer.setPixelRatio(window.devicePixelRatio);
         //bg color
         renderer.setClearColor(color);
+
+        if (options.enableShadows !== undefined && options.enableShadows == true) {
+            renderer.shadowMap.enabled = true;
+        }
         return renderer;
     },
     setupFog: function setupFog() {
@@ -64687,8 +64744,20 @@ var framework = {
         } catch (err) {
 
             console.warn(err.message);
-            _progressEmitter2.default.emit("worldmessage", err);
+            _progressEmitter2.default.emit("world-message", err);
         }
+    },
+    setupWorldClone: function setupWorldClone(mesh) {
+        console.log(mesh);
+
+        this.objManager.all[mesh.id] = {
+            pos: {
+                x: mesh.position.x !== undefined ? mesh.position.x : 0,
+                y: mesh.position.y !== undefined ? mesh.position.y : 0,
+                z: mesh.position.z !== undefined ? mesh.position.z : 0
+            },
+            animeTimeline: _animejs2.default.timeline({ autoplay: true, loop: true })
+        };
     },
     typeChecker: function typeChecker(unchecked, type) {
 
@@ -64721,7 +64790,7 @@ var framework = {
         }
     },
     initWorld: function initWorld() {
-        var _this6 = this;
+        var _this7 = this;
 
         //initializes world after clicking and removes event listener to prevent memory leaks
         var title = void 0;
@@ -64736,7 +64805,8 @@ var framework = {
                 if (title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined) {
                     title.scale.set(1 * (camData.width / title.geometry.parameters.width), 1 * (camData.width / title.geometry.parameters.height), 1);
                 }
-                title.anime = this.createAnime(title, this.options.menu);
+
+                this.decideTimelineOrder(this.createAnime(mesh, options), title, options);
             }
         }
 
@@ -64747,56 +64817,57 @@ var framework = {
             var audioPromise = (0, _audioInitializer2.default)(this.sounds);
 
             preloaderPromise.then(function (message) {
-                _progressEmitter2.default.emit("worldmessage", { message: message });
+                _progressEmitter2.default.emit("world-message", { message: message });
                 audioPromise.then(function (controllers) {
-                    _this6.audioControllers = controllers;
-                    var scenePromise = _this6.setupScene(_this6.worldObjects, controllers);
+                    _this7.audioControllers = controllers;
+                    var scenePromise = _this7.setupScene(_this7.worldObjects, controllers);
                     scenePromise.then(function (animationType) {
-                        var preloader = _this6.scene.getObjectByName("preloader");
+                        var preloader = _this7.scene.getObjectByName("preloader");
                         //clears the timeline for a new batch of animations
-                        preloader.animeTimeline = _animejs2.default.timeline({});
-                        preloader.animeTimeline.add(_this6.createAnime(preloader, { animationType: animationType }));
+
+                        _this7.decideTimelineOrder(_this7.createAnime(preloader, { animationType: animationType }), preloader);
+
                         window.setTimeout(function () {
-                            _progressEmitter2.default.emit("worldmessage", { message: "" });
-                            _this6.scene = _this6.scenes[_this6.scenes.length - 1];
+                            _progressEmitter2.default.emit("world-message", { message: "" });
+                            _this7.scene = _this7.scenes[_this7.scenes.length - 1];
                         }, delay);
                     });
                 });
             });
         } else {
             preloaderPromise.then(function (message) {
-                _progressEmitter2.default.emit("worldmessage", { message: message });
+                _progressEmitter2.default.emit("world-message", { message: message });
                 /* 
                     if the scene can't be made then the promise is never fulfilled and
                 the preloader will never stop 
                 
                 */
 
-                var scenePromise = _this6.setupScene(_this6.worldObjects);
+                var scenePromise = _this7.setupScene(_this7.worldObjects);
 
                 scenePromise.then(function (animationType) {
-                    var preloader = _this6.scene.getObjectByName("preloader");
+                    var preloader = _this7.scene.getObjectByName("preloader");
                     window.setTimeout(function () {
                         //clears the timeline for a new batch of animations
-                        preloader.animeTimeline = _animejs2.default.timeline({});
-                        preloader.animeTimeline.add(_this6.createAnime(preloader, { animationType: animationType }));
-                        _progressEmitter2.default.emit("worldmessage", { message: "" });
-                        _this6.scene = _this6.scenes[_this6.scenes.length - 1];
-                        console.log(_this6.scene);
+
+                        _this7.decideTimelineOrder(_this7.createAnime(preloader, { animationType: "fade-out" }), preloader);
+                        _progressEmitter2.default.emit("world-message", { message: "" });
+                        _this7.scene = _this7.scenes[_this7.scenes.length - 1];
+                        console.log(_this7.scene, _this7.objManager, _this7.animationManger);
                     }, delay);
                 });
             });
         }
     },
     start: function start() {
-        var _this7 = this;
+        var _this8 = this;
 
         this.setupScene({});
         this.scene = this.scenes[0];
         //start event listeners
         this.canvas.addEventListener("mousemove", this.doMouseMove, false);
         window.addEventListener("resize", function (e) {
-            _this7.onWindowResize();
+            _this8.onWindowResize();
         }, false);
         //run animation cycle for all scenes
         window.requestAnimationFrame(this.runScene);
@@ -64826,10 +64897,10 @@ var framework = {
                             texture: tex
                         };
 
-                        _this7.setupMesh(options, _this7.scenes.length - 1);
+                        _this8.setupMesh(options, _this8.scenes.length - 1);
                         //calculate title mesh so if img is too large it will fit inside the camera viewW
-                        var title = _this7.scenes[_this7.scenes.length - 1].getObjectByName("title");
-                        _this7.fitOnScreen(title);
+                        var title = _this8.scenes[_this8.scenes.length - 1].getObjectByName("title");
+                        _this8.fitOnScreen(title);
                     }, undefined, function (err) {
                         throw new Error("Couldn't load texture, check your img path");
                     });
@@ -64855,14 +64926,14 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
-        var _this8 = this;
+        var _this9 = this;
 
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
             if (/Light/.test(obj.type)) {
                 //checks for light objects
-                obj.target.position.clone(_this8.scene.position);
+                obj.target.position.clone(_this9.scene.position);
             }
         });
     },
@@ -64873,6 +64944,8 @@ var framework = {
         this.runAnimations(elaspedTime);
 
         this.renderer.render(this.scene, this.camera);
+
+        //console.log( this.renderer.getDrawingBufferSize() );
     }
 };
 Object.assign(WorldController.prototype, framework);
@@ -65687,6 +65760,7 @@ exports.default = function (mesh) {
         animator = void 0,
         canPack = true;
 
+    console.log(options, "these are our options");
     var asymmetry = options.animationAsymmetry !== undefined && options.hasOwnProperty("animationAsymmetry") ? options.animationAsymmetry : false,
         type = options.animationType !== undefined && options.hasOwnProperty("animationType") ? options.animationType : _defaults2.default.animationType,
 
@@ -65701,7 +65775,7 @@ exports.default = function (mesh) {
         positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty("positionRelativeTo") ? options.positionRelativeTo : _defaults2.default.positionRelativeTo,
         speed = 2;
 
-    console.log(duration);
+    console.log(type);
     type.trim();
     type.toLowerCase();
 
@@ -65780,7 +65854,6 @@ exports.default = function (mesh) {
         keyframes: keyframes,
         type: type,
         direction: direction,
-        duration: duration,
         delay: delay,
         easing: easing,
         elasticity: elasticity,
@@ -65948,13 +66021,6 @@ var _defaults2 = _interopRequireDefault(_defaults);
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function convertKeyframesToRadians(keyframes) {
-    console.log(keyframes, "radians");
-    return keyframes.map(function (frame) {
-        return { value: frame.value * (Math.PI * 2 / 180) };
-    });
-}
 
 function parseKeyframes(str) {
     return str.slice().trim().split(" ").map(function (value) {

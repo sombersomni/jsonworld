@@ -29,7 +29,7 @@ class World extends Component {
 		return ( <div className="links"> domLinks </div> );
 	}
 	componentDidMount () {
-        progressEmitter.on("worldmessage", ( e ) => {
+        progressEmitter.on("world-message", ( e ) => {
             this.setState( { message: e.message } );
         } );
 		this.world.start();

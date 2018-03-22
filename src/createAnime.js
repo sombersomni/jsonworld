@@ -3,12 +3,6 @@ import * as THREE from "three";
 
 import defaultOptions from "./json/defaults.json";
 
-function convertKeyframesToRadians( keyframes ) {
-    console.log( keyframes, "radians" );
-    return keyframes.map( frame => {
-        return { value: frame.value * ( Math.PI * 2 / 180 ) }
-    } );
-}
 
 
 function parseKeyframes( str ) {
@@ -87,6 +81,7 @@ function determineTarget( type, mesh ) {
 export default function ( mesh, options = {} ) {
     let keyframes, animTarget, animProp, animator, canPack = true;
 
+    console.log( options, "these are our options");
     let asymmetry = options.animationAsymmetry !== undefined && options.hasOwnProperty( "animationAsymmetry" ) ? options.animationAsymmetry : false ,
           type = options.animationType !== undefined && options.hasOwnProperty( "animationType" ) ? options.animationType : defaultOptions.animationType,
           //defaults are handled before they get to this function
@@ -100,7 +95,7 @@ export default function ( mesh, options = {} ) {
           positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty( "positionRelativeTo" ) ? options.positionRelativeTo : defaultOptions.positionRelativeTo,
           speed = 2;
     
-    console.log( duration );
+    console.log( type );
     type.trim();
     type.toLowerCase();
     
@@ -185,7 +180,6 @@ export default function ( mesh, options = {} ) {
             keyframes,
             type,
             direction,
-            duration,
             delay,
             easing,
             elasticity,

@@ -1,6 +1,6 @@
 {
     "animationAsymmetry": false,
-    "animationType" : "spin_basic",
+    "animationType" : "spin-basic",
     "animationDuration" : 1000,
     "animationEasing" : "easeInSine",
     "animationElasticity" : 100,
@@ -24,7 +24,7 @@
     "layoutType": "basic",
     "rotationAngle": 360,
     "sunColor" :"#F9AE0D",
-    "sunIntensity" : 1.5,
+    "sunIntensity" : 1,
     "loop" : true,
     "margin" : 50,
     "preloader" : {

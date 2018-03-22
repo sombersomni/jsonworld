@@ -82,6 +82,7 @@ const framework = {
       this.camera.rotation.y = speedX * -1;
       this.camera.rotation.x = speedY * -1;
     },
+    convertToRadians : value => (Math.PI * 2 ) / 180 * value,
     createAnime,
     createGeometry,
     createPreloader: function ( options = {} ) {
@@ -112,22 +113,33 @@ const framework = {
         } );
     },
     createMaterial,
-    decideTimelineOrder( animation, mesh, options ) {
-        
-        //takes the mesh and adds a animation timeline to the root object
-        if ( animation instanceof Array && animation.length > 0 ) {
-            for ( var i = 0; i <= animation.length - 1; i++ ) {
-               // console.log( animation[i] );
-                mesh.animeTimeline.add( animation[i] );
-            }
+    decideTimelineOrder : function ( animation, mesh, options = {} ) {
+        try {
+            if ( mesh.id !== undefined ) {
+                let obj = this.objManager.all[ mesh.id ];
+                //takes the mesh and adds a animation timeline to the root object
+                if ( animation instanceof Array ) {
+                    for ( var i = 0; i <= animation.length - 1; i++ ) {
+                       // console.log( animation[i] );
+                        console.log(obj, "this is the group decision");
+                        obj.animeTimeline.add( animation[i] );
+                    }
+
+                } else if ( animation instanceof Function ) {
+
+                    this.animationManager.all[ mesh.id ].push( animation );
+                } else {
+                        console.log( obj, "this is default decision");
+
+                       obj.animeTimeline.add( animation );
+                }
+                
+            } else throw new Error( "you need a mesh id to create animation timelines " );
+        } catch( err ) {
             
-        } else if ( animation instanceof Function ) {
-            //mesh.animationManager.push( animation );
-        } else {
-                mesh.animeTimeline.add( animation );
+            console.warn( err.message );
         }
         
-        return mesh;
     },
     getCanvas: function ( id = "world" ) {
         //if canvas doesn't exist we will create one//
@@ -220,10 +232,13 @@ const framework = {
                                         
                                         const newRadius = radius + padding;
                                         
+                                        //the calculations below create a layout based on your presets in the Layout Limit. 
+                                        //If your count is over the limit, your count will override it.
+                                        
                                         newX = leftRight * ( newIndex % ( layoutLimit[ 0 ] / 2 ) ) *  newRadius + calculatedMargin;
 
                                         newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * newRadius;
-                                        console.log( index, Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) ) ;
+                                        
                                         newZ =( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * newRadius ) * -1;
 
                                     } else {
@@ -293,7 +308,7 @@ const framework = {
 
         }
         
-        camera.position.set(0, 200, 500);
+        camera.position.set(0, 200, 200 );
 
         if (this.cameras.length > 0) {
             camera.name = "cam_" + this.cameras.length.toString();
@@ -318,31 +333,32 @@ const framework = {
         //parsers option string into viable data type for running code
         const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
         
+        type.trim();
         switch( type ) {
                 
             case "animation":
                 target.slice().split( " " ).forEach( ( val, i, arr ) => {
                         let word = val.trim();
                         
-                            if( val.search( /^\d{1}/ ) ) {
+                            if( /^\d{1}/.test( word ) ) {
                                 if( /(ease){1}/.test( word ) ) {
 
-                                    return Object.assign( {}, options, { [ animationOrder[i] ] : word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "") } );
+                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "") } );
 
                                 } else if ( word === "true" ) {
-                                    return Object.assign( {}, options, { [ animationOrder[i] ] : true } );
+                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : true } );
                                 } else if ( word === "asymmetry" ) {
                                     //allows for some to be grouped together and some to run on their own
-                                    return Object.assign( {}, options, { [ "animationAsymmetry" ] : true } );
+                                    options = Object.assign( {}, options, { [ "animationAsymmetry" ] : true } );
                                 } else {
-                                    return Object.assign( {}, options, { [ animationOrder[i] ] : word } );
+                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : word } );
                                 }
 
                             } else {
                                 if( /s$/.test( word ) ) {
-                                    return Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000 } );
+                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000 } );
                                 } else {
-                                    return Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) } );
+                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) } );
                                 } 
 
                             }
@@ -356,7 +372,7 @@ const framework = {
                 return colorInterpreter( target );
                 
             default:
-                return target.slice().split( " " ).map( each => parseInt( each.trim(), 10 ) );
+                return target.slice().split( " " ).map( each => parseInt( each, 10 ) );
                 
                 
         }
@@ -450,36 +466,32 @@ const framework = {
                 //START TIMELINE FOR ANIMATION and ANIMATION MANAGER FOR VERTICE ANIMATIONS
         
                 //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
-                mesh.animeTimeline = anime.timeline( { 
-                    autoplay: true, 
-                    loop: true } );
         
         
-                if ( options.hasOwnProperty( "animation" ) && options.animation.length > 0 && options.animation !== undefined && typeof options.animation === "string" ) {
+                if ( options.hasOwnProperty( "animation" ) && options.animation !== undefined && typeof options.animation === "string" ) {
 
                     if ( /\,/.test( options.animation ) ) {
              
                         const seperateAnimations = options.animation.slice().split(",");
                         for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
                         
-                            let opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
+                            const opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
                             if ( opts !== undefined ) {
-                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                               this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
                             }
                         }
                     } else {
-                        let opts = this.optionParser( options.animation , animationOptions, "animation" );
+                        const opts = this.optionParser( options.animation , animationOptions, "animation" );
                         if ( opts !== undefined ) {
-                               mesh = this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                               this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
                         }
                     }
                     
                 } else {
                     
-                    mesh = this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
+                    this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
                 }
                 
-                mesh.animeTimeline.play();
                 return mesh;
     },
     setupMesh: function ( options, sI ) {
@@ -506,11 +518,13 @@ const framework = {
                         mesh.receiveShadow = true;
                         mesh.castShadow = true;
                     }
+                    
                     group.add( mesh );
                 }
                 group.name = options.name !== undefined ? options.name : "bundle";
                 
-                group.position.set( 0, 0, 0 );
+                this.setupWorldClone( group );
+                    
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
                     this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
@@ -558,6 +572,8 @@ const framework = {
                 
                 mesh.name = options.name !== undefined ? options.name : "";
                 
+                this.setupWorldClone( mesh );
+                
                 mesh = this.setObjectTransforms( mesh, options );
                 
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
@@ -572,12 +588,40 @@ const framework = {
 
             return;
     },
-    setObjectTransforms : function( mesh, options ) {
+    setObjectTransforms : function( mesh, options = {} ) {
         
-        console.log( mesh );
+        try {
+            
+            [ "position", "rotation", "scale" ].forEach( type  => {
+                if ( options.hasOwnProperty( type ) && options[ type ] !== undefined ) {
+                        
+                        let transform;
+                        if ( options[ type ] instanceof Array ) {
+                            
+                            transform = options[ type ];
+
+                        } else if ( typeof options[ type ] === "string" ) {
+
+                            transform = this.optionParser( options[ type ] );
+
+                        } else {
+                            transform = [ options[ type ], options[ type ], options[ type ] ];
+                        }
+                    
+                            mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
+                            console.log( transform, mesh );
+
+                }
+
+            } );
+            
+            return mesh;
+            
+        } catch ( err ) {
+            
+            console.log( err.message );
+        }
         
-        mesh.rotation.x = -1 * Math.PI / 2;
-        mesh.position.set(0, -60, 0 );
         
         return mesh;
     },
@@ -610,6 +654,10 @@ const framework = {
             
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 sunlight.castShadow = true;
+                sunlight.shadow.mapSize.width = 512;
+                sunlight.shadow.mapSize.height = 512;
+                sunlight.shadow.camera.far = defaultOptions.cameraFar;
+                sunlight.shadow.camera.near = defaultOptions.cameraNear;
                 //debug shadow camera
                 const shadowCamera = new THREE.CameraHelper( sunlight.shadow.camera );
                 this.scenes[ this.scenes.length -1 ].add( shadowCamera );
@@ -667,6 +715,10 @@ const framework = {
         renderer.setPixelRatio(window.devicePixelRatio);
         //bg color
         renderer.setClearColor(color);
+        
+        if ( options.enableShadows !== undefined && options.enableShadows == true ) {
+            renderer.shadowMap.enabled = true;
+        }
         return renderer;
     },
     setupFog: function ( options = {} ) {
@@ -706,12 +758,24 @@ const framework = {
         } catch( err ) {
             
             console.warn( err.message );
-            progressEmitter.emit( "worldmessage", err );
+            progressEmitter.emit( "world-message", err );
         }
         
     },
-    typeChecker : function ( unchecked, type ) {
+    setupWorldClone : function ( mesh ) {
+        console.log( mesh );
         
+        this.objManager.all[ mesh.id ] =  {
+            pos :{
+                x: mesh.position.x !== undefined ? mesh.position.x : 0,
+                y: mesh.position.y !== undefined ? mesh.position.y : 0,
+                z: mesh.position.z !== undefined ? mesh.position.z : 0
+            },
+            animeTimeline : anime.timeline( { autoplay: true, loop : true } )
+        };
+    },
+    typeChecker : function ( unchecked, type ) {
+
         const stringCheck = unchecked === "string",
               numCheck = Number.isNaN( unchecked ),
               arrCheck = unchecked instanceof Array,
@@ -755,7 +819,8 @@ const framework = {
                 if ( title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined ) {
                     title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
                 }
-                title.anime = this.createAnime( title, this.options.menu );
+                
+                this.decideTimelineOrder( this.createAnime( mesh, options ), title, options );
             }
         }
        
@@ -766,17 +831,18 @@ const framework = {
             const audioPromise = initializeAudio( this.sounds );
     
             preloaderPromise.then( message => {
-                progressEmitter.emit( "worldmessage", { message } );
+                progressEmitter.emit( "world-message", { message } );
                 audioPromise.then( controllers => {
                         this.audioControllers = controllers;
                         const scenePromise = this.setupScene( this.worldObjects, controllers );
                         scenePromise.then( animationType => { 
                             let preloader = this.scene.getObjectByName( "preloader" );
                             //clears the timeline for a new batch of animations
-                            preloader.animeTimeline = anime.timeline( {} );
-                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
+                            
+                            this.decideTimelineOrder( this.createAnime( preloader, { animationType } ), preloader );
+                            
                             window.setTimeout( () => {
-                                progressEmitter.emit( "worldmessage", { message: "" } );
+                                progressEmitter.emit( "world-message", { message: "" } );
                                 this.scene = this.scenes[ this.scenes.length - 1 ];
                             }, delay );
                         } )
@@ -785,7 +851,7 @@ const framework = {
     
         } else {
                 preloaderPromise.then( message => {
-                    progressEmitter.emit( "worldmessage", { message } );
+                    progressEmitter.emit( "world-message", { message } );
                     /* 
                         if the scene can't be made then the promise is never fulfilled and
                     the preloader will never stop 
@@ -798,11 +864,11 @@ const framework = {
                         let preloader = this.scene.getObjectByName( "preloader" );
                         window.setTimeout( () => {
                            //clears the timeline for a new batch of animations
-                            preloader.animeTimeline = anime.timeline( {} );
-                            preloader.animeTimeline.add( this.createAnime( preloader, { animationType } ) );
-                            progressEmitter.emit( "worldmessage", { message: "" } );
+                            
+                            this.decideTimelineOrder( this.createAnime( preloader, { animationType : "fade-out" } ), preloader );
+                            progressEmitter.emit( "world-message", { message: "" } );
                             this.scene = this.scenes[ this.scenes.length - 1 ];
-                            console.log( this.scene );
+                            console.log( this.scene, this.objManager, this.animationManger );
                         }, delay );
                     } )
                 } )            
@@ -894,6 +960,8 @@ const framework = {
         this.runAnimations( elaspedTime );
 
         this.renderer.render( this.scene, this.camera );
+        
+        //console.log( this.renderer.getDrawingBufferSize() );
     }
 };
 Object.assign( WorldController.prototype, framework );
