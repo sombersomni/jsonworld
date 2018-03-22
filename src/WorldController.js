@@ -220,10 +220,11 @@ const framework = {
                                         
                                         const newRadius = radius + padding;
                                         
-                                        newX = leftRight * ( ( newIndex + 1 ) % ( layoutLimit[ 0 ] / 2 ) ) *  newRadius + calculatedMargin;
+                                        newX = leftRight * ( newIndex % ( layoutLimit[ 0 ] / 2 ) ) *  newRadius + calculatedMargin;
 
-                                        newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * newRadius + calculatedMargin;
-                                        newZ = Math.floor( index / layoutLimit[ 0 ] ) * newRadius + calculatedMargin * -1;
+                                        newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * newRadius;
+                                        console.log( index, Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) ) ;
+                                        newZ =( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * newRadius ) * -1;
 
                                     } else {
                                         newX = leftRight * Math.floor( ( index  + 1 ) / 2 ) *  ( radius + padding - mesh.position.x  ) + ( leftRight * margin * ( index + 1 ) );
@@ -241,7 +242,7 @@ const framework = {
             
         } catch( err ) {
             
-            console.log( err );
+            console.warn( err.message );
         }
         
         
@@ -383,7 +384,6 @@ const framework = {
             keyframes.forEach( f => {
                 /* if you have multiple props that fit your target type you can use
                 them within a singe keyframe */
-                console.log( f );
                 if ( f instanceof Array ) {
                     //made an array outside the push loop so the keyframes won't overwrite each other
                     f.forEach( each => {
@@ -412,7 +412,7 @@ const framework = {
         }
 
         if ( mesh.type === "Group" && asymmetry ) {
-            console.log( mesh, "start packing all children" );
+            
                     let pack = [];
                     for ( var n = 0; n <= mesh.children.length -1; n++ ) {
                         let obj = mesh.children[n];
@@ -493,7 +493,7 @@ const framework = {
             
         
                 m = this.createMaterial( options );
-        console.log( m );
+        
                 if ( options.count !== undefined && options.count > 1 ) {
                 const group = new THREE.Group();
                 for ( let i = 0; i <= options.count - 1; i++ ) {
@@ -577,7 +577,7 @@ const framework = {
         console.log( mesh );
         
         mesh.rotation.x = -1 * Math.PI / 2;
-        mesh.position.set(0, -100, 0 );
+        mesh.position.set(0, -60, 0 );
         
         return mesh;
     },
@@ -606,8 +606,8 @@ const framework = {
             //creates the sun light for the whole world
             const sunlight = new THREE.DirectionalLight( sunColor, intensity );
             sunlight.name = "sunlight";
-            sunlight.position.set( 0, 0, 100 );
-            console.log( sunlight );
+            sunlight.position.set( 0, 100000,  0 );
+            
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 sunlight.castShadow = true;
                 //debug shadow camera
@@ -883,7 +883,7 @@ const framework = {
             
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
-                //obj.position.z += 0.001;
+                obj.target.position.clone( this.scene.position );
             }
         } );
     },

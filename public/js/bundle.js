@@ -46091,14 +46091,14 @@ var config = {
     "worldObjects": [{
         "name": "wooden-crate",
         "grid": "basic",
-        "layoutLimit": "10 20 20",
+        "layoutLimit": "10 10 10",
         "margin": "20 0 0",
         "padding": 25,
         "type": "box",
         "size": [50, 50, 50],
         "position": [0, 0, 0],
         "color": "white",
-        "count": 27,
+        "count": 1000,
         "shadow": true,
         "material": "lambert",
         "modifiers": {
@@ -46115,7 +46115,7 @@ var config = {
         "material": "phong",
         "size": "10000 10000",
         "rotation": "90 0 0",
-        "position": [0, -100, 0],
+        "position": [0, -150, 0],
         "shadow": true
     }]
 }; //index
@@ -64178,10 +64178,11 @@ var framework = {
 
                                     var newRadius = radius + padding;
 
-                                    newX = leftRight * ((newIndex + 1) % (layoutLimit[0] / 2)) * newRadius + calculatedMargin;
+                                    newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * newRadius + calculatedMargin;
 
-                                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * newRadius + calculatedMargin;
-                                    newZ = Math.floor(index / layoutLimit[0]) * newRadius + calculatedMargin * -1;
+                                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * newRadius;
+                                    console.log(index, Math.floor(index / (layoutLimit[2] * layoutLimit[0])));
+                                    newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * newRadius * -1;
                                 } else {
                                     newX = leftRight * Math.floor((index + 1) / 2) * (radius + padding - mesh.position.x) + leftRight * margin * (index + 1);
                                 }
@@ -64197,7 +64198,7 @@ var framework = {
             }
         } catch (err) {
 
-            console.log(err);
+            console.warn(err.message);
         }
 
         return mesh;
@@ -64358,7 +64359,6 @@ var framework = {
             keyframes.forEach(function (f) {
                 /* if you have multiple props that fit your target type you can use
                 them within a singe keyframe */
-                console.log(f);
                 if (f instanceof Array) {
                     //made an array outside the push loop so the keyframes won't overwrite each other
                     f.forEach(function (each) {
@@ -64386,7 +64386,7 @@ var framework = {
         }
 
         if (mesh.type === "Group" && asymmetry) {
-            console.log(mesh, "start packing all children");
+
             var pack = [];
             for (var n = 0; n <= mesh.children.length - 1; n++) {
                 var obj = mesh.children[n];
@@ -64463,7 +64463,7 @@ var framework = {
         */
 
         m = this.createMaterial(options);
-        console.log(m);
+
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
             for (var i = 0; i <= options.count - 1; i++) {
@@ -64545,7 +64545,7 @@ var framework = {
         console.log(mesh);
 
         mesh.rotation.x = -1 * Math.PI / 2;
-        mesh.position.set(0, -100, 0);
+        mesh.position.set(0, -60, 0);
 
         return mesh;
     },
@@ -64587,8 +64587,8 @@ var framework = {
             //creates the sun light for the whole world
             var sunlight = new THREE.DirectionalLight(sunColor, intensity);
             sunlight.name = "sunlight";
-            sunlight.position.set(0, 0, 100);
-            console.log(sunlight);
+            sunlight.position.set(0, 100000, 0);
+
             if (_this5.options.hasOwnProperty("enableShadows") && _this5.options.enableShadows) {
                 sunlight.castShadow = true;
                 //debug shadow camera
@@ -64855,12 +64855,14 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
+        var _this8 = this;
+
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
             if (/Light/.test(obj.type)) {
                 //checks for light objects
-                //obj.position.z += 0.001;
+                obj.target.position.clone(_this8.scene.position);
             }
         });
     },
@@ -66066,7 +66068,7 @@ exports.default = function () {
     //CHOICES
     switch (type) {
         case "box":
-            console.log(!arrCheck);
+
             if (!arrCheck) {
                 return new THREE.BoxGeometry(size, size, size);
             } else {

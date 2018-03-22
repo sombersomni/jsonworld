@@ -10,14 +10,14 @@ const config = {
         {
             "name" : "wooden-crate",
             "grid" : "basic",
-            "layoutLimit" : "10 20 20",
+            "layoutLimit" : "10 10 10",
             "margin": "20 0 0",
             "padding": 25,
             "type" : "box",
             "size" : [ 50, 50, 50 ],
             "position" : [ 0, 0, 0 ], 
             "color" : "white",
-            "count" : 27,
+            "count" : 1000,
             "shadow" : true,
             "material" : "lambert",
             "modifiers" : {
@@ -33,7 +33,7 @@ const config = {
             "material" : "phong",
             "size" : "10000 10000",
             "rotation" : "90 0 0",
-            "position" : [ 0, -100, 0 ],
+            "position" : [ 0, -150, 0 ],
             "shadow" : true
         },
       

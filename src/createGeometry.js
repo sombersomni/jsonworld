@@ -28,7 +28,7 @@ export default function (options = {} ) {
     //CHOICES
     switch( type ) {
         case "box":
-            console.log( !arrCheck );
+            
             if ( !arrCheck ) {
                 return new THREE.BoxGeometry( size, size, size );
             } else {
