@@ -333,57 +333,66 @@ const framework = {
         //parsers option string into viable data type for running code
         const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
         
-        type.trim();
-        switch( type ) {
+        try {
+            if ( typeof type === "string" ) { 
                 
-            case "animation":
-                target.slice().split( " " ).forEach( ( val, i, arr ) => {
-                        let word = val.trim();
-                        
-                            if( /^\d{1}/.test( word ) ) {
-                                if( /(ease){1}/.test( word ) ) {
+                switch( type ) {
 
-                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "") } );
+                    case "animation":
+                        target.slice().split( " " ).forEach( ( val, i, arr ) => {
+                                let word = val.trim();
 
-                                } else if ( word === "true" ) {
-                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : true } );
-                                } else if ( word === "asymmetry" ) {
-                                    //allows for some to be grouped together and some to run on their own
-                                    options = Object.assign( {}, options, { [ "animationAsymmetry" ] : true } );
-                                } else {
-                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : word } );
-                                }
+                                    if( word.search( /^\d{1}/ ) ) {
+                                        if( /(ease){1}/.test( word ) ) {
 
-                            } else {
-                                if( /s$/.test( word ) ) {
-                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000 } );
-                                } else {
-                                    options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) } );
-                                } 
+                                            options = Object.assign( {}, options, { [ animationOrder[i] ] : word.slice().split("-").reduce( ( acc, curVal, n ) => n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, ( match, p1 ) => p1.toUpperCase() ), "") } );
 
-                            }
-                        
-                
-                    } );
-                return options;
+                                        } else if ( word === "true" ) {
+                                            options = Object.assign( {}, options, { [ animationOrder[i] ] : true } );
+                                        } else if ( word === "asymmetry" ) {
+                                            //allows for some to be grouped together and some to run on their own
+                                            options = Object.assign( {}, options, { [ "animationAsymmetry" ] : true } );
+                                        } else {
+                                            options = Object.assign( {}, options, { [ animationOrder[i] ] : word } );
+                                        }
+
+                                    } else {
+                                        if( /s$/.test( word ) ) {
+                                            options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) * 1000 } );
+                                        } else {
+                                            options = Object.assign( {}, options, { [ animationOrder[i] ] : parseInt( word.match(/[0-9]*/)[0], 10 ) } );
+                                        } 
+
+                                    }
+
+
+                            } );
+                        return options;
+
+                    case "color" : 
+
+                        return colorInterpreter( target );
+
+                    default:
+                        return target.slice().split( " " ).map( each => parseInt( each, 10 ) );
+
+
+                }
+            } else throw new TypeError( "you need to use a string" );
+        } catch ( err ) {
             
-            case "color" : 
-                
-                return colorInterpreter( target );
-                
-            default:
-                return target.slice().split( " " ).map( each => parseInt( each, 10 ) );
-                
-                
+            console.warn( err.message );
+            progressEmitter.emit( "world-message", err );
         }
+        
     },
     packAnimations: function ( mesh, options ) {
-        const { animTarget, asymmetry, began, canPack, complete, delay, elasticity, finished, keyframes, run, offset, positionRelativeTo } = options;
+        const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset, positionRelativeTo } = options;
 
-        const duration = 1000;
         let animation = {
             elasticity,
-            offset
+            offset,
+            duration
         } ;
         
         let modifier;
@@ -730,9 +739,9 @@ const framework = {
             if ( options.color !== undefined ) {
                 
                 const checkPass = this.typeChecker( options.color, "color" );
-                if ( checkedPass.passed ) {
+                if ( checkedPass ) {
                     
-                    color = this.optionParser( options.color, options, "color" );
+                    color = this.optionParser( options.color, undefined, "color" );
                 } 
             }
             

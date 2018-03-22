@@ -46109,7 +46109,7 @@ var config = {
             }
         },
         "texture": "imgs/create.jpg",
-        "animation": "_floatUp asymmetry",
+        "animation": "_floatUp 20s asymmetry",
         "animationKeyframes": {
             "_floatUp": [{ y: 1000 }]
         }
@@ -64300,48 +64300,56 @@ var framework = {
         //parsers option string into viable data type for running code
         var animationOrder = ["animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry"];
 
-        type.trim();
-        switch (type) {
+        try {
+            if (typeof type === "string") {
 
-            case "animation":
-                target.slice().split(" ").forEach(function (val, i, arr) {
-                    var word = val.trim();
+                switch (type) {
 
-                    if (/^\d{1}/.test(word)) {
-                        if (/(ease){1}/.test(word)) {
+                    case "animation":
+                        target.slice().split(" ").forEach(function (val, i, arr) {
+                            var word = val.trim();
 
-                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word.slice().split("-").reduce(function (acc, curVal, n) {
-                                return n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, function (match, p1) {
-                                    return p1.toUpperCase();
-                                });
-                            }, "")));
-                        } else if (word === "true") {
-                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], true));
-                        } else if (word === "asymmetry") {
-                            //allows for some to be grouped together and some to run on their own
-                            options = Object.assign({}, options, _defineProperty({}, "animationAsymmetry", true));
-                        } else {
-                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word));
-                        }
-                    } else {
-                        if (/s$/.test(word)) {
-                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10) * 1000));
-                        } else {
-                            options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10)));
-                        }
-                    }
-                });
-                return options;
+                            if (word.search(/^\d{1}/)) {
+                                if (/(ease){1}/.test(word)) {
 
-            case "color":
+                                    options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word.slice().split("-").reduce(function (acc, curVal, n) {
+                                        return n === 0 ? acc + curVal : acc + curVal.replace(/^(\w)/, function (match, p1) {
+                                            return p1.toUpperCase();
+                                        });
+                                    }, "")));
+                                } else if (word === "true") {
+                                    options = Object.assign({}, options, _defineProperty({}, animationOrder[i], true));
+                                } else if (word === "asymmetry") {
+                                    //allows for some to be grouped together and some to run on their own
+                                    options = Object.assign({}, options, _defineProperty({}, "animationAsymmetry", true));
+                                } else {
+                                    options = Object.assign({}, options, _defineProperty({}, animationOrder[i], word));
+                                }
+                            } else {
+                                if (/s$/.test(word)) {
+                                    options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10) * 1000));
+                                } else {
+                                    options = Object.assign({}, options, _defineProperty({}, animationOrder[i], parseInt(word.match(/[0-9]*/)[0], 10)));
+                                }
+                            }
+                        });
+                        return options;
 
-                return (0, _colorInterpreter2.default)(target);
+                    case "color":
 
-            default:
-                return target.slice().split(" ").map(function (each) {
-                    return parseInt(each, 10);
-                });
+                        return (0, _colorInterpreter2.default)(target);
 
+                    default:
+                        return target.slice().split(" ").map(function (each) {
+                            return parseInt(each, 10);
+                        });
+
+                }
+            } else throw new TypeError("you need to use a string");
+        } catch (err) {
+
+            console.warn(err.message);
+            _progressEmitter2.default.emit("world-message", err);
         }
     },
     packAnimations: function packAnimations(mesh, options) {
@@ -64353,6 +64361,7 @@ var framework = {
             canPack = options.canPack,
             complete = options.complete,
             delay = options.delay,
+            duration = options.duration,
             elasticity = options.elasticity,
             finished = options.finished,
             keyframes = options.keyframes,
@@ -64361,10 +64370,10 @@ var framework = {
             positionRelativeTo = options.positionRelativeTo;
 
 
-        var duration = 1000;
         var animation = {
             elasticity: elasticity,
-            offset: offset
+            offset: offset,
+            duration: duration
         };
 
         var modifier = void 0;
@@ -64717,9 +64726,9 @@ var framework = {
             if (options.color !== undefined) {
 
                 var checkPass = this.typeChecker(options.color, "color");
-                if (checkedPass.passed) {
+                if (checkedPass) {
 
-                    color = this.optionParser(options.color, options, "color");
+                    color = this.optionParser(options.color, undefined, "color");
                 }
             }
 
@@ -65775,15 +65784,14 @@ exports.default = function (mesh) {
         positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty("positionRelativeTo") ? options.positionRelativeTo : _defaults2.default.positionRelativeTo,
         speed = 2;
 
-    console.log(type);
-    type.trim();
-    type.toLowerCase();
-
     //seperate keyframes and make it compatible for use in anime timeline
     if (options.animationKeyframes !== undefined && options.hasOwnProperty("animationKeyframes")) {
 
         try {
             if (options.animationKeyframes[type] !== undefined) {
+                type.toLowerCase();
+                type.trim();
+
                 if (typeof options.animationKeyframes[type] === "string") {
                     keyframes = parseKeyframes(options.animationKeyframes[type]);
                 } else if (options.animationKeyframes[type] instanceof Array) {
@@ -65847,6 +65855,7 @@ exports.default = function (mesh) {
         animTarget: animTarget,
         canPack: canPack,
         complete: function complete(info) {},
+        duration: duration,
         finished: function finished(info) {},
         run: function run(info) {},
         began: function began(info) {},

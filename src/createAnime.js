@@ -95,15 +95,15 @@ export default function ( mesh, options = {} ) {
           positionRelativeTo = options.positionRelativeTo !== undefined && options.hasOwnProperty( "positionRelativeTo" ) ? options.positionRelativeTo : defaultOptions.positionRelativeTo,
           speed = 2;
     
-    console.log( type );
-    type.trim();
-    type.toLowerCase();
     
     //seperate keyframes and make it compatible for use in anime timeline
     if ( options.animationKeyframes !== undefined && options.hasOwnProperty( "animationKeyframes" ) ) {
         
         try {
           if ( options.animationKeyframes[ type ] !== undefined ) {
+              type.toLowerCase();
+              type.trim();
+              
                 if ( typeof options.animationKeyframes[ type ] === "string" ) {
                     keyframes = parseKeyframes( options.animationKeyframes[ type ] );
                 } else if ( options.animationKeyframes[ type ] instanceof Array ) {
@@ -173,6 +173,7 @@ export default function ( mesh, options = {} ) {
             animTarget,
             canPack,
             complete: ( info ) => { },
+            duration,
             finished: ( info ) => { },
             run: ( info ) => { },
             began: ( info ) => { },

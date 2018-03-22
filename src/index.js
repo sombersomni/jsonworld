@@ -25,7 +25,7 @@ const config = {
                 "margin" : ( m ) => m + 2,
             },
             "texture" : "imgs/create.jpg",
-            "animation" : "_floatUp asymmetry",
+            "animation" : "_floatUp 20s asymmetry",
             "animationKeyframes" : {
                 "_floatUp" : [ { y: 1000 } ]
             }

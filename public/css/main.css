@@ -15,7 +15,7 @@
 
 body {
 	background: #222222;
-    color: #ffffff;
+    color: #000000;
     font-family: 'Share Tech Mono', monospace; /* change font here */
     font-size: 16px;
 }
@@ -33,5 +33,6 @@ canvas {
     position: absolute;
     width: 99%;
     height: 99%;
+    z-index: 1;
 }
 
