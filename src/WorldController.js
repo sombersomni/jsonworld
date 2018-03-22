@@ -82,6 +82,25 @@ const framework = {
       this.camera.rotation.y = speedX * -1;
       this.camera.rotation.x = speedY * -1;
     },
+    computeObjectRadius : function ( mesh ) {
+        //gets the radius from the bounding sphere to reflect the objects collision area
+        const center = new THREE.Vector3( 0, 0, 0 );
+        mesh.geometry.computeBoundingSphere();
+        
+            if ( mesh.geometry.boundingSphere !== undefined ) {
+                return mesh.geometry.boundingSphere;
+            } else if ( mesh.geometry.parameters.radius !== undefined ) {
+                return { radius : mesh.geometry.parameters.radius, center };
+            } else if ( mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom ) {
+                return { radius : Math.max( mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom ), center };
+            } else if ( mesh.geometry.parameters.width ) {
+                return { radius : mesh.geometry.parameters.width / 2 , center };
+            } else {
+                console.warn( "can't compute radius for object" );
+                
+                return { radius : defaultOptions.radius, center };
+            }
+    },
     convertToRadians : value => (Math.PI * 2 ) / 180 * value,
     createAnime,
     createGeometry,
@@ -120,17 +139,16 @@ const framework = {
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
                     for ( var i = 0; i <= animation.length - 1; i++ ) {
-                       // console.log( animation[i] );
-                        console.log(obj, "this is the group decision");
+                        
                         obj.animeTimeline.add( animation[i] );
                     }
 
                 } else if ( animation instanceof Function ) {
 
                     this.animationManager.all[ mesh.id ].push( animation );
+                    
                 } else {
-                        console.log( obj, "this is default decision");
-
+                    
                        obj.animeTimeline.add( animation );
                 }
                 
@@ -154,72 +172,31 @@ const framework = {
         }
     },
     gridMeshPosition: function ( mesh, options, index ) {
-        //gets the radius from the bounding sphere to reflect the objects collision area
-        
-        const p = new Promise( ( res, rej ) => {
-            
-            mesh.geometry.computeBoundingSphere();
-            if ( mesh.geometry.boundingSphere !== undefined ) {
-                res( mesh.geometry.boundingSphere );
-            } else if ( mesh.geometry.parameters.radius !== undefined ) {
-                res( mesh.geometry.parameters.radius );
-            } else if ( mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom ) {
-                res( Math.max( mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom ) );
-            } else if ( mesh.geometry.parameters.width ) {
-                res( mesh.geometry.parameters.width / 2 );
-            } else {
-                rej( "can't compute radius for object" );
-            }
-        } );
-        
         //MODIFIERS
         
         const marginModifier = 0;
         
         //CONSTANTS
-        const type = options.layoutType !== undefined ? options.layoutType : defaultOptions.layoutType;
+        const type = options.layoutType !== undefined && typeof options.layoutType === "string" ? options.layoutType : defaultOptions.layoutType;
          
         
         //VARIABLES
-            let layoutLimit = options.layoutLimit !== undefined ? options.layoutLimit : defaultOptions.layoutLimit,
-                margin = options.margin !== undefined ? options.margin : defaultOptions.margin,
-                padding;
-        
-        try {
-
-            if ( options.padding === undefined ) {
-
-                padding = Number.isNaN( options.padding ) ? options.padding : defaultOptions.padding;
-            } else {
-                padding = options.padding;
-            }
-
-            if ( typeof layoutLimit === "string" ) {
-
-                layoutLimit = this.optionParser( layoutLimit );
-            }
-
-            if ( typeof margin === "string" ) {
-
-                margin = this.optionParser( margin );
-            }
-
+            const layoutLimit = this.typeChecker( options, "layoutLimit", defaultOptions ),
+                margin = this.typeChecker( options, "margin", defaultOptions ),
+                padding = this.typeChecker( options, "padding", defaultOptions );
+    
             if ( mesh.type === "Mesh" ) {
 
-                p.then( data => {
-
-                    const radius = data.radius,
-                          center = data.center;
-
                     let newX = 0, newY = 0, newZ = 0;
-
-
+                    
+                    const { center, radius } = this.computeObjectRadius( mesh );
+                
                     switch( type ) {
 
                             case "basic":
 
                                 if ( index === 0 ) {
-
+                                    
                                     mesh.position.set( 0, 0, 0 );
                                 } else {
 
@@ -227,23 +204,16 @@ const framework = {
                                     
                                     const newIndex = Math.floor( ( index + 1 ) / 2 );
                                     //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
-                                    if ( margin instanceof Array ) {
                                         const calculatedMargin = ( leftRight * margin[ 0 ] * ( newIndex % ( ( layoutLimit[ 0 ] / 2 ) + marginModifier ) ) ); // calculates the margin spacing for each object in the group
-                                        
-                                        const newRadius = radius + padding;
                                         
                                         //the calculations below create a layout based on your presets in the Layout Limit. 
                                         //If your count is over the limit, your count will override it.
                                         
-                                        newX = leftRight * ( newIndex % ( layoutLimit[ 0 ] / 2 ) ) *  newRadius + calculatedMargin;
+                                        newX = leftRight * ( newIndex % ( layoutLimit[ 0 ] / 2 ) ) *  ( radius + padding[ 0 ] ) + calculatedMargin + center.x;
 
-                                        newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * newRadius;
+                                        newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * ( radius + padding[ 1 ]) + center.y;
                                         
-                                        newZ =( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * newRadius ) * -1;
-
-                                    } else {
-                                        newX = leftRight * Math.floor( ( index  + 1 ) / 2 ) *  ( radius + padding - mesh.position.x  ) + ( leftRight * margin * ( index + 1 ) );
-                                    }
+                                        newZ =( ( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * ( radius + padding[ 2 ] ) ) * -1 ) + center.z;
 
                                     mesh.position.set( newX , newY, newZ );
                                 }
@@ -252,13 +222,7 @@ const framework = {
                             default:
                                 return mesh;
                     }
-                } );
             }
-            
-        } catch( err ) {
-            
-            console.warn( err.message );
-        }
         
         
         return mesh;
@@ -329,7 +293,7 @@ const framework = {
         }
         return mesh;
     },
-    optionParser: function ( target, options = {}, type = "default" ) {
+    optionParser: function ( target, options, type = "default" ) {
         //parsers option string into viable data type for running code
         const animationOrder = [ "animationType", "animationDuration", "animationEasing", "animationDelay", "loop", "animationDirection", "animationElasticity", "asymmetry" ];
         
@@ -374,8 +338,16 @@ const framework = {
                         return colorInterpreter( target );
 
                     default:
-                        return target.slice().split( " " ).map( each => parseInt( each, 10 ) );
-
+                        let newTarget = target.slice().split( /\s+/ ).map( each => parseInt( each, 10 ) ).filter( each => !Number.isNaN( each ) );
+                        //if the arrays length is less than 3, we insert zeros to avoid any undefined indexes
+                        if ( newTarget.length !== 3 ) {
+                            
+                            for ( var n = 0; n <= 3 - ( newTarget.length - 1 ); n++ ) {
+                                newTarget.push( 0 );
+                            }
+                        } 
+                        
+                        return newTarget;
 
                 }
             } else throw new TypeError( "you need to use a string" );
@@ -511,8 +483,6 @@ const framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-            
-        
                 m = this.createMaterial( options );
         
                 if ( options.count !== undefined && options.count > 1 ) {
@@ -599,39 +569,14 @@ const framework = {
     },
     setObjectTransforms : function( mesh, options = {} ) {
         
-        try {
-            
             [ "position", "rotation", "scale" ].forEach( type  => {
-                if ( options.hasOwnProperty( type ) && options[ type ] !== undefined ) {
-                        
-                        let transform;
-                        if ( options[ type ] instanceof Array ) {
-                            
-                            transform = options[ type ];
-
-                        } else if ( typeof options[ type ] === "string" ) {
-
-                            transform = this.optionParser( options[ type ] );
-
-                        } else {
-                            transform = [ options[ type ], options[ type ], options[ type ] ];
-                        }
-                    
-                            mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
-                            console.log( transform, mesh );
-
-                }
-
+                
+                const transform = this.typeChecker( options, type, defaultOptions );
+                
+                mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
+                
             } );
-            
-            return mesh;
-            
-        } catch ( err ) {
-            
-            console.log( err.message );
-        }
-        
-        
+
         return mesh;
     },
     setupModifier: function( mesh, animProp, target, options ) {
@@ -736,14 +681,8 @@ const framework = {
         
         try {
             
-            if ( options.color !== undefined ) {
-                
-                const checkPass = this.typeChecker( options.color, "color" );
-                if ( checkedPass ) {
-                    
-                    color = this.optionParser( options.color, undefined, "color" );
-                } 
-            }
+            color = this.typeChecker( options, "color", defaultOptions );
+
             
             const density = options.fogDensity !== undefined ? options.fogDensity : defaultOptions.fogDensity;
             const type =  options.fogType !== undefined && typeof options.fogType === "string" ? options.fogType : defaultOptions.fogType;
@@ -772,47 +711,43 @@ const framework = {
         
     },
     setupWorldClone : function ( mesh ) {
-        console.log( mesh );
         
         this.objManager.all[ mesh.id ] =  {
-            pos :{
-                x: mesh.position.x !== undefined ? mesh.position.x : 0,
-                y: mesh.position.y !== undefined ? mesh.position.y : 0,
-                z: mesh.position.z !== undefined ? mesh.position.z : 0
-            },
+            pos : new THREE.Vector3( mesh.position.x !== undefined ? mesh.position.x : 0,
+                                    mesh.position.y !== undefined ? mesh.position.y : 0,
+                                    mesh.position.z !== undefined ? mesh.position.z : 0 ),
             animeTimeline : anime.timeline( { autoplay: true, loop : true } )
         };
     },
-    typeChecker : function ( unchecked, type ) {
-
-        const stringCheck = unchecked === "string",
-              numCheck = Number.isNaN( unchecked ),
-              arrCheck = unchecked instanceof Array,
-              funcCheck = unchecked instanceof Function,
-              boolCheck = unchecked instanceof Boolean;
-              
-            
-            if ( type === "color" ) {
-                if ( stringCheck || numCheck )  {
-                    
-                return true;
-                } else {
-                    
-                    console.warn( "You need to use either a string or a number" );
-                    return false;
-                }
-            } else if ( type === " size" || type === "position" ) {
+    typeChecker : function ( options, type, defaults ) {
+        //goes through each option attribute and returns an array with the information sorted for app use
+        if ( options.hasOwnProperty( type ) && options[ type ] !== undefined ) {
+            if ( options[ type ] instanceof Array ) {
                 
-                if ( stringCheck || numCheck || arrCheck )  {
-                    
-                    return true;
-                } else {
-                    console.warn( "You need to use either a string, a number, or an array" );
-                    return false;
-                }
+                return options[ type ];
+                
+            } else if ( typeof options[ type ] === "string" ) {
+                
+                return this.optionParser( options[ type ], options, type );
+            
+            } else if ( !Number.isNaN( options[ type ] ) ) {
+                
+                return [ options[ type ], options[ type ], options[ type ] ];
+                
             } else {
-                console.warn( "make sure you are spelling your properties correctly" );
+                
+                console.warn( "you are not using an acceptable data type for " + type );
             }
+        
+        } else {
+            
+            console.log( "using default options. type is "+ type );
+        }
+        
+        if ( defaults[ type ] !== undefined ) {
+                return this.typeChecker( defaults, type, defaults );
+        } else return;
+        
     },
     initWorld : function () {
         //initializes world after clicking and removes event listener to prevent memory leaks
@@ -956,6 +891,11 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
             
+            if ( obj.name === "nose" ) {
+                obj.rotation.x += 0.01;
+                obj.rotation.y += 0.01;
+                
+            }
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
                 obj.target.position.clone( this.scene.position );
@@ -970,7 +910,6 @@ const framework = {
 
         this.renderer.render( this.scene, this.camera );
         
-        //console.log( this.renderer.getDrawingBufferSize() );
     }
 };
 Object.assign( WorldController.prototype, framework );

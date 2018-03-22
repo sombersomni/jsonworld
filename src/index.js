@@ -17,6 +17,7 @@ const config = {
             "type" : "box",
             "size" : [ 50, 50, 50 ],
             "position" : [ 0, 0, 0 ], 
+            "scale" : [ 1, 2, 1 ],
             "color" : "white",
             "count" : 149,
             "shadow" : true,
@@ -37,8 +38,17 @@ const config = {
             "color" : wallColor,
             "material" : "phong",
             "size" : "10000 10000",
-            "rotation" : "45 0 0",
+            "rotation" : " 45 0 0",
             "position" : [ 0, -200, 0 ],
+            "shadow" : true
+        },
+        {
+            "name" : "nose",
+            "material" : "wireframe",
+            "color" : "red",
+            "type" : "cone",
+            "scale" : [ 1, 0.5 , 1 ],
+            "size" : "100 1000 0",
             "shadow" : true
         }
       

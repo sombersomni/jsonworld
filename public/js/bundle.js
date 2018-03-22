@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"#F9AE0D","sunIntensity":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","roughness":10,"sceneTransition":"fade-out","segments":8,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
 
 /***/ }),
 /* 7 */
@@ -46099,6 +46099,7 @@ var config = {
         "type": "box",
         "size": [50, 50, 50],
         "position": [0, 0, 0],
+        "scale": [1, 2, 1],
         "color": "white",
         "count": 149,
         "shadow": true,
@@ -46120,8 +46121,16 @@ var config = {
         "color": wallColor,
         "material": "phong",
         "size": "10000 10000",
-        "rotation": "45 0 0",
+        "rotation": " 45 0 0",
         "position": [0, -200, 0],
+        "shadow": true
+    }, {
+        "name": "nose",
+        "material": "wireframe",
+        "color": "red",
+        "type": "cone",
+        "scale": [1, 0.5, 1],
+        "size": "100 1000 0",
         "shadow": true
     }]
 };
@@ -64035,6 +64044,25 @@ var framework = {
         this.camera.rotation.y = speedX * -1;
         this.camera.rotation.x = speedY * -1;
     },
+    computeObjectRadius: function computeObjectRadius(mesh) {
+        //gets the radius from the bounding sphere to reflect the objects collision area
+        var center = new THREE.Vector3(0, 0, 0);
+        mesh.geometry.computeBoundingSphere();
+
+        if (mesh.geometry.boundingSphere !== undefined) {
+            return mesh.geometry.boundingSphere;
+        } else if (mesh.geometry.parameters.radius !== undefined) {
+            return { radius: mesh.geometry.parameters.radius, center: center };
+        } else if (mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom) {
+            return { radius: Math.max(mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom), center: center };
+        } else if (mesh.geometry.parameters.width) {
+            return { radius: mesh.geometry.parameters.width / 2, center: center };
+        } else {
+            console.warn("can't compute radius for object");
+
+            return { radius: _defaults2.default.radius, center: center };
+        }
+    },
     convertToRadians: function convertToRadians(value) {
         return Math.PI * 2 / 180 * value;
     },
@@ -64085,15 +64113,13 @@ var framework = {
                 //takes the mesh and adds a animation timeline to the root object
                 if (animation instanceof Array) {
                     for (var i = 0; i <= animation.length - 1; i++) {
-                        // console.log( animation[i] );
-                        console.log(obj, "this is the group decision");
+
                         obj.animeTimeline.add(animation[i]);
                     }
                 } else if (animation instanceof Function) {
 
                     this.animationManager.all[mesh.id].push(animation);
                 } else {
-                    console.log(obj, "this is default decision");
 
                     obj.animeTimeline.add(animation);
                 }
@@ -64118,108 +64144,59 @@ var framework = {
         }
     },
     gridMeshPosition: function gridMeshPosition(mesh, options, index) {
-        //gets the radius from the bounding sphere to reflect the objects collision area
-
-        var p = new Promise(function (res, rej) {
-
-            mesh.geometry.computeBoundingSphere();
-            if (mesh.geometry.boundingSphere !== undefined) {
-                res(mesh.geometry.boundingSphere);
-            } else if (mesh.geometry.parameters.radius !== undefined) {
-                res(mesh.geometry.parameters.radius);
-            } else if (mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom) {
-                res(Math.max(mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom));
-            } else if (mesh.geometry.parameters.width) {
-                res(mesh.geometry.parameters.width / 2);
-            } else {
-                rej("can't compute radius for object");
-            }
-        });
-
         //MODIFIERS
 
         var marginModifier = 0;
 
         //CONSTANTS
-        var type = options.layoutType !== undefined ? options.layoutType : _defaults2.default.layoutType;
+        var type = options.layoutType !== undefined && typeof options.layoutType === "string" ? options.layoutType : _defaults2.default.layoutType;
 
         //VARIABLES
-        var layoutLimit = options.layoutLimit !== undefined ? options.layoutLimit : _defaults2.default.layoutLimit,
-            margin = options.margin !== undefined ? options.margin : _defaults2.default.margin,
-            padding = void 0;
+        var layoutLimit = this.typeChecker(options, "layoutLimit", _defaults2.default),
+            margin = this.typeChecker(options, "margin", _defaults2.default),
+            padding = this.typeChecker(options, "padding", _defaults2.default);
 
-        try {
+        if (mesh.type === "Mesh") {
 
-            if (options.padding === undefined) {
+            var newX = 0,
+                newY = 0,
+                newZ = 0;
 
-                padding = Number.isNaN(options.padding) ? options.padding : _defaults2.default.padding;
-            } else {
-                padding = options.padding;
-            }
+            var _computeObjectRadius = this.computeObjectRadius(mesh),
+                center = _computeObjectRadius.center,
+                radius = _computeObjectRadius.radius;
 
-            if (typeof layoutLimit === "string") {
+            switch (type) {
 
-                layoutLimit = this.optionParser(layoutLimit);
-            }
+                case "basic":
 
-            if (typeof margin === "string") {
+                    if (index === 0) {
 
-                margin = this.optionParser(margin);
-            }
+                        mesh.position.set(0, 0, 0);
+                    } else {
 
-            if (mesh.type === "Mesh") {
+                        var leftRight = index % 2 === 0 ? -1 : 1;
 
-                p.then(function (data) {
+                        var newIndex = Math.floor((index + 1) / 2);
+                        //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
+                        var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
 
-                    var radius = data.radius,
-                        center = data.center;
+                        //the calculations below create a layout based on your presets in the Layout Limit. 
+                        //If your count is over the limit, your count will override it.
 
-                    var newX = 0,
-                        newY = 0,
-                        newZ = 0;
+                        newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * (radius + padding[0]) + calculatedMargin + center.x;
 
-                    switch (type) {
+                        newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * (radius + padding[1]) + center.y;
 
-                        case "basic":
+                        newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * (radius + padding[2]) * -1 + center.z;
 
-                            if (index === 0) {
-
-                                mesh.position.set(0, 0, 0);
-                            } else {
-
-                                var leftRight = index % 2 === 0 ? -1 : 1;
-
-                                var newIndex = Math.floor((index + 1) / 2);
-                                //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
-                                if (margin instanceof Array) {
-                                    var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
-
-                                    var newRadius = radius + padding;
-
-                                    //the calculations below create a layout based on your presets in the Layout Limit. 
-                                    //If your count is over the limit, your count will override it.
-
-                                    newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * newRadius + calculatedMargin;
-
-                                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * newRadius;
-
-                                    newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * newRadius * -1;
-                                } else {
-                                    newX = leftRight * Math.floor((index + 1) / 2) * (radius + padding - mesh.position.x) + leftRight * margin * (index + 1);
-                                }
-
-                                mesh.position.set(newX, newY, newZ);
-                            }
-                            return mesh;
-
-                        default:
-                            return mesh;
+                        mesh.position.set(newX, newY, newZ);
                     }
-                });
-            }
-        } catch (err) {
+                    return mesh;
 
-            console.warn(err.message);
+                default:
+                    return mesh;
+            }
         }
 
         return mesh;
@@ -64293,8 +64270,7 @@ var framework = {
         }
         return mesh;
     },
-    optionParser: function optionParser(target) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    optionParser: function optionParser(target, options) {
         var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "default";
 
         //parsers option string into viable data type for running code
@@ -64340,9 +64316,20 @@ var framework = {
                         return (0, _colorInterpreter2.default)(target);
 
                     default:
-                        return target.slice().split(" ").map(function (each) {
+                        var newTarget = target.slice().split(/\s+/).map(function (each) {
                             return parseInt(each, 10);
+                        }).filter(function (each) {
+                            return !Number.isNaN(each);
                         });
+                        //if the arrays length is less than 3, we insert zeros to avoid any undefined indexes
+                        if (newTarget.length !== 3) {
+
+                            for (var n = 0; n <= 3 - (newTarget.length - 1); n++) {
+                                newTarget.push(0);
+                            }
+                        }
+
+                        return newTarget;
 
                 }
             } else throw new TypeError("you need to use a string");
@@ -64489,7 +64476,6 @@ var framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-
         m = this.createMaterial(options);
 
         if (options.count !== undefined && options.count > 1) {
@@ -64578,32 +64564,12 @@ var framework = {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 
-        try {
+        ["position", "rotation", "scale"].forEach(function (type) {
 
-            ["position", "rotation", "scale"].forEach(function (type) {
-                if (options.hasOwnProperty(type) && options[type] !== undefined) {
+            var transform = _this4.typeChecker(options, type, _defaults2.default);
 
-                    var transform = void 0;
-                    if (options[type] instanceof Array) {
-
-                        transform = options[type];
-                    } else if (typeof options[type] === "string") {
-
-                        transform = _this4.optionParser(options[type]);
-                    } else {
-                        transform = [options[type], options[type], options[type]];
-                    }
-
-                    mesh[type]["set"](type === "rotation" ? _this4.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this4.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this4.convertToRadians(transform[2]) : transform[2]);
-                    console.log(transform, mesh);
-                }
-            });
-
-            return mesh;
-        } catch (err) {
-
-            console.log(err.message);
-        }
+            mesh[type]["set"](type === "rotation" ? _this4.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this4.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this4.convertToRadians(transform[2]) : transform[2]);
+        });
 
         return mesh;
     },
@@ -64723,14 +64689,7 @@ var framework = {
 
         try {
 
-            if (options.color !== undefined) {
-
-                var checkPass = this.typeChecker(options.color, "color");
-                if (checkedPass) {
-
-                    color = this.optionParser(options.color, undefined, "color");
-                }
-            }
+            color = this.typeChecker(options, "color", _defaults2.default);
 
             var density = options.fogDensity !== undefined ? options.fogDensity : _defaults2.default.fogDensity;
             var type = options.fogType !== undefined && typeof options.fogType === "string" ? options.fogType : _defaults2.default.fogType;
@@ -64757,46 +64716,36 @@ var framework = {
         }
     },
     setupWorldClone: function setupWorldClone(mesh) {
-        console.log(mesh);
 
         this.objManager.all[mesh.id] = {
-            pos: {
-                x: mesh.position.x !== undefined ? mesh.position.x : 0,
-                y: mesh.position.y !== undefined ? mesh.position.y : 0,
-                z: mesh.position.z !== undefined ? mesh.position.z : 0
-            },
+            pos: new THREE.Vector3(mesh.position.x !== undefined ? mesh.position.x : 0, mesh.position.y !== undefined ? mesh.position.y : 0, mesh.position.z !== undefined ? mesh.position.z : 0),
             animeTimeline: _animejs2.default.timeline({ autoplay: true, loop: true })
         };
     },
-    typeChecker: function typeChecker(unchecked, type) {
+    typeChecker: function typeChecker(options, type, defaults) {
+        //goes through each option attribute and returns an array with the information sorted for app use
+        if (options.hasOwnProperty(type) && options[type] !== undefined) {
+            if (options[type] instanceof Array) {
 
-        var stringCheck = unchecked === "string",
-            numCheck = Number.isNaN(unchecked),
-            arrCheck = unchecked instanceof Array,
-            funcCheck = unchecked instanceof Function,
-            boolCheck = unchecked instanceof Boolean;
+                return options[type];
+            } else if (typeof options[type] === "string") {
 
-        if (type === "color") {
-            if (stringCheck || numCheck) {
+                return this.optionParser(options[type], options, type);
+            } else if (!Number.isNaN(options[type])) {
 
-                return true;
+                return [options[type], options[type], options[type]];
             } else {
 
-                console.warn("You need to use either a string or a number");
-                return false;
-            }
-        } else if (type === " size" || type === "position") {
-
-            if (stringCheck || numCheck || arrCheck) {
-
-                return true;
-            } else {
-                console.warn("You need to use either a string, a number, or an array");
-                return false;
+                console.warn("you are not using an acceptable data type for " + type);
             }
         } else {
-            console.warn("make sure you are spelling your properties correctly");
+
+            console.log("using default options. type is " + type);
         }
+
+        if (defaults[type] !== undefined) {
+            return this.typeChecker(defaults, type, defaults);
+        } else return;
     },
     initWorld: function initWorld() {
         var _this7 = this;
@@ -64940,6 +64889,10 @@ var framework = {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
+            if (obj.name === "nose") {
+                obj.rotation.x += 0.01;
+                obj.rotation.y += 0.01;
+            }
             if (/Light/.test(obj.type)) {
                 //checks for light objects
                 obj.target.position.clone(_this9.scene.position);
@@ -64953,8 +64906,6 @@ var framework = {
         this.runAnimations(elaspedTime);
 
         this.renderer.render(this.scene, this.camera);
-
-        //console.log( this.renderer.getDrawingBufferSize() );
     }
 };
 Object.assign(WorldController.prototype, framework);
@@ -65834,20 +65785,15 @@ exports.default = function (mesh) {
                             return [{ animProp: decision.animProp, value: frame }];
                         }
                     });
-                } else {
-                    keyframes = undefined;
                 }
             } else {
-                console.log(type);
+
                 if (/^[\_]{1}/.test(type)) {
                     canPack = false;
-                } else {
-                    console.log(keyframes);
-                    keyframes = undefined;
                 }
             }
         } catch (err) {
-            console.log(err);
+            console.warn(err.message);
         }
     }
 
@@ -65871,8 +65817,6 @@ exports.default = function (mesh) {
         positionRelativeTo: positionRelativeTo,
         speed: speed
     };
-
-    console.log(newOptions);
 
     switch (type) {
         case "atom":
@@ -65962,7 +65906,7 @@ exports.default = function (mesh) {
         case "spin-basic":
 
             newOptions.animTarget = "rotation";
-            newOptions.keyframes = { animProp: "y", value: Math.PI * 2 / 180 * _defaults2.default.rotationAngle };
+            newOptions.keyframes = { animProp: "y", value: Math.PI * 2 / 180 * _defaults2.default.rotation };
 
             return this.packAnimations(mesh, Object.assign({}, newOptions));
 
@@ -66123,11 +66067,13 @@ exports.default = function () {
 
     //goes through every geometry type plus custom ones
     var segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
-        type = options.type !== undefined ? options.type : "default";
+        thetaStart = this.convertToRadians(options.angleStart !== undefined ? options.angleStart : 0),
+        thetaLength = this.convertToRadians(options.arcAngle !== undefined ? options.arcAngle : 360),
+        type = options.type !== undefined ? options.type : "default",
+        openEnded = options.openEnd !== undefined ? options.openEnd : false;
+
     var size = options.size !== undefined ? options.size : _defaults2.default.size,
         position = options.position !== undefined ? options.position : _defaults2.default.objectPosition;
-
-    //console.log( size, position );
 
     if (typeof size === "string") {
         size = this.optionParser(size);;
@@ -66144,27 +66090,23 @@ exports.default = function () {
     switch (type) {
         case "box":
 
-            if (!arrCheck) {
-                return new THREE.BoxGeometry(size, size, size);
-            } else {
-                return new THREE.BoxGeometry(size[0], size[1], size[2]);
-            }
-            break;
+            return !arrCheck ? new THREE.BoxGeometry(size, size, size) : new THREE.BoxGeometry(size[0], size[1], size[2]);
+        case "circle":
+
+            return !arrCheck ? new THREE.CircleGeometry(size / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength) : new THREE.CircleGeometry(size[0] / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength);
+
+        case "cone":
+
+            return !arrCheck ? new THREE.ConeGeometry(size, size, segments, segments, openEnded, thetaStart, thetaLength) : new THREE.ConeGeometry(size[0], size[1], segments, segments, openEnded, thetaStart, thetaLength);
+
         case "cylinder":
-            if (!arrCheck) {
-                return new THREE.CylinderGeometry(size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2);
-            } else {
-                return new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2);
-            }
-            break;
+
+            return !arrCheck ? new THREE.CylinderGeometry(size / 2, size / 2, size, segments, segments, openEnded, thetaStart, thetaLength) : new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength);
+
         case "dodecahedron":
             //creates dodecahedron geometry
-            if (!arrCheck) {
-                return new THREE.DodecahedronGeometry(size);
-            } else {
-                return new THREE.DodecahedronGeometry(size[0]);
-            }
-            break;
+            return !arrCheck ? new THREE.DodecahedronGeometry(size / 2) : new THREE.DodecahedronGeometry(size[0] / 2);
+
         case "font":
             var shapes = options.font.generateShapes(options.title, 100, 4);
             var shapeGeo = new THREE.ShapeGeometry(shapes);

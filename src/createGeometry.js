@@ -7,12 +7,14 @@ import proceduralTree from "./utils/proceduralTree";
 export default function (options = {} ) {
     //goes through every geometry type plus custom ones
     const segments = options.segments !== undefined ? options.segments : defaultOptions.segments,
-        type = options.type !== undefined ? options.type : "default";
+          thetaStart = this.convertToRadians( options.angleStart !== undefined ? options.angleStart : 0 ),
+          thetaLength = this.convertToRadians( options.arcAngle !== undefined ? options.arcAngle : 360 ),
+          type = options.type !== undefined ? options.type : "default",
+          openEnded = options.openEnd !== undefined ? options.openEnd : false;
+    
     let size = options.size !== undefined ? options.size: defaultOptions.size,
         position = options.position !== undefined ? options.position: defaultOptions.objectPosition;
     
-    
-    //console.log( size, position );
     
     if ( typeof size === "string" ) {
         size = this.optionParser( size );;
@@ -27,29 +29,25 @@ export default function (options = {} ) {
     
     //CHOICES
     switch( type ) {
-        case "box":
+        case "box" :
             
-            if ( !arrCheck ) {
-                return new THREE.BoxGeometry( size, size, size );
-            } else {
-                return new THREE.BoxGeometry( size[0], size[1], size[2] );
-            }
-            break;
+            return !arrCheck ? new THREE.BoxGeometry( size, size, size ) : new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] );
+        case "circle" :
+            
+            return !arrCheck ? new THREE.CircleGeometry( size / 2, ( options.segments !== undefined ? options.segments : 32 ), thetaStart, thetaLength ) : new THREE.CircleGeometry( size[ 0 ] / 2, ( options.segments !== undefined ? options.segments : 32 ), thetaStart, thetaLength );
+            
+        case "cone" :
+            
+            return !arrCheck ? new THREE.ConeGeometry( size, size, segments, segments, openEnded, thetaStart, thetaLength ) : new THREE.ConeGeometry( size[ 0 ], size[ 1 ], segments, segments, openEnded, thetaStart, thetaLength );
+            
         case "cylinder" :
-            if ( !arrCheck ) {
-                return new THREE.CylinderGeometry( size, size, size, segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
-            } else {
-                return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, options.isOpen ? true : false, 0, Math.PI * 2 );
-            }
-           break; 
+            
+            return !arrCheck ? new THREE.CylinderGeometry( size / 2, size / 2, size, segments, segments, openEnded, thetaStart, thetaLength ) : new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength );
+            
         case "dodecahedron" :
             //creates dodecahedron geometry
-            if ( !arrCheck ){
-                return new THREE.DodecahedronGeometry( size );  
-            } else {
-                return new THREE.DodecahedronGeometry( size[0] );
-            }
-           break; 
+            return !arrCheck ? new THREE.DodecahedronGeometry( size / 2 ) : new THREE.DodecahedronGeometry( size[0] / 2 );
+    
         case "font" :
             let shapes = options.font.generateShapes( options.title , 100, 4 );
             let shapeGeo = new THREE.ShapeGeometry( shapes );

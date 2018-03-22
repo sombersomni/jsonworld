@@ -150,21 +150,19 @@ export default function ( mesh, options = {} ) {
                            }
                     } ); 
 
-                } else {
-                    keyframes = undefined;
-                }
+                } 
+              
             } else {
-                console.log( type );
+                
                 if ( /^[\_]{1}/.test( type ) ) {
                     canPack = false; 
 
-                } else {
-                    console.log( keyframes );
-                    keyframes = undefined;
-                }
+                } 
+                
             }  
+            
         } catch( err ) {
-            console.log( err );
+            console.warn( err.message );
         }
         
     }
@@ -189,8 +187,6 @@ export default function ( mesh, options = {} ) {
             positionRelativeTo,
             speed
     };
-    
-    console.log( newOptions );
     
     switch( type ) {
         case "atom":
@@ -280,7 +276,7 @@ export default function ( mesh, options = {} ) {
         case "spin-basic" :
             
             newOptions.animTarget = "rotation";
-            newOptions.keyframes = { animProp: "y", value: ( Math.PI * 2 / 180 ) * defaultOptions.rotationAngle };
+            newOptions.keyframes = { animProp: "y", value: ( Math.PI * 2 / 180 ) * defaultOptions.rotation };
             
             return this.packAnimations( mesh, Object.assign( {}, newOptions ) );
             
