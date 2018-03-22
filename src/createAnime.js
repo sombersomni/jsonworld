@@ -129,10 +129,10 @@ export default function ( mesh, options = {} ) {
                                       if ( decision !== undefined ) {
                                            animTarget = decision.animTarget;
 
-                                           let value = frame[ key ];
+                                           const value = frame[ key ];
                                           
                                           if ( Number.isNaN( value ) ) {
-                                              throw new TypeError( defaultOptions.errors.FRAMEVALUE );
+                                              throw new TypeError( "keyframes value should be a number" );
                                           }
                                           
                                            eachProp.push( { 
@@ -148,7 +148,7 @@ export default function ( mesh, options = {} ) {
                            } else {
                                
                                           if ( Number.isNaN( frame ) ) {
-                                              throw new TypeError( defaultOptions.errors.FRAMEVALUE );
+                                              throw new TypeError( "keyframes value should be a number" );
                                           }
                                            
                                return [ { animProp: decision.animProp, value: frame } ];

@@ -79,6 +79,7 @@ It's cool to see a 3D object, but it's not all that impressive. The syntax for d
 {
     "worldObjects" : [
         {
+            "name" : "mgs-crate",
             "type" : "box", 
             "size" : "50 50 50",
             "position" : "100 0 0",
@@ -92,6 +93,7 @@ It's cool to see a 3D object, but it's not all that impressive. The syntax for d
 ```
 Basic Attributes | Description
 ------------ | -------------
+name | helps identify the object so you can keep track of it. If you don't give it a name, no name will be assigned to it.
 type | declares what type of object you want to make
 size | gives the object a size by "width height depth". You can also use an array [ 10, 100, 10 ]. in the above example, jsonworld uses the width as the radius for the sphere. The program will makes its best guess for when you choose a size.
 position | sets the position of the object by it's axis "x y z". You can also use an array [ 10, 10, 10 ]. By default, positioning is set based on the world's origin which is ( 0, 0, 0 ).
@@ -99,11 +101,11 @@ color | sets a color for the object. Takes CSS syntax ( "rgb(1, 1, 1 )" ) , lite
 count | creates clones of root object type. Although you can put as large number of objects on the screen at a time, I recommened between 1 to 1000 at a time for best performance
 shadow | controls if this object can receive and cast shadows onto the world
 
-As you can see, we have 5 spheres lined up along the center of the screen, but something is wrong. There is no depth! They look 2D. Although we turned the shadows on above, **_3D Objects_ require you to use a property called _material_** in order for the world to effect the object. Similar to human skin, you can think of *Material* as the skin of a world object. This will allow us to change the object's asthetic to differentiate all the others that may populate the screen. 
+As you can see, we have 5 boxes lined up along the center of the screen, but something is wrong. There is no depth! They look 2D. Although we turned the shadows on above, **_3D Objects_ require you to use a property called _material_** in order for the world to effect the object. Similar to human skin, you can think of *Material* as the skin of a world object. This will allow us to change the object's asthetic to differentiate all the others that may populate the screen. 
 
 ## Material Attributes
 
-Here is where the **THREEJS** lingo comes in ( click the link for a deeper explanation for advanced use ). THREEJS Materials control the appearance of an object. Here are your material options below: 
+Here is where the **THREEJS** lingo comes in. THREEJS Materials control the appearance of an object. Here are your material options below: 
 
 Material Type| Description
 ------------ | -------------
@@ -122,6 +124,7 @@ Let's add our material. We will move to javascript so we can focus on evolving o
 ```javascript
     
     const MGSCrate = {
+        name: "mgs-crate",
         type: "box",
         size: "50 50 50",
         position : "100 0 0",
@@ -145,16 +148,15 @@ Positioning objects in world space may seem difficult at first, but as you add m
 Imagine your screen is a giant graph where up and down is the *y axis* and left and rigth is the *x axis*. The only new axis we're adding is the z-axis, back and forth. The world * camera * is set to 200 on the z and 200 on the y, while staying center on the x. This keeps things in view since all objects by default will start a ( 0, 0 , 0 ). If you create a bunch of objects all at once without considering where they will be, you can end up stacking objects on top of each other. JSONWORLD will try to prevent this by automatically checking where it can place an object without colliding into each other. But you want to probably handle where things go on the screen yourself.
 
 ```javascript
-    //continuing from inside MSGCrate object
+    //continuing from texture inside MSGCrate object
  const MSGCrate = {
     /* code */
     texture : "crate.png",
-    margin : "100 100 50 50 0 0 ",
+    margin : "100 50 0",
     "layout" : "basic",
-    ""
+    "layoutLimit" : "25 25 25"
     
-    
-    
+                   
 }
 
 

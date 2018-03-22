@@ -85,7 +85,7 @@ export default function (options = {} ) {
             break;
         case "plane" :
             //creates plane geometry
-            if ( !arrheck) {
+            if ( !arrCheck) {
                 //uses a single number for sizing
                 return new THREE.PlaneGeometry( size, size, segments, segments);
             } else {

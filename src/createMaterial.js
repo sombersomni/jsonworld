@@ -2,7 +2,7 @@ import * as THREE from "three";
 import defaultOptions from "./json/defaults.json";
 
 export default function ( options = {} ) {
-    const color = options.color !== undefined ? this.optionParser( options.color, options, "color" ) : new THREE.Color(),
+    const color = options.color !== undefined ? this.optionParser( options.color, undefined, "color" ) : new THREE.Color(),
           emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( defaultOptions.emissiveColor ),
           emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
           material = options.hasOwnProperty( "material" ) && options.material !== undefined ? options.material : "default",
@@ -18,7 +18,7 @@ export default function ( options = {} ) {
     const matOpts = {
         color,
         emissive,
-        emissiveIntensity : .05,
+        emissiveIntensity : 0.0025,
         map,
         overdraw,
         side,

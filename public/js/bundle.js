@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#000000","errors":{"FRAMEVALUE":"your keyframe value needs to be a number"},"emissiveColor":"white","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"white","sunIntensity":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"positionRelativeTo":"world","roughness":50,"sceneTransition":"fade-out","segments":8,"size":25,"shininess":50,"wireframeLinecap":"round","wireframeLineWidth":2}
+module.exports = {"animationAsymmetry":false,"animationType":"spin_basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotationAngle":360,"sunColor":"#F9AE0D","sunIntensity":1.5,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","roughness":10,"sceneTransition":"fade-out","segments":8,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
 
 /***/ }),
 /* 7 */
@@ -46086,17 +46086,37 @@ var _World2 = _interopRequireDefault(_World);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var config = {
+    "antialias": true,
+    "enableShadows": true,
     "worldObjects": [{
+        "name": "wooden-crate",
         "grid": "basic",
+        "layoutLimit": "10 20 20",
+        "margin": "20 0 0",
+        "padding": 25,
         "type": "box",
         "size": [50, 50, 50],
-        "position": "100 0 0",
+        "position": [0, 0, 0],
         "color": "white",
-        "count": 50,
+        "count": 27,
         "shadow": true,
         "material": "lambert",
+        "modifiers": {
+            "margin": function margin(m) {
+                return m + 2;
+            }
+        },
         "texture": "imgs/create.jpg"
 
+    }, {
+        "name": "floor",
+        "type": "plane",
+        "color": "#ff0000",
+        "material": "phong",
+        "size": "10000 10000",
+        "rotation": "90 0 0",
+        "position": [0, -100, 0],
+        "shadow": true
     }]
 }; //index
 
@@ -64097,40 +64117,87 @@ var framework = {
                 rej("can't compute radius for object");
             }
         });
+
+        //MODIFIERS
+
+        var marginModifier = 0;
+
+        //CONSTANTS
         var type = options.layoutType !== undefined ? options.layoutType : _defaults2.default.layoutType;
 
-        var margin = options.margin !== undefined ? options.margin : _defaults2.default.margin;
+        //VARIABLES
+        var layoutLimit = options.layoutLimit !== undefined ? options.layoutLimit : _defaults2.default.layoutLimit,
+            margin = options.margin !== undefined ? options.margin : _defaults2.default.margin,
+            padding = void 0;
 
-        console.log(margin);
+        try {
 
-        if (typeof margin === "string") {
-            console.log(margin);
-            margin = this.optionParser(margin, undefined, "margin");
-        }
+            if (options.padding === undefined) {
 
-        if (mesh.type === "Mesh") {
+                padding = Number.isNaN(options.padding) ? options.padding : _defaults2.default.padding;
+            } else {
+                padding = options.padding;
+            }
 
-            p.then(function (data) {
+            if (typeof layoutLimit === "string") {
 
-                var radius = mesh.geometry.boundingSphere.radius,
-                    center = mesh.geometry.boundingSphere.center;
+                layoutLimit = this.optionParser(layoutLimit);
+            }
 
-                switch (type) {
+            if (typeof margin === "string") {
 
-                    case "basic":
+                margin = this.optionParser(margin);
+            }
 
-                        var leftRight = index % 2 === 0 ? -1 : 1;
+            if (mesh.type === "Mesh") {
 
-                        var newX = leftRight * Math.floor(index / 2) * (radius + 10 - mesh.position.x) + leftRight * margin * (index + 1);
+                p.then(function (data) {
 
-                        console.log(newX);
-                        mesh.position.set(newX, 0, 0);
-                        return mesh;
+                    var radius = data.radius,
+                        center = data.center;
 
-                    default:
-                        return mesh;
-                }
-            });
+                    var newX = 0,
+                        newY = 0,
+                        newZ = 0;
+
+                    switch (type) {
+
+                        case "basic":
+
+                            if (index === 0) {
+
+                                mesh.position.set(0, 0, 0);
+                            } else {
+
+                                var leftRight = index % 2 === 0 ? -1 : 1;
+
+                                var newIndex = Math.floor((index + 1) / 2);
+                                //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
+                                if (margin instanceof Array) {
+                                    var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
+
+                                    var newRadius = radius + padding;
+
+                                    newX = leftRight * ((newIndex + 1) % (layoutLimit[0] / 2)) * newRadius + calculatedMargin;
+
+                                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * newRadius + calculatedMargin;
+                                    newZ = Math.floor(index / layoutLimit[0]) * newRadius + calculatedMargin * -1;
+                                } else {
+                                    newX = leftRight * Math.floor((index + 1) / 2) * (radius + padding - mesh.position.x) + leftRight * margin * (index + 1);
+                                }
+
+                                mesh.position.set(newX, newY, newZ);
+                            }
+                            return mesh;
+
+                        default:
+                            return mesh;
+                    }
+                });
+            }
+        } catch (err) {
+
+            console.log(err);
         }
 
         return mesh;
@@ -64166,10 +64233,10 @@ var framework = {
         var width = opt.width !== undefined ? opt.width : window.innerWidth,
             height = opt.height !== undefined ? opt.height : window.innerHeight;
         var aspectRatio = width / height,
-            fov = opt.fov !== undefined ? opt.fov : 60,
-            far = opt.far !== undefined ? opt.far : 1000,
-            type = opt.type !== undefined ? opt.type : "perspective",
-            near = opt.near !== undefined ? opt.near : .01;
+            fov = opt.fov !== undefined ? opt.fov : _defaults2.default.cameraFov,
+            far = opt.far !== undefined ? opt.far : _defaults2.default.cameraFar,
+            type = opt.type !== undefined ? opt.type : _defaults2.default.cameraType,
+            near = opt.near !== undefined ? opt.near : .01; //cant put floats in defaultOptions so we will leave them here.
 
         switch (type.toLowerCase()) {
             case "perspective":
@@ -64182,7 +64249,8 @@ var framework = {
                 console.warn("this camera type is not acceptable");
 
         }
-        camera.position.set(0, 200, 200);
+
+        camera.position.set(0, 200, 500);
 
         if (this.cameras.length > 0) {
             camera.name = "cam_" + this.cameras.length.toString();
@@ -64246,13 +64314,6 @@ var framework = {
 
                 return (0, _colorInterpreter2.default)(target);
 
-            case "margin":
-
-                //matches numbers and returns an array of values
-                var arr = target.match(/[0-9]+/);
-
-                console.log(arr);
-            //for ( var x = 0; x <= target)
             default:
                 return target.slice().split(" ").map(function (each) {
                     return parseInt(each.trim(), 10);
@@ -64402,6 +64463,7 @@ var framework = {
         */
 
         m = this.createMaterial(options);
+        console.log(m);
         if (options.count !== undefined && options.count > 1) {
             var group = new THREE.Group();
             for (var i = 0; i <= options.count - 1; i++) {
@@ -64410,7 +64472,7 @@ var framework = {
 
                 mesh = this.gridMeshPosition(new THREE.Mesh(g, m), options, i);
 
-                if (options.hasOwnProperty("shadow") && options.shadow) {
+                if (options.hasOwnProperty("shadow") && options.shadow === true) {
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
@@ -64418,6 +64480,7 @@ var framework = {
             }
             group.name = options.name !== undefined ? options.name : "bundle";
 
+            group.position.set(0, 0, 0);
             if (options.animation !== undefined || options.animationType !== undefined) {
 
                 this.scenes[sI].add(this.setupAnimationForMesh(group, options));
@@ -64464,6 +64527,8 @@ var framework = {
 
             mesh.name = options.name !== undefined ? options.name : "";
 
+            mesh = this.setObjectTransforms(mesh, options);
+
             if (options.animation !== undefined || options.animationType !== undefined) {
 
                 this.scenes[sI].add(this.setupAnimationForMesh(mesh, options));
@@ -64474,6 +64539,15 @@ var framework = {
         }
 
         return;
+    },
+    setObjectTransforms: function setObjectTransforms(mesh, options) {
+
+        console.log(mesh);
+
+        mesh.rotation.x = -1 * Math.PI / 2;
+        mesh.position.set(0, -100, 0);
+
+        return mesh;
     },
     setupModifier: function setupModifier(mesh, animProp, target, options) {
         var _this4 = this;
@@ -64510,16 +64584,18 @@ var framework = {
             _this5.scenes.push(new THREE.Scene());
             _this5.scenes[_this5.scenes.length - 1].name = _this5.scenes.length === 1 ? "menu" : "main";
             _this5.scenes[_this5.scenes.length - 1].fog = _this5.fog;
-            console.log(intensity);
-            var light = new THREE.DirectionalLight(sunColor, intensity);
-            //light.position.set( 0, 10000, 0 );
+            //creates the sun light for the whole world
+            var sunlight = new THREE.DirectionalLight(sunColor, intensity);
+            sunlight.name = "sunlight";
+            sunlight.position.set(0, 0, 100);
+            console.log(sunlight);
             if (_this5.options.hasOwnProperty("enableShadows") && _this5.options.enableShadows) {
-                light.castShadow = true;
+                sunlight.castShadow = true;
                 //debug shadow camera
-                var shadowCamera = new THREE.CameraHelper(light.shadow.camera);
+                var shadowCamera = new THREE.CameraHelper(sunlight.shadow.camera);
                 _this5.scenes[_this5.scenes.length - 1].add(shadowCamera);
             }
-            _this5.scenes[_this5.scenes.length - 1].add(light);
+            _this5.scenes[_this5.scenes.length - 1].add(sunlight);
 
             if (options instanceof Array) {
                 options.forEach(function (o) {
@@ -64560,11 +64636,13 @@ var framework = {
     setupRenderer: function setupRenderer() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-        var opt = options.renderer || options;
-        var renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-        var color = opt.backgroundColor !== undefined ? opt.backgroundColor : _defaults2.default.backgroundColor,
-            width = opt.width !== undefined ? opt.width : window.innerWidth,
-            height = opt.height !== undefined ? opt.height : window.innerHeight;
+
+        //sets up the renderer for the canvas element. By default it uses the WebGL Renderer with antialiasing off
+
+        var renderer = new THREE.WebGLRenderer({ antialias: options.antialias !== undefined && options.antialias == true ? options.antialias : false, canvas: this.canvas });
+        var color = options.backgroundColor !== undefined ? options.backgroundColor : _defaults2.default.backgroundColor,
+            width = window.innerWidth,
+            height = window.innerHeight;
         renderer.setSize(width, height);
         renderer.setPixelRatio(window.devicePixelRatio);
         //bg color
@@ -64575,21 +64653,72 @@ var framework = {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
         //sets ups the scenes fog and if there are no defined properties it will use defaults
-        var fog = void 0;
-        var opt = options.fog !== undefined ? options.fog : {};
-        var camOpt = options.camera !== undefined ? options.camera : {};
-        var color = opt.color !== undefined ? (0, _colorInterpreter2.default)(opt.color) : new THREE.Color();
-        var density = opt.density !== undefined ? opt.density : .0010;
-        var far = camOpt.far !== undefined ? camOpt.far : 1000;
-        var type = opt.type !== undefined ? opt.type : "exponential";
-        var near = camOpt.near !== undefined ? camOpt.near : .01;
+        var color = void 0;
 
-        if (type === "linear") {
-            fog = new THREE.Fog(color, near, far);
-        } else {
-            fog = new THREE.FogExp2(color, density);
+        try {
+
+            if (options.color !== undefined) {
+
+                var checkPass = this.typeChecker(options.color, "color");
+                if (checkedPass.passed) {
+
+                    color = this.optionParser(options.color, options, "color");
+                }
+            }
+
+            var density = options.fogDensity !== undefined ? options.fogDensity : _defaults2.default.fogDensity;
+            var type = options.fogType !== undefined && typeof options.fogType === "string" ? options.fogType : _defaults2.default.fogType;
+
+            var camOpt = options.camera !== undefined ? options.camera : {};
+            var far = camOpt.far !== undefined ? camOpt.far : _defaults2.default.cameraFar;
+            var near = camOpt.near !== undefined ? camOpt.near : _defaults2.default.cameraNear;
+
+            var fog = void 0;
+
+            if (type === "light") {
+                fog = new THREE.Fog(color, near, far);
+            } else if (type === "heavy") {
+                fog = new THREE.FogExp2(color, density);
+            } else {
+                throw new Error("for Fog, you need to choose either 'heavy' or 'light' ");
+            }
+
+            return fog;
+        } catch (err) {
+
+            console.warn(err.message);
+            _progressEmitter2.default.emit("worldmessage", err);
         }
-        return fog;
+    },
+    typeChecker: function typeChecker(unchecked, type) {
+
+        var stringCheck = unchecked === "string",
+            numCheck = Number.isNaN(unchecked),
+            arrCheck = unchecked instanceof Array,
+            funcCheck = unchecked instanceof Function,
+            boolCheck = unchecked instanceof Boolean;
+
+        if (type === "color") {
+            if (stringCheck || numCheck) {
+
+                return true;
+            } else {
+
+                console.warn("You need to use either a string or a number");
+                return false;
+            }
+        } else if (type === " size" || type === "position") {
+
+            if (stringCheck || numCheck || arrCheck) {
+
+                return true;
+            } else {
+                console.warn("You need to use either a string, a number, or an array");
+                return false;
+            }
+        } else {
+            console.warn("make sure you are spelling your properties correctly");
+        }
     },
     initWorld: function initWorld() {
         var _this6 = this;
@@ -64726,24 +64855,12 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
-        var _this8 = this;
-
         this.scene.children.forEach(function (obj) {
-            if (obj.geometry !== undefined) {
-                obj.geometry.verticesNeedUpdate = true;
-                if (obj.type === "Mesh") {
-                    var exploreRow = true;
-                    var slowdown = 1 / Math.pow(time, _this8.SLOWDOWN_POWER);
+            var name = obj.name.trim().toLowerCase();
 
-                    if (obj.animationManager === undefined) {
-                        obj.animationManager = {
-                            speed: 4
-
-                        };
-                    }
-
-                    obj.rotation.x += .01;
-                }
+            if (/Light/.test(obj.type)) {
+                //checks for light objects
+                //obj.position.z += 0.001;
             }
         });
     },
@@ -65613,7 +65730,7 @@ exports.default = function (mesh) {
                                     var value = frame[key];
 
                                     if (Number.isNaN(value)) {
-                                        throw new TypeError(_defaults2.default.errors.FRAMEVALUE);
+                                        throw new TypeError("keyframes value should be a number");
                                     }
 
                                     eachProp.push({
@@ -65627,7 +65744,7 @@ exports.default = function (mesh) {
                         } else {
 
                             if (Number.isNaN(frame)) {
-                                throw new TypeError(_defaults2.default.errors.FRAMEVALUE);
+                                throw new TypeError("keyframes value should be a number");
                             }
 
                             return [{ animProp: decision.animProp, value: frame }];
@@ -66005,7 +66122,7 @@ exports.default = function () {
             break;
         case "plane":
             //creates plane geometry
-            if (!arrheck) {
+            if (!arrCheck) {
                 //uses a single number for sizing
                 return new THREE.PlaneGeometry(size, size, segments, segments);
             } else {
@@ -66175,7 +66292,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    var color = options.color !== undefined ? this.optionParser(options.color, options, "color") : new THREE.Color(),
+    var color = options.color !== undefined ? this.optionParser(options.color, undefined, "color") : new THREE.Color(),
         emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color(_defaults2.default.emissiveColor),
         emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
         material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default",
@@ -66191,7 +66308,7 @@ exports.default = function () {
     var matOpts = {
         color: color,
         emissive: emissive,
-        emissiveIntensity: .05,
+        emissiveIntensity: 0.0025,
         map: map,
         overdraw: overdraw,
         side: side,
