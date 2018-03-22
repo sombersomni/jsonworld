@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/somberSomni/Bioluminescence.git"
+    "url": "git+https://github.com/somberSomni/jsonworld.git"
   },
   "keywords": [
     "music",
@@ -20,9 +20,9 @@
   "author": "Somber Somni",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/somberSomni/Bioluminescence/issues"
+    "url": "https://github.com/somberSomni/jsonworld/issues"
   },
-  "homepage": "https://github.com/somberSomni/Bioluminescence#readme",
+  "homepage": "https://github.com/somberSomni/jsonworld#readme",
   "dependencies": {
     "aframe": "^0.7.1",
     "aframe-react": "^4.3.0",
