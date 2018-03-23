@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLineWidth":2}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 7 */
@@ -46127,11 +46127,13 @@ var config = {
     }, {
         "name": "nose",
         "material": "wireframe",
-        "color": "red",
-        "type": "cone",
-        "scale": [1, 0.5, 1],
-        "size": "100 1000 0",
-        "shadow": true
+        "color": "white",
+        "type": "parametric",
+        "scale": 10,
+        "size": "10 10",
+        "position": "0 0 0",
+        "shadow": true,
+        "debug": true
     }]
 };
 
@@ -64468,6 +64470,8 @@ var framework = {
         return mesh;
     },
     setupMesh: function setupMesh(options, sI) {
+        var _this4 = this;
+
         var m = void 0,
             mesh = void 0;
         //@params sI - the index of the scene
@@ -64545,6 +64549,21 @@ var framework = {
 
             this.setupWorldClone(mesh);
 
+            if (options.debug === true) {
+                var debugVerts = new THREE.Group();
+                mesh.geometry.vertices.forEach(function (v, i) {
+
+                    var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
+                    var geo = _this4.createGeometry({ type: "sphere", size: 0.5, segments: 8 });
+                    var debugMesh = new THREE.Mesh(geo, material);
+                    //copies the position of this vertice
+                    debugMesh.position.set(v.x, v.y, v.z);
+                    debugVerts.add(debugMesh);
+                });
+
+                mesh.add(debugVerts);
+            }
+
             mesh = this.setObjectTransforms(mesh, options);
 
             if (options.animation !== undefined || options.animationType !== undefined) {
@@ -64559,22 +64578,22 @@ var framework = {
         return;
     },
     setObjectTransforms: function setObjectTransforms(mesh) {
-        var _this4 = this;
+        var _this5 = this;
 
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 
         ["position", "rotation", "scale"].forEach(function (type) {
 
-            var transform = _this4.typeChecker(options, type, _defaults2.default);
+            var transform = _this5.typeChecker(options, type, _defaults2.default);
 
-            mesh[type]["set"](type === "rotation" ? _this4.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this4.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this4.convertToRadians(transform[2]) : transform[2]);
+            mesh[type]["set"](type === "rotation" ? _this5.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this5.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this5.convertToRadians(transform[2]) : transform[2]);
         });
 
         return mesh;
     },
     setupModifier: function setupModifier(mesh, animProp, target, options) {
-        var _this5 = this;
+        var _this6 = this;
 
         switch (target) {
             case "position":
@@ -64586,7 +64605,7 @@ var framework = {
                     };
                 } else {
                     return function (value) {
-                        return value + _this5.scene.position[animProp];
+                        return value + _this6.scene.position[animProp];
                     };
                 }
             default:
@@ -64596,7 +64615,7 @@ var framework = {
         }
     },
     setupScene: function setupScene() {
-        var _this6 = this;
+        var _this7 = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -64605,15 +64624,15 @@ var framework = {
         var intensity = this.options.sunIntensity !== undefined ? this.options.sunIntensity : _defaults2.default.sunIntensity,
             sunColor = this.options.sunColor !== undefined ? this.options.sunColor : _defaults2.default.sunColor;
         return new Promise(function (res, rej) {
-            _this6.scenes.push(new THREE.Scene());
-            _this6.scenes[_this6.scenes.length - 1].name = _this6.scenes.length === 1 ? "menu" : "main";
-            _this6.scenes[_this6.scenes.length - 1].fog = _this6.fog;
+            _this7.scenes.push(new THREE.Scene());
+            _this7.scenes[_this7.scenes.length - 1].name = _this7.scenes.length === 1 ? "menu" : "main";
+            _this7.scenes[_this7.scenes.length - 1].fog = _this7.fog;
             //creates the sun light for the whole world
             var sunlight = new THREE.DirectionalLight(sunColor, intensity);
             sunlight.name = "sunlight";
             sunlight.position.set(0, 100000, 0);
 
-            if (_this6.options.hasOwnProperty("enableShadows") && _this6.options.enableShadows) {
+            if (_this7.options.hasOwnProperty("enableShadows") && _this7.options.enableShadows) {
                 sunlight.castShadow = true;
                 sunlight.shadow.mapSize.width = 512;
                 sunlight.shadow.mapSize.height = 512;
@@ -64621,9 +64640,9 @@ var framework = {
                 sunlight.shadow.camera.near = _defaults2.default.cameraNear;
                 //debug shadow camera
                 var shadowCamera = new THREE.CameraHelper(sunlight.shadow.camera);
-                _this6.scenes[_this6.scenes.length - 1].add(shadowCamera);
+                _this7.scenes[_this7.scenes.length - 1].add(shadowCamera);
             }
-            _this6.scenes[_this6.scenes.length - 1].add(sunlight);
+            _this7.scenes[_this7.scenes.length - 1].add(sunlight);
 
             if (options instanceof Array) {
                 options.forEach(function (o) {
@@ -64634,10 +64653,10 @@ var framework = {
 
                                 o = Object.assign({}, o, { size: o.size !== undefined ? o.size : [texture.image.naturalWidth / 2, texture.image.naturalHeight / 2, 0],
                                     texture: texture });
-                                _this6.setupMesh(o, _this6.scenes.length - 1);
+                                _this7.setupMesh(o, _this7.scenes.length - 1);
                             });
                         } else {
-                            _this6.setupMesh(o, _this6.scenes.length - 1);
+                            _this7.setupMesh(o, _this7.scenes.length - 1);
                         }
                     }
                 });
@@ -64653,7 +64672,7 @@ var framework = {
                             texture: texture });
                     });
                 } else {
-                    _this6.setupMesh(options, _this6.scenes.length - 1);
+                    _this7.setupMesh(options, _this7.scenes.length - 1);
                 }
                 res(_defaults2.default.sceneTransition);
             } else {
@@ -64748,7 +64767,7 @@ var framework = {
         } else return;
     },
     initWorld: function initWorld() {
-        var _this7 = this;
+        var _this8 = this;
 
         //initializes world after clicking and removes event listener to prevent memory leaks
         var title = void 0;
@@ -64777,17 +64796,17 @@ var framework = {
             preloaderPromise.then(function (message) {
                 _progressEmitter2.default.emit("world-message", { message: message });
                 audioPromise.then(function (controllers) {
-                    _this7.audioControllers = controllers;
-                    var scenePromise = _this7.setupScene(_this7.worldObjects, controllers);
+                    _this8.audioControllers = controllers;
+                    var scenePromise = _this8.setupScene(_this8.worldObjects, controllers);
                     scenePromise.then(function (animationType) {
-                        var preloader = _this7.scene.getObjectByName("preloader");
+                        var preloader = _this8.scene.getObjectByName("preloader");
                         //clears the timeline for a new batch of animations
 
-                        _this7.decideTimelineOrder(_this7.createAnime(preloader, { animationType: animationType }), preloader);
+                        _this8.decideTimelineOrder(_this8.createAnime(preloader, { animationType: animationType }), preloader);
 
                         window.setTimeout(function () {
                             _progressEmitter2.default.emit("world-message", { message: "" });
-                            _this7.scene = _this7.scenes[_this7.scenes.length - 1];
+                            _this8.scene = _this8.scenes[_this8.scenes.length - 1];
                         }, delay);
                     });
                 });
@@ -64801,31 +64820,31 @@ var framework = {
                 
                 */
 
-                var scenePromise = _this7.setupScene(_this7.worldObjects);
+                var scenePromise = _this8.setupScene(_this8.worldObjects);
 
                 scenePromise.then(function (animationType) {
-                    var preloader = _this7.scene.getObjectByName("preloader");
+                    var preloader = _this8.scene.getObjectByName("preloader");
                     window.setTimeout(function () {
                         //clears the timeline for a new batch of animations
 
-                        _this7.decideTimelineOrder(_this7.createAnime(preloader, { animationType: "fade-out" }), preloader);
+                        _this8.decideTimelineOrder(_this8.createAnime(preloader, { animationType: "fade-out" }), preloader);
                         _progressEmitter2.default.emit("world-message", { message: "" });
-                        _this7.scene = _this7.scenes[_this7.scenes.length - 1];
-                        console.log(_this7.scene, _this7.objManager, _this7.animationManger);
+                        _this8.scene = _this8.scenes[_this8.scenes.length - 1];
+                        console.log(_this8.scene, _this8.objManager, _this8.animationManger);
                     }, delay);
                 });
             });
         }
     },
     start: function start() {
-        var _this8 = this;
+        var _this9 = this;
 
         this.setupScene({});
         this.scene = this.scenes[0];
         //start event listeners
         this.canvas.addEventListener("mousemove", this.doMouseMove, false);
         window.addEventListener("resize", function (e) {
-            _this8.onWindowResize();
+            _this9.onWindowResize();
         }, false);
         //run animation cycle for all scenes
         window.requestAnimationFrame(this.runScene);
@@ -64855,10 +64874,10 @@ var framework = {
                             texture: tex
                         };
 
-                        _this8.setupMesh(options, _this8.scenes.length - 1);
+                        _this9.setupMesh(options, _this9.scenes.length - 1);
                         //calculate title mesh so if img is too large it will fit inside the camera viewW
-                        var title = _this8.scenes[_this8.scenes.length - 1].getObjectByName("title");
-                        _this8.fitOnScreen(title);
+                        var title = _this9.scenes[_this9.scenes.length - 1].getObjectByName("title");
+                        _this9.fitOnScreen(title);
                     }, undefined, function (err) {
                         throw new Error("Couldn't load texture, check your img path");
                     });
@@ -64884,18 +64903,14 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
-        var _this9 = this;
+        var _this10 = this;
 
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
-            if (obj.name === "nose") {
-                obj.rotation.x += 0.01;
-                obj.rotation.y += 0.01;
-            }
             if (/Light/.test(obj.type)) {
                 //checks for light objects
-                obj.target.position.clone(_this9.scene.position);
+                obj.target.position.clone(_this10.scene.position);
             }
         });
     },
@@ -66072,40 +66087,29 @@ exports.default = function () {
         type = options.type !== undefined ? options.type : "default",
         openEnded = options.openEnd !== undefined ? options.openEnd : false;
 
-    var size = options.size !== undefined ? options.size : _defaults2.default.size,
-        position = options.position !== undefined ? options.position : _defaults2.default.objectPosition;
-
-    if (typeof size === "string") {
-        size = this.optionParser(size);;
-    }
-
-    if (typeof position === "string") {
-        position = this.optionParser(position);
-    }
-
-    //bool checks
-    var arrCheck = size instanceof Array;
+    var size = this.typeChecker(options, "size", _defaults2.default),
+        position = this.typeChecker(options, "position", _defaults2.default);
 
     //CHOICES
     switch (type) {
         case "box":
 
-            return !arrCheck ? new THREE.BoxGeometry(size, size, size) : new THREE.BoxGeometry(size[0], size[1], size[2]);
+            return new THREE.BoxGeometry(size[0], size[1], size[2]);
         case "circle":
 
-            return !arrCheck ? new THREE.CircleGeometry(size / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength) : new THREE.CircleGeometry(size[0] / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength);
+            return new THREE.CircleGeometry(size[0] / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength);
 
         case "cone":
 
-            return !arrCheck ? new THREE.ConeGeometry(size, size, segments, segments, openEnded, thetaStart, thetaLength) : new THREE.ConeGeometry(size[0], size[1], segments, segments, openEnded, thetaStart, thetaLength);
+            return new THREE.ConeGeometry(size[0], size[1], segments, segments, openEnded, thetaStart, thetaLength);
 
         case "cylinder":
 
-            return !arrCheck ? new THREE.CylinderGeometry(size / 2, size / 2, size, segments, segments, openEnded, thetaStart, thetaLength) : new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength);
+            return new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength);
 
         case "dodecahedron":
             //creates dodecahedron geometry
-            return !arrCheck ? new THREE.DodecahedronGeometry(size / 2) : new THREE.DodecahedronGeometry(size[0] / 2);
+            return new THREE.DodecahedronGeometry(size[0] / 2);
 
         case "font":
             var shapes = options.font.generateShapes(options.title, 100, 4);
@@ -66139,34 +66143,28 @@ exports.default = function () {
                 return _geometry.fromGeometry(shapeGeo);
             }
             break;
+
+        case "octahedron":
+
+            return new THREE.OctahedronGeometry(size[0], 0);
+
+        case "icosahedron":
+
+            return new THREE.IcosahedronGeometry(size[0], 0);
+
+        case "parametric":
+
+            return new THREE.ParametricGeometry(_parametricHandlers2.default.radialWave, 8, 8);
         case "plane":
             //creates plane geometry
-            if (!arrCheck) {
-                //uses a single number for sizing
-                return new THREE.PlaneGeometry(size, size, segments, segments);
-            } else {
-                //uses the first value which should be width
-                return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
-            }
-            break;
-        case "icosahedron":
-            if (!arrCheck) {
-                return new THREE.IcosahedronGeometry(size, 0);
-            } else {
+            return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
 
-                return new THREE.IcosahedronGeometry(size[0], 0);
-            }
         case "sphere":
             //creates a sphere geometry
-            if (!arrCheck) {
-                return new THREE.SphereGeometry(size, segments, segments);
-            } else {
-                return new THREE.SphereGeometry(size[0], segments, segments);
-            }
-            break;
-        case "tree":
+            return new THREE.SphereGeometry(size[0], segments, segments);
 
-            return (0, _proceduralTree2.default)();
+            break;
+
         default:
             return new THREE.BoxGeometry(size, size, size);
     }
@@ -66179,6 +66177,10 @@ var THREE = _interopRequireWildcard(_three);
 var _defaults = __webpack_require__(6);
 
 var _defaults2 = _interopRequireDefault(_defaults);
+
+var _parametricHandlers = __webpack_require__(49);
+
+var _parametricHandlers2 = _interopRequireDefault(_parametricHandlers);
 
 var _proceduralTree = __webpack_require__(42);
 
@@ -66321,8 +66323,9 @@ exports.default = function () {
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
         side = options.side !== undefined ? options.side : THREE.DoubleSide,
         transparent = options.transparent !== undefined ? options.transparent : false,
-        wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth : _defaults2.default.wireframeLineWidth,
-        wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : _defaults2.default.wireframeLinecap;
+        wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth : _defaults2.default.wireframeLinewidth,
+        wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : _defaults2.default.wireframeLinecap,
+        wireframeLinejoin = options.wireframeLinejoin !== undefined ? options.wireframeLinejoin : _defaults2.default.wireframeLinejoin;
 
     var matOpts = {
         color: color,
@@ -66358,10 +66361,12 @@ exports.default = function () {
         case "standard":
             return new THREE.MeshStandardMaterial(Object.assign({}, matOpts, { metalness: shininess / 100, roughness: roughness / 100 }));
         case "wireframe":
-            return new THREE.MeshNormalMaterial({
+            return new THREE.MeshBasicMaterial({
                 transparent: true,
                 wireframe: true,
-                wireframeLineWidth: wireframeLineWidth,
+                color: color,
+                wireframeLinewidth: wireframeLinewidth,
+                wireframeLinejoin: wireframeLinejoin,
                 wireframeLinecap: wireframeLinecap });
         default:
             return new THREE.MeshBasicMaterial({ color: color });
@@ -111932,6 +111937,59 @@ function CanvasRenderer() {
 
 
 
+
+/***/ }),
+/* 48 */,
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _three = __webpack_require__(1);
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function klein(u, v) {
+    u *= Math.PI;
+    v *= 2 * Math.PI;
+    u = u * 2;
+    var x, y, z;
+    if (u < Math.PI) {
+        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(u) * Math.cos(v);
+        z = -8 * Math.sin(u) - 2 * (1 - Math.cos(u) / 2) * Math.sin(u) * Math.cos(v);
+    } else {
+        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(v + Math.PI);
+        z = -8 * Math.sin(u);
+    }
+    y = -2 * (1 - Math.cos(u) / 2) * Math.sin(v);
+    console.log(x, y, z);
+    return new THREE.Vector3(x, y, z);
+};
+
+function radialWave(u, v) {
+    if (Math.floor(u) % 1 === 0) {
+        console.log(u, v);
+    }
+    var r = 50;
+    var x = u * r;
+    var z = Math.sin(v / 2) * 2 * r;
+    var y = (Math.sin(u * 4 * Math.PI) + Math.cos(v * 2 * Math.PI)) * 2.8;
+    return new THREE.Vector3(x, y, z);
+};
+
+var parametricHandlers = {
+    klein: klein, radialWave: radialWave
+
+};
+
+exports.default = parametricHandlers;
 
 /***/ })
 /******/ ]);

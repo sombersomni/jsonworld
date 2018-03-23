@@ -45,11 +45,13 @@ const config = {
         {
             "name" : "nose",
             "material" : "wireframe",
-            "color" : "red",
-            "type" : "cone",
-            "scale" : [ 1, 0.5 , 1 ],
-            "size" : "100 1000 0",
-            "shadow" : true
+            "color" : "white",
+            "type" : "parametric",
+            "scale" : 10,
+            "size" : "10 10",
+            "position" : "0 0 0",
+            "shadow" : true,
+            "debug" : true
         }
       
     ]

@@ -553,6 +553,23 @@ const framework = {
                 
                 this.setupWorldClone( mesh );
                 
+                if ( options.debug === true ) {
+                    const debugVerts = new THREE.Group();
+                    mesh.geometry.vertices.forEach( ( v, i ) => {
+                        
+                        
+                        const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
+                        const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
+                        let debugMesh = new THREE.Mesh( geo, material );
+                        //copies the position of this vertice
+                        debugMesh.position.set( v.x, v.y, v.z );
+                        debugVerts.add( debugMesh );
+                        
+                    } );
+                    
+                    mesh.add( debugVerts );
+                }
+                
                 mesh = this.setObjectTransforms( mesh, options );
                 
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
@@ -891,11 +908,6 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
             
-            if ( obj.name === "nose" ) {
-                obj.rotation.x += 0.01;
-                obj.rotation.y += 0.01;
-                
-            }
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
                 obj.target.position.clone( this.scene.position );

@@ -12,8 +12,9 @@ export default function ( options = {} ) {
           shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,
           side = options.side !== undefined ? options.side : THREE.DoubleSide,
           transparent = options.transparent !== undefined ? options.transparent : false,
-          wireframeLineWidth = options.wireframeLineWidth !== undefined ? options.wireframeLineWidth: defaultOptions.wireframeLineWidth,
-          wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : defaultOptions.wireframeLinecap;
+          wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth: defaultOptions.wireframeLinewidth,
+          wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : defaultOptions.wireframeLinecap,
+          wireframeLinejoin = options.wireframeLinejoin !== undefined ? options.wireframeLinejoin : defaultOptions.wireframeLinejoin;
     
     const matOpts = {
         color,
@@ -49,10 +50,12 @@ export default function ( options = {} ) {
         case "standard" :
             return new THREE.MeshStandardMaterial( Object.assign( {}, matOpts, { metalness: shininess / 100, roughness : roughness / 100 } ) );
         case "wireframe" :
-            return new THREE.MeshNormalMaterial( {
+            return new THREE.MeshBasicMaterial( {
                 transparent: true,
                 wireframe: true, 
-                wireframeLineWidth,
+                color,
+                wireframeLinewidth,
+                wireframeLinejoin,
                 wireframeLinecap } );
         default:
             return new THREE.MeshBasicMaterial( { color } );

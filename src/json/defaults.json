@@ -48,5 +48,6 @@
     "size" : 100,
     "shininess" : 10,
     "wireframeLinecap" : "round",
-    "wireframeLineWidth" : 2
+    "wireframeLinewidth" : 2,
+    "wireframeLinejoin" : "round"
 }
