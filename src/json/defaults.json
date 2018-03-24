@@ -31,6 +31,8 @@
     "scale" : 1,
     "loop" : true,
     "margin" : 50,
+    "parametricHandler" : "radialWave",
+    "latheHandler" : 45,
     "preloader" : {
         "type": "dodecahedron",
         "position": "0 100 100",

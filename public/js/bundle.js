@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 7 */
@@ -46128,9 +46128,8 @@ var config = {
         "name": "nose",
         "material": "wireframe",
         "color": "white",
-        "type": "parametric",
-        "scale": 10,
-        "size": "10 10",
+        "type": "lathe",
+        "size": "5 5 5",
         "position": "0 0 0",
         "shadow": true,
         "debug": true
@@ -63953,11 +63952,11 @@ var _createGeometry = __webpack_require__(41);
 
 var _createGeometry2 = _interopRequireDefault(_createGeometry);
 
-var _createMaterial = __webpack_require__(43);
+var _createMaterial = __webpack_require__(44);
 
 var _createMaterial2 = _interopRequireDefault(_createMaterial);
 
-var _audioInitializer = __webpack_require__(44);
+var _audioInitializer = __webpack_require__(45);
 
 var _audioInitializer2 = _interopRequireDefault(_audioInitializer);
 
@@ -63971,10 +63970,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var OBJLoader = __webpack_require__(45);
+var OBJLoader = __webpack_require__(46);
 OBJLoader(THREE);
 
-var MTLLoader = __webpack_require__(46);
+var MTLLoader = __webpack_require__(47);
 
 // JSON
 
@@ -64317,21 +64316,17 @@ var framework = {
 
                         return (0, _colorInterpreter2.default)(target);
 
+                    case "typeHandler":
+
+                        console.log(target);
+
                     default:
-                        var newTarget = target.slice().split(/\s+/).map(function (each) {
+
+                        return target.slice().split(/\s+/).map(function (each) {
                             return parseInt(each, 10);
                         }).filter(function (each) {
                             return !Number.isNaN(each);
                         });
-                        //if the arrays length is less than 3, we insert zeros to avoid any undefined indexes
-                        if (newTarget.length !== 3) {
-
-                            for (var n = 0; n <= 3 - (newTarget.length - 1); n++) {
-                                newTarget.push(0);
-                            }
-                        }
-
-                        return newTarget;
 
                 }
             } else throw new TypeError("you need to use a string");
@@ -64743,16 +64738,18 @@ var framework = {
     },
     typeChecker: function typeChecker(options, type, defaults) {
         //goes through each option attribute and returns an array with the information sorted for app use
+        var arr = [];
+
         if (options.hasOwnProperty(type) && options[type] !== undefined) {
             if (options[type] instanceof Array) {
 
-                return options[type];
+                arr = options[type];
             } else if (typeof options[type] === "string") {
 
-                return this.optionParser(options[type], options, type);
+                arr = this.optionParser(options[type], options, type);
             } else if (!Number.isNaN(options[type])) {
 
-                return [options[type], options[type], options[type]];
+                arr = [options[type], options[type], options[type]];
             } else {
 
                 console.warn("you are not using an acceptable data type for " + type);
@@ -64762,9 +64759,20 @@ var framework = {
             console.log("using default options. type is " + type);
         }
 
-        if (defaults[type] !== undefined) {
+        if (defaults[type] !== undefined && arr.length === 0) {
             return this.typeChecker(defaults, type, defaults);
-        } else return;
+        } else {
+
+            console.log(arr);
+            if (arr.length < 3) {
+
+                for (var x = 0; x <= 3 - arr.length - 1; x++) {
+                    arr.push(arr[0] !== undefined ? arr[0] : 1);
+                }
+            }
+
+            return arr;
+        }
     },
     initWorld: function initWorld() {
         var _this8 = this;
@@ -66119,8 +66127,8 @@ exports.default = function () {
             shapeGeo.translate(xMid, 0, 0);
             if (options.material !== undefined && options.material === "line") {
                 var holeShapes = [];
-                for (var i = 0; i < shapes.length; i++) {
-                    var shape = shapes[i];
+                for (var _i = 0; _i < shapes.length; _i++) {
+                    var shape = shapes[_i];
                     if (shape.holes && shape.holes.length > 0) {
                         for (var j = 0; j < shape.holes.length; j++) {
                             var hole = shape.holes[j];
@@ -66130,10 +66138,10 @@ exports.default = function () {
                 }
                 shapes.push.apply(shapes, holeShapes);
                 var geometries = [];
-                for (var _i = 0; _i < shapes.length; _i++) {
-                    var _shape = shapes[_i];
-                    var points = _shape.getPoints();
-                    var geometry = new THREE.BufferGeometry().setFromPoints(points);
+                for (var _i2 = 0; _i2 < shapes.length; _i2++) {
+                    var _shape = shapes[_i2];
+                    var _points = _shape.getPoints();
+                    var geometry = new THREE.BufferGeometry().setFromPoints(_points);
                     geometries.push(geometry);
                 }
 
@@ -66152,9 +66160,37 @@ exports.default = function () {
 
             return new THREE.IcosahedronGeometry(size[0], 0);
 
-        case "parametric":
+        case "lathe":
 
-            return new THREE.ParametricGeometry(_parametricHandlers2.default.radialWave, 8, 8);
+            var points = [];
+
+            var angleArr = this.typeChecker(options, "typeHandler", { typeHandler: _defaults2.default.latheHandler });
+
+            console.log(angleArr, "angle array");
+            var angle = Math.PI * 2 / 180;
+            length = 20;
+            for (var i = 0; i <= length - 1; i++) {
+                points.push(new THREE.Vector2((Math.sin(i * (angle / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
+            }
+            return new THREE.LatheGeometry(points);
+
+        case "parametric":
+            var parametric = void 0;
+
+            if (options.hasOwnProperty("typeHandler") && options.typeHandler !== undefined && (typeof options.typeHandler === "string" || options.typeHandler instanceof Function)) {
+
+                parametric = options.parametricHandler;
+            } else {
+
+                console.warn("parametric type needs to be either a function or string. using defalut");
+                parametric = _defaults2.default.parametricHandler;
+            }
+
+            //creates an object based on uv mapping. U is the x cordinate, v is the y axis on
+            return new THREE.ParametricGeometry(function (u, v) {
+                return parametric instanceof Function ? parametric(u, v, size[0]) : _parametricHandlers2.default[parametric](u, v, size[0]);
+            }, 8, 8);
+
         case "plane":
             //creates plane geometry
             return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
@@ -66178,11 +66214,11 @@ var _defaults = __webpack_require__(6);
 
 var _defaults2 = _interopRequireDefault(_defaults);
 
-var _parametricHandlers = __webpack_require__(49);
+var _parametricHandlers = __webpack_require__(42);
 
 var _parametricHandlers2 = _interopRequireDefault(_parametricHandlers);
 
-var _proceduralTree = __webpack_require__(42);
+var _proceduralTree = __webpack_require__(43);
 
 var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
 
@@ -66192,6 +66228,68 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 /***/ }),
 /* 42 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _three = __webpack_require__(1);
+
+var THREE = _interopRequireWildcard(_three);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+function klein(u, v) {
+    var size = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+
+    u *= Math.PI;
+    v *= 2 * Math.PI;
+    u = u * 2;
+
+    var x = void 0,
+        y = void 0,
+        z = void 0;
+    if (u < Math.PI) {
+        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(u) * Math.cos(v);
+        z = -8 * Math.sin(u) - 2 * (1 - Math.cos(u) / 2) * Math.sin(u) * Math.cos(v);
+    } else {
+        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(v + Math.PI);
+        z = -8 * Math.sin(u);
+    }
+    y = -2 * (1 - Math.cos(u) / 2) * Math.sin(v);
+
+    return new THREE.Vector3(x * size, y * size, z * size);
+};
+
+function radialWave(u, v) {
+    var size = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
+
+
+    if (Math.floor(u) % 1 === 0) {
+        console.log(u, v);
+    }
+
+    var r = 50;
+    var x = u * r;
+    var z = Math.sin(v / 2) * 2 * r;
+    var y = (Math.sin(u * 4 * Math.PI) + Math.cos(v * 2 * Math.PI)) * 2.8;
+    return new THREE.Vector3(x * size, y * size, z * size);
+};
+
+var parametricHandlers = {
+    klein: klein, radialWave: radialWave
+
+};
+
+exports.default = parametricHandlers;
+
+/***/ }),
+/* 43 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -66300,7 +66398,7 @@ function generateBranch() {
 }
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -66387,7 +66485,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -66488,7 +66586,7 @@ function seperateSoundName(path) {
 exports.default = initializeAudio;
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67159,7 +67257,7 @@ module.exports = function (THREE) {
 };
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -67167,7 +67265,7 @@ module.exports = function (THREE) {
  *
  * @author angelxuanchang
  */
-var THREE = __webpack_require__(47);
+var THREE = __webpack_require__(48);
 function MTLLoader( manager ) {
 
   this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
@@ -67701,7 +67799,7 @@ module.exports = MTLLoader;
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -111937,59 +112035,6 @@ function CanvasRenderer() {
 
 
 
-
-/***/ }),
-/* 48 */,
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _three = __webpack_require__(1);
-
-var THREE = _interopRequireWildcard(_three);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
-
-function klein(u, v) {
-    u *= Math.PI;
-    v *= 2 * Math.PI;
-    u = u * 2;
-    var x, y, z;
-    if (u < Math.PI) {
-        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(u) * Math.cos(v);
-        z = -8 * Math.sin(u) - 2 * (1 - Math.cos(u) / 2) * Math.sin(u) * Math.cos(v);
-    } else {
-        x = 3 * Math.cos(u) * (1 + Math.sin(u)) + 2 * (1 - Math.cos(u) / 2) * Math.cos(v + Math.PI);
-        z = -8 * Math.sin(u);
-    }
-    y = -2 * (1 - Math.cos(u) / 2) * Math.sin(v);
-    console.log(x, y, z);
-    return new THREE.Vector3(x, y, z);
-};
-
-function radialWave(u, v) {
-    if (Math.floor(u) % 1 === 0) {
-        console.log(u, v);
-    }
-    var r = 50;
-    var x = u * r;
-    var z = Math.sin(v / 2) * 2 * r;
-    var y = (Math.sin(u * 4 * Math.PI) + Math.cos(v * 2 * Math.PI)) * 2.8;
-    return new THREE.Vector3(x, y, z);
-};
-
-var parametricHandlers = {
-    klein: klein, radialWave: radialWave
-
-};
-
-exports.default = parametricHandlers;
 
 /***/ })
 /******/ ]);

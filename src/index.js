@@ -46,9 +46,8 @@ const config = {
             "name" : "nose",
             "material" : "wireframe",
             "color" : "white",
-            "type" : "parametric",
-            "scale" : 10,
-            "size" : "10 10",
+            "type" : "lathe",
+            "size" : "5 5 5",
             "position" : "0 0 0",
             "shadow" : true,
             "debug" : true

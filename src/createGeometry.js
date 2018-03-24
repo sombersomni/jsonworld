@@ -75,15 +75,41 @@ export default function (options = {} ) {
             
         case "octahedron": 
             
-            return new THREE.OctahedronGeometry( size[0], 0 );
+            return new THREE.OctahedronGeometry( size[ 0 ], 0 );
           
         case "icosahedron": 
             
-            return new THREE.IcosahedronGeometry( size[0], 0 );
+            return new THREE.IcosahedronGeometry( size[ 0 ], 0 );
+            
+        case "lathe" :
+            
+            let points = [];
+            
+            let angleArr = this.typeChecker( options, "typeHandler", { typeHandler: defaultOptions.latheHandler } );
+            
+            console.log( angleArr, "angle array" );
+            const angle = ( Math.PI * 2 / 180 );
+                  length = 20;
+            for ( var i = 0; i <= length - 1; i++ ) {
+                points.push( new THREE.Vector2( ( Math.sin( i * ( angle / length ) ) * 10 + 5 ) * ( size[ 0 ] > 0 ? size[ 0 ] : 1 ) , ( ( i - ( length / 2 ) ) * 2 ) * size[ 1 ] ) );
+            }
+            return new THREE.LatheGeometry( points );
             
         case "parametric" :
+            let parametric;
             
-            return new THREE.ParametricGeometry( parametricHandlers.radialWave, 8, 8 );
+            if ( options.hasOwnProperty( "typeHandler" ) && options.typeHandler !== undefined && ( typeof options.typeHandler === "string" || options.typeHandler instanceof Function ) ) {
+                
+                parametric = options.parametricHandler;
+            } else {
+                
+                console.warn( "parametric type needs to be either a function or string. using defalut" );
+                parametric = defaultOptions.parametricHandler;
+            }
+
+            //creates an object based on uv mapping. U is the x cordinate, v is the y axis on
+                 return new THREE.ParametricGeometry( ( u, v ) => parametric instanceof Function ? parametric( u, v, size[ 0 ] ) : parametricHandlers[ parametric ]( u, v, size[ 0 ] ), 8, 8 );
+            
         case "plane" :
             //creates plane geometry
             return new THREE.PlaneGeometry( size[0], size[1], segments, segments );

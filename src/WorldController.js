@@ -336,18 +336,14 @@ const framework = {
                     case "color" : 
 
                         return colorInterpreter( target );
+                        
+                    case "typeHandler" :
+                        
+                        console.log( target );
 
                     default:
-                        let newTarget = target.slice().split( /\s+/ ).map( each => parseInt( each, 10 ) ).filter( each => !Number.isNaN( each ) );
-                        //if the arrays length is less than 3, we insert zeros to avoid any undefined indexes
-                        if ( newTarget.length !== 3 ) {
-                            
-                            for ( var n = 0; n <= 3 - ( newTarget.length - 1 ); n++ ) {
-                                newTarget.push( 0 );
-                            }
-                        } 
                         
-                        return newTarget;
+                        return target.slice().split( /\s+/ ).map( each => parseInt( each, 10 ) ).filter( each => !Number.isNaN( each ) );
 
                 }
             } else throw new TypeError( "you need to use a string" );
@@ -738,18 +734,20 @@ const framework = {
     },
     typeChecker : function ( options, type, defaults ) {
         //goes through each option attribute and returns an array with the information sorted for app use
+        let arr = [];
+        
         if ( options.hasOwnProperty( type ) && options[ type ] !== undefined ) {
             if ( options[ type ] instanceof Array ) {
                 
-                return options[ type ];
+                 arr = options[ type ];
                 
             } else if ( typeof options[ type ] === "string" ) {
                 
-                return this.optionParser( options[ type ], options, type );
+                arr = this.optionParser( options[ type ], options, type );
             
             } else if ( !Number.isNaN( options[ type ] ) ) {
                 
-                return [ options[ type ], options[ type ], options[ type ] ];
+                arr = [ options[ type ], options[ type ], options[ type ] ];
                 
             } else {
                 
@@ -761,9 +759,22 @@ const framework = {
             console.log( "using default options. type is "+ type );
         }
         
-        if ( defaults[ type ] !== undefined ) {
+        if ( defaults[ type ] !== undefined && arr.length === 0 ) {
                 return this.typeChecker( defaults, type, defaults );
-        } else return;
+        } else {
+            
+            console.log( arr );
+            if ( arr.length < 3 ) {
+                
+                for ( var x = 0; x <= 3 - arr.length - 1; x++ ) {
+                    arr.push( arr[ 0 ] !== undefined ? arr[ 0 ] : 1 );
+                }
+            }
+            
+            return arr;
+        
+        }
+        
         
     },
     initWorld : function () {
