@@ -46091,31 +46091,6 @@ var config = {
     "antialias": true,
     "enableShadows": true,
     "worldObjects": [{
-        "name": "wooden-crate",
-        "grid": "basic",
-        "layoutLimit": "10 10 10",
-        "margin": "20 0 0",
-        "padding": 10,
-        "type": "box",
-        "size": [50, 50, 50],
-        "position": [0, 0, 0],
-        "scale": [1, 2, 1],
-        "color": "white",
-        "count": 149,
-        "shadow": true,
-        "material": "lambert",
-        "modifiers": {
-            "margin": function margin(m) {
-                return m + 2;
-            }
-        },
-        "texture": "imgs/create.jpg",
-        "animation": "_floatUp 20s asymmetry",
-        "animationKeyframes": {
-            "_floatUp": [{ y: 1000 }]
-        }
-
-    }, {
         "name": "floor",
         "type": "plane",
         "color": wallColor,
@@ -46125,18 +46100,56 @@ var config = {
         "position": [0, -200, 0],
         "shadow": true
     }, {
-        "name": "nose",
-        "material": "wireframe",
-        "color": "white",
-        "type": "lathe",
+        "name": "heart",
+        "material": "lambert",
+        "count": 100,
+        "color": "#FF000A",
+        "type": "heart",
+        "extrude": {
+            amount: 10
+
+        },
         "size": "5 5 5",
         "position": "0 0 0",
         "shadow": true,
         "debug": true
+    }, {
+        "name": "ball",
+        "type": "sphere",
+        "position": 0,
+        "size": 3,
+        "color": "red"
     }]
-};
 
-var Main = function Main() {
+    /* 
+    
+    {
+                "name" : "wooden-crate",
+                "grid" : "basic",
+                "layoutLimit" : "10 10 10",
+                "margin": "20 0 0",
+                "padding": 10,
+                "type" : "box",
+                "size" : [ 50, 50, 50 ],
+                "position" : [ 0, 0, 0 ], 
+                "scale" : [ 1, 2, 1 ],
+                "color" : "white",
+                "count" : 149,
+                "shadow" : true,
+                "material" : "lambert",
+                "modifiers" : {
+                    "margin" : ( m ) => m + 2,
+                },
+                "texture" : "imgs/create.jpg",
+                "animation" : "_floatUp 20s asymmetry",
+                "animationKeyframes" : {
+                    "_floatUp" : [ { y: 1000 } ]
+                }
+                
+            }
+    */
+
+};var Main = function Main() {
     return _react2.default.createElement(
         "div",
         { className: "container" },
@@ -64171,28 +64184,23 @@ var framework = {
 
                 case "basic":
 
-                    if (index === 0) {
+                    var leftRight = index % 2 === 0 ? -1 : 1;
 
-                        mesh.position.set(0, 0, 0);
-                    } else {
+                    var newIndex = Math.floor((index + 1) / 2);
+                    //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
+                    var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
 
-                        var leftRight = index % 2 === 0 ? -1 : 1;
+                    //the calculations below create a layout based on your presets in the Layout Limit. 
+                    //If your count is over the limit, your count will override it.
 
-                        var newIndex = Math.floor((index + 1) / 2);
-                        //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
-                        var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
+                    newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * (radius + padding[0]) + calculatedMargin + center.x;
 
-                        //the calculations below create a layout based on your presets in the Layout Limit. 
-                        //If your count is over the limit, your count will override it.
+                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * (radius + padding[1]) + center.y;
 
-                        newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * (radius + padding[0]) + calculatedMargin + center.x;
+                    newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * (radius + padding[2]) * -1 + center.z;
 
-                        newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * (radius + padding[1]) + center.y;
+                    mesh.position.set(newX, newY, newZ);
 
-                        newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * (radius + padding[2]) * -1 + center.z;
-
-                        mesh.position.set(newX, newY, newZ);
-                    }
                     return mesh;
 
                 default:
@@ -66089,7 +66097,8 @@ exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
     //goes through every geometry type plus custom ones
-    var segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
+    var extrude = options.extrude !== undefined && options.hasOwnProperty("extrude") ? options.extrude : undefined,
+        segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
         thetaStart = this.convertToRadians(options.angleStart !== undefined ? options.angleStart : 0),
         thetaLength = this.convertToRadians(options.arcAngle !== undefined ? options.arcAngle : 360),
         type = options.type !== undefined ? options.type : "default",
@@ -66152,6 +66161,35 @@ exports.default = function () {
             }
             break;
 
+        case "heart":
+
+            var origin = { x: position[0], y: position[1] };
+            var height = 50;
+            var controlOffset = height / 5;
+            var angle = Math.PI / 180 * (-1 * 45);
+            var heartShape = new THREE.Shape();
+
+            var rotatedPoint = (0, _rotatePoint2.default)(0, 1, angle);
+            rotatedPoint.x *= height;
+            rotatedPoint.y *= height;
+            heartShape.moveTo(origin.x, origin.y);
+            heartShape.quadraticCurveTo(rotatedPoint.x - controlOffset, rotatedPoint.y / 4, rotatedPoint.x, rotatedPoint.y);
+            heartShape.quadraticCurveTo(rotatedPoint.x, rotatedPoint.y + controlOffset * 2, rotatedPoint.x / 2 + origin.x, origin.y + height + controlOffset);
+            heartShape.quadraticCurveTo(origin.x, origin.y + height + controlOffset, origin.x, origin.y + height);
+            heartShape.quadraticCurveTo(origin.x, origin.y + height + controlOffset, (rotatedPoint.x / 2 + origin.x) * -1, origin.y + height + controlOffset);
+            heartShape.quadraticCurveTo(rotatedPoint.x * -1, rotatedPoint.y + controlOffset * 2, rotatedPoint.x * -1, rotatedPoint.y);
+            heartShape.quadraticCurveTo((rotatedPoint.x - controlOffset) * -1, rotatedPoint.y / 4, origin.x, origin.y);
+
+            if (extrude !== undefined) {
+
+                return new THREE.ExtrudeGeometry(heartShape, extrude);
+            } else {
+
+                return new THREE.ShapeGeometry(heartShape);
+            }
+
+            return new THREE.ShapeGeometry(heartShape);
+
         case "octahedron":
 
             return new THREE.OctahedronGeometry(size[0], 0);
@@ -66166,11 +66204,10 @@ exports.default = function () {
 
             var angleArr = this.typeChecker(options, "typeHandler", { typeHandler: _defaults2.default.latheHandler });
 
-            console.log(angleArr, "angle array");
-            var angle = Math.PI * 2 / 180;
+            var ang = Math.PI / 180 * 45;
             length = 20;
             for (var i = 0; i <= length - 1; i++) {
-                points.push(new THREE.Vector2((Math.sin(i * (angle / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
+                points.push(new THREE.Vector2((Math.sin(i * (ang / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
             }
             return new THREE.LatheGeometry(points);
 
@@ -66194,6 +66231,8 @@ exports.default = function () {
         case "plane":
             //creates plane geometry
             return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
+
+        case "shape":
 
         case "sphere":
             //creates a sphere geometry
@@ -66221,6 +66260,10 @@ var _parametricHandlers2 = _interopRequireDefault(_parametricHandlers);
 var _proceduralTree = __webpack_require__(43);
 
 var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
+
+var _rotatePoint = __webpack_require__(49);
+
+var _rotatePoint2 = _interopRequireDefault(_rotatePoint);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -66269,10 +66312,6 @@ function klein(u, v) {
 function radialWave(u, v) {
     var size = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
 
-
-    if (Math.floor(u) % 1 === 0) {
-        console.log(u, v);
-    }
 
     var r = 50;
     var x = u * r;
@@ -112035,6 +112074,25 @@ function CanvasRenderer() {
 
 
 
+
+/***/ }),
+/* 49 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function (x, y, angle) {
+
+    var rotatedPoint = {};
+    rotatedPoint.x = x * Math.cos(angle) - y * Math.sin(angle);
+    rotatedPoint.y = x * Math.sin(angle) + y * Math.cos(angle);
+    return rotatedPoint;
+};
 
 /***/ })
 /******/ ]);

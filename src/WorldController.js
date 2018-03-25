@@ -195,11 +195,6 @@ const framework = {
 
                             case "basic":
 
-                                if ( index === 0 ) {
-                                    
-                                    mesh.position.set( 0, 0, 0 );
-                                } else {
-
                                     const leftRight = index % 2 === 0 ? -1 : 1;
                                     
                                     const newIndex = Math.floor( ( index + 1 ) / 2 );
@@ -216,7 +211,7 @@ const framework = {
                                         newZ =( ( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * ( radius + padding[ 2 ] ) ) * -1 ) + center.z;
 
                                     mesh.position.set( newX , newY, newZ );
-                                }
+                            
                                 return mesh;
 
                             default:

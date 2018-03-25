@@ -1,4 +1,5 @@
 import * as THREE from "three";
+
 function klein (u, v, size = 0 ) {
     
     u *= Math.PI;
@@ -20,10 +21,6 @@ function klein (u, v, size = 0 ) {
 };
             
 function radialWave(u, v, size = 0 ) {
-    
-    if ( Math.floor( u ) % 1 === 0 ) {
-        console.log( u, v );
-    } 
     
     const r = 50;
     const x = u * r;

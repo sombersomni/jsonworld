@@ -9,6 +9,44 @@ const config = {
     "enableShadows": true,
     "worldObjects" : [
         {
+            "name" : "floor",
+            "type" : "plane",
+            "color" : wallColor,
+            "material" : "phong",
+            "size" : "10000 10000",
+            "rotation" : " 45 0 0",
+            "position" : [ 0, -200, 0 ],
+            "shadow" : true
+        },
+        {
+            "name" : "heart",
+            "material" : "lambert",
+            "count" : 100,
+            "color" : "#FF000A",
+            "type" : "heart",
+            "extrude" : {
+               amount: 10,
+                
+            },
+            "size" : "5 5 5",
+            "position" : "0 0 0",
+            "shadow" : true,
+            "debug" : true
+        },
+        {
+            "name" : "ball",
+            "type" : "sphere",
+            "position" : 0,
+            "size" : 3,
+            "color" : "red"
+        }
+      
+    ]
+}
+
+/* 
+
+{
             "name" : "wooden-crate",
             "grid" : "basic",
             "layoutLimit" : "10 10 10",
@@ -31,31 +69,8 @@ const config = {
                 "_floatUp" : [ { y: 1000 } ]
             }
             
-        },
-        {
-            "name" : "floor",
-            "type" : "plane",
-            "color" : wallColor,
-            "material" : "phong",
-            "size" : "10000 10000",
-            "rotation" : " 45 0 0",
-            "position" : [ 0, -200, 0 ],
-            "shadow" : true
-        },
-        {
-            "name" : "nose",
-            "material" : "wireframe",
-            "color" : "white",
-            "type" : "lathe",
-            "size" : "5 5 5",
-            "position" : "0 0 0",
-            "shadow" : true,
-            "debug" : true
         }
-      
-    ]
-}
-
+*/
 
 const Main = () => {
 	return (
