@@ -63965,11 +63965,11 @@ var _createGeometry = __webpack_require__(41);
 
 var _createGeometry2 = _interopRequireDefault(_createGeometry);
 
-var _createMaterial = __webpack_require__(44);
+var _createMaterial = __webpack_require__(45);
 
 var _createMaterial2 = _interopRequireDefault(_createMaterial);
 
-var _audioInitializer = __webpack_require__(45);
+var _audioInitializer = __webpack_require__(46);
 
 var _audioInitializer2 = _interopRequireDefault(_audioInitializer);
 
@@ -63983,10 +63983,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var OBJLoader = __webpack_require__(46);
+var OBJLoader = __webpack_require__(47);
 OBJLoader(THREE);
 
-var MTLLoader = __webpack_require__(47);
+var MTLLoader = __webpack_require__(48);
 
 // JSON
 
@@ -66261,7 +66261,7 @@ var _proceduralTree = __webpack_require__(43);
 
 var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
 
-var _rotatePoint = __webpack_require__(49);
+var _rotatePoint = __webpack_require__(44);
 
 var _rotatePoint2 = _interopRequireDefault(_rotatePoint);
 
@@ -66447,6 +66447,25 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+exports.default = function (x, y, angle) {
+
+    var rotatedPoint = {};
+    rotatedPoint.x = x * Math.cos(angle) - y * Math.sin(angle);
+    rotatedPoint.y = x * Math.sin(angle) + y * Math.cos(angle);
+    return rotatedPoint;
+};
+
+/***/ }),
+/* 45 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -66524,7 +66543,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -66625,7 +66644,7 @@ function seperateSoundName(path) {
 exports.default = initializeAudio;
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67296,7 +67315,7 @@ module.exports = function (THREE) {
 };
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -67304,7 +67323,7 @@ module.exports = function (THREE) {
  *
  * @author angelxuanchang
  */
-var THREE = __webpack_require__(48);
+var THREE = __webpack_require__(49);
 function MTLLoader( manager ) {
 
   this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
@@ -67838,7 +67857,7 @@ module.exports = MTLLoader;
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -112074,25 +112093,6 @@ function CanvasRenderer() {
 
 
 
-
-/***/ }),
-/* 49 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function (x, y, angle) {
-
-    var rotatedPoint = {};
-    rotatedPoint.x = x * Math.cos(angle) - y * Math.sin(angle);
-    rotatedPoint.y = x * Math.sin(angle) + y * Math.cos(angle);
-    return rotatedPoint;
-};
 
 /***/ })
 /******/ ]);
