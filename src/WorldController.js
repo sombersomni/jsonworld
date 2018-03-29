@@ -135,6 +135,25 @@ const framework = {
         } );
     },
     createMaterial,
+    createTransition : function ( id, mesh, options = {} ) {
+        //takes the transition type and keeps track of any 
+        console.log( mesh, "in the function createTransition" );
+        let clone = this.objManager.all[ mesh.id * id ];
+        console.log( clone , "clone in function");
+        // transition options parse over options for animation instead of adding duplicate attributes for transition
+        const type = "color";
+        switch( type ) {
+                
+            case "color":
+                const color = options.color instanceof THREE.Color ? options.color : this.typeChecker( options, "color", defaultOptions ); 
+                
+                clone.transitions.color = anime( this.createAnime( mesh, Object.assign( {}, options, { animationKeyframes : { color: [ { r: color.r, g: color.g, b: color.b } ] } } ) ) );
+                
+                console.log( clone, "end of function" );
+                break;
+            default:
+        }
+    },
     decideTimelineOrder : function (id, animation, mesh, options = {} ) {
         try {
             if ( mesh.id !== undefined ) {
@@ -334,11 +353,11 @@ const framework = {
 
                     case "color" : 
 
-                        return colorInterpreter( target );
+                        return colorInterpreter( target.trim() );
                         
                     case "typeHandler" :
                         
-                        console.log( target );
+                        console.log( target.trim() );
 
                     default:
                         
@@ -356,6 +375,7 @@ const framework = {
     packAnimations: function ( mesh, options ) {
         const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, loop, run, offset, positionRelativeTo } = options;
 
+        console.log( animTarget, "in pack animations" );
         let animation = {
             duration,
             elasticity,
@@ -411,8 +431,14 @@ const framework = {
                         let obj = mesh.children[n];
 
                             if ( canPack ) {
-                                let newAnimation = Object.assign( {}, animation, { targets: obj[ animTarget ], 
-                                                                                  offset: n * offset } );
+                                
+                                let newAnimation;
+                                if ( animTarget === "color" ) {
+                                    newAnimation = Object.assign( {}, animation, { targets: mesh[ "material" ][ animTarget ], offset: n * offset } );
+                                } else {
+                                    newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ], offset: n * offset } );
+
+                                }
                                 pack.push( newAnimation );
                             }
 
@@ -420,7 +446,13 @@ const framework = {
                     }
                     return pack;
         } else {
-            let newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ] } );
+            let newAnimation;
+            if ( animTarget === "color" ) {
+                newAnimation = Object.assign( {}, animation, { targets: mesh[ "material" ][ animTarget ] } );
+            } else {
+                newAnimation = Object.assign( {}, animation, { targets: mesh[ animTarget ] } );
+                
+            }
             return newAnimation;
         }
     },
@@ -566,16 +598,37 @@ const framework = {
                 
                 mesh = this.setObjectTransforms( mesh, options );
                 
-                this.setupWorldClone( sI, mesh );
+                this.setupWorldClone( sI, mesh, options );
                 
+                let newMesh = mesh;
+                console.log( newMesh );
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    this.scenes[sI].add( this.setupAnimationForMesh( sI, mesh, options ) );
-                } else {
+                    newMesh = this.setupAnimationForMesh( sI, mesh, options );
+                } 
+                
+                if ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) {
                     
-                    this.scenes[sI].add( mesh );
+                    if ( /\,/.test( options.transition ) ) {
+                        
+                        const seperateTransitions = options.transition.slice().split(",");
+                        for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
+                            
+                            const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
+                            if ( opts !== undefined ) {
+                                this.createTransition( sI, newMesh, Object.assign( {}, opts, { autoplay: true, loop: 1 } ) );
+                            }
+                        }
+                    } else {
+                        
+                        const opts = this.optionParser( options.transition , options, "animation" );
+                        if ( opts !== undefined ) {
+                            this.createTransition( sI, newMesh, Object.assign( {}, opts, { autoplay: true, loop: 1 } ) );
+                        }
+                    }
                 }
                 
+                this.scenes[sI].add( newMesh );
             }
 
             return;
@@ -724,13 +777,26 @@ const framework = {
         }
         
     },
-    setupWorldClone : function ( id, mesh ) {
+    setupWorldClone : function ( id, mesh, options = {} ) {
         
         this.objManager.all[ mesh.id * id ] =  {
             pos : new THREE.Vector3( mesh.position.x !== undefined ? mesh.position.x : 0,
                                     mesh.position.y !== undefined ? mesh.position.y : 0,
                                     mesh.position.z !== undefined ? mesh.position.z : 0 ),
-            animeTimeline : anime.timeline( { autoplay: true, loop : true } )
+            animeTimeline : anime.timeline( { autoplay: true, loop : true } ),
+            originalOptions: options,
+            transitions : {
+                opacity: undefined,
+                color: undefined,
+                position: undefined,
+                scale: undefined,
+                size: undefined,
+                width: undefined,
+                height: undefined,
+                depth: undefined,
+                rotation: undefined
+                
+            }
         };
     },
     typeChecker : function ( options, type, defaults ) {
@@ -848,7 +914,6 @@ const framework = {
         
         this.setupScene( { worldObjects: {} } ).then( completed => {
             //makes sure the scene is fully loaded
-            console.log( completed );
             this.scene = this.scenes[ completed.id ];
             //start event listeners
             this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
@@ -946,29 +1011,126 @@ const framework = {
                 const mesh = this.scenes[ completed.id ].getObjectByName( query );
                 const clone = this.objManager.all[ mesh.id * completed.id ];
                 
-                console.log( this.objManager.all[ mesh.id * completed.id ], completed.id , this.objManager );
                 return {
                     mesh : mesh,
                     name: mesh.name,
                     color: mesh.material.color,
                     id: mesh.id,
-                    x: clone.x,
-                    y: clone.y,
-                    z: clone.z,
-                    update: this.update.call( this, options );
+                    x: clone.pos.x,
+                    y: clone.pos.y,
+                    z: clone.pos.z,
+                    update: ( config ) => this.update.call( this, mesh, config )
                     
                 }
 
-            } );
-  
- 
-        
+            } ).catch( err => { console.warn( err.message ) } );
         
     },
-    update: function ( id, options = {} ) {
+    update: function ( mesh, options = {} ) {
         
-        console.log( id, options );
-        
+        try{
+                if ( mesh.type === "Mesh" ) {
+
+                    //@param m stands for mesh, it may change during update
+                    let clone = this.objManager.all[ mesh.id  * this.scene.id ];
+                    const playOnce = { autoplay: true, loop: 1 };
+                    const originalMesh = mesh;
+
+                    let m = mesh;
+
+                    if ( options.material !== undefined ) {
+
+                        if ( typeof options.material !== "string" ) throw new TypeError ( "material needs to be a string" );
+                        this.setupMesh( Object.assign( {}, clone.originalOptions, options ), this.scene.id );
+
+                        let newObj = this.scene.getObjectByName( clone.originalOptions.name );
+
+                        this.scene.remove( mesh );
+                        let newClone = this.objManager.all[ newObj.id * this.scene.id ];
+                        newClone = Object.assign( {}, clone, { mesh : newObj } );
+
+                        clone = newClone;
+                        m = newObj;
+
+                        console.log( m, "new mesh" );
+                    }
+
+                    if ( options.color !== undefined ) {
+                        const color = this.typeChecker( options, "color", defaultOptions );
+                        //changes the color, but if transition is in place, color will smoothly change to next one
+                        if ( clone.transitions.color !== undefined ) {
+                            const type = "color";
+                            const originalOptions = {
+                                animationDuration: clone.transitions[ type ].duration,
+                                animationDelay: clone.transitions[ type ].delay,
+                                animationType: type,
+                                loop: clone.transitions[ type ].loop,
+                                animationDirection: clone.transitions[ type ].direction
+                            }
+                            this.createTransition( this.scene.id, m, Object.assign( {}, options, originalOptions ) );
+
+                        } else {
+
+                            m.material.color = color;
+                        }
+                    }
+
+                    if ( options.texture !== undefined && typeof options.texture === "string" ) {
+
+                        if ( options.texture !== "none" ) {
+                                new THREE.TextureLoader().load( options.texture, texture => {
+                                m.material.needsUpdate = true;
+                                m.material.map = texture;
+                            } );
+                        } else {
+                            m.material.needsUpdate = true;
+                            m.material.map = undefined;
+                        }
+
+                        m.material.needsUpdate = false;
+                    }
+
+                        // transitions are animations that aren't remembered by the timeline, they always play once
+                        if ( ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) ) {
+
+                            if ( /\,/.test( options.transition ) ) {
+
+                                const seperateTransitions = options.transition.slice().split(",");
+                                for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
+
+                                    const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
+                                    if ( opts !== undefined ) {
+
+                                       this.createTransition( this.scene.id, m, Object.assign( {}, opts, playOnce ) );
+                                    }
+                                }
+                            } else {
+                                const opts = this.optionParser( options.transition , options, "animation" );
+                                if ( opts !== undefined ) {
+                                       this.createTransition( this.scene.id, m, opts, playOnce );
+                                }
+                            }
+
+                        } 
+                    
+                    if ( options.position !== undefined ) {
+                        
+                        //equivalent to teleporting your object
+                        
+                        const position = this.optionParser( options.position, options, "default" );
+                        console.log( position );
+                        if ( clone.transitions.position !== undefined ) {
+                            
+                        }  else {
+                            
+                        }
+                    }
+                }
+        } catch ( err ) { 
+            console.warn( err.message );
+        }
+            
+
     }
 };
 Object.assign( WorldController.prototype, framework );

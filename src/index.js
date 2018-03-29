@@ -44,8 +44,10 @@ const config = {
             "name" : "book",
             "type" : "box",
             "size" : [ 10, 18, 5 ],
+            "scale" : 10,
             "position": [ 100, 0, -60 ],
-            "color" : "white"
+            "color" : "white",
+            "transition" : "color 2s"
         }
       
     ]

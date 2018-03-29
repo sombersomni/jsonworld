@@ -36,8 +36,8 @@ class World extends Component {
             
         setTimeout( () => { 
             this.world.find( "book" ).then( book => { 
-                console.log( book );
-                //book.update( { color : "red" } );
+                
+                book.update( { texture: "imgs/harrypotter.jpg" } );
             } );
             // returns a copied instance of what the book is at that moment. Read only
             //such as the color, id, name, x, y, z, width, height, etc
@@ -47,12 +47,12 @@ class World extends Component {
             //however, for advanced changes the id may not stay the same
             
             
-        }, 2000 );
+        }, 6000 );
             
             setTimeout( () => { 
-            this.world.find( "ball" ).then( ball => { 
-                console.log( ball );
-                //book.update( { color : "red" } );
+            this.world.find( "book" ).then( book => { 
+                
+                book.update( { color : "red", material: "lambert", position: "0 300 0" } );
             } );
             // returns a copied instance of what the book is at that moment. Read only
             //such as the color, id, name, x, y, z, width, height, etc
@@ -61,8 +61,14 @@ class World extends Component {
             //notice the ids are the same as the item was simply updated, rather than replaced
             //however, for advanced changes the id may not stay the same
             
-            
+            console.log( this.world.scene, "this is the world scene" );
         }, 10000 );
+            
+            setTimeout( () => {
+                
+                console.log( this.world.scene, "this is the world scene" );
+                
+            }, 14000 );
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );

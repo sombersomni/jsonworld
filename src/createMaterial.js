@@ -6,7 +6,7 @@ export default function ( options = {} ) {
           emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( defaultOptions.emissiveColor ),
           emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
           material = options.hasOwnProperty( "material" ) && options.material !== undefined ? options.material : "default",
-          map = options.texture !== undefined ? options.texture : null, 
+          map = options.texture !== undefined  || options.texture !== "none" ? options.texture : null, 
           overdraw = options.overdraw !== undefined ? options.overdraw : defaultOptions.overdraw,
           roughness = options.roughness !== undefined ? options.roughness : defaultOptions.roughness,
           shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,

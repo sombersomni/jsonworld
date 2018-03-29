@@ -12,7 +12,28 @@ function parseKeyframes( str ) {
 function determineTarget( type, mesh ) {
     
     try {
+        console.log( type, "the type" );
         switch( type ) {
+                
+            case "r" :
+                return {
+                    animTarget: "color",
+                    animProp: "r"
+                    
+                };
+            case "g" :
+                return {
+                    animTarget: "color",
+                    animProp: "g"
+                    
+                };
+            case "b" :
+                return {
+                    animTarget: "color",
+                    animProp: "b"
+                    
+                };
+                
             case "opacity" :
                 
                 return {
@@ -99,6 +120,7 @@ export default function ( mesh, options = {} ) {
     //seperate keyframes and make it compatible for use in anime timeline
     if ( options.animationKeyframes !== undefined && options.hasOwnProperty( "animationKeyframes" ) ) {
         
+        console.log( type, "the type in createAnime" );
         try {
           if ( options.animationKeyframes[ type ] !== undefined ) {
               type.toLowerCase();
@@ -118,9 +140,9 @@ export default function ( mesh, options = {} ) {
                                    frame object in order to assign multiple changes in one keyframe
 
                                    */
-
+                                   console.log( key );
                                    const decision = determineTarget( key , mesh );
-
+                                        console.log( decision );
                                       if ( decision !== undefined ) {
                                            animTarget = decision.animTarget;
 
@@ -188,6 +210,7 @@ export default function ( mesh, options = {} ) {
             speed
     };
     
+    console.log( newOptions, "createAnime inside");
     switch( type ) {
         case "atom":
             return function ( time ) {
