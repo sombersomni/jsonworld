@@ -19,7 +19,7 @@ const config = {
             "shadow" : true
         },
         {
-            "name" : "heart",
+            "name" : "hearts",
             "material" : "lambert",
             "count" : 100,
             "color" : "#FF000A",
@@ -39,6 +39,13 @@ const config = {
             "position" : 0,
             "size" : 3,
             "color" : "red"
+        },
+        {
+            "name" : "book",
+            "type" : "box",
+            "size" : [ 10, 18, 5 ],
+            "position": [ 100, 0, -60 ],
+            "color" : "white"
         }
       
     ]

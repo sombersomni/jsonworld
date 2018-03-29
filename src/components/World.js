@@ -33,6 +33,36 @@ class World extends Component {
             this.setState( { message: e.message } );
         } );
 		this.world.start();
+            
+        setTimeout( () => { 
+            this.world.find( "book" ).then( book => { 
+                console.log( book );
+                //book.update( { color : "red" } );
+            } );
+            // returns a copied instance of what the book is at that moment. Read only
+            //such as the color, id, name, x, y, z, width, height, etc
+            //includes any other properties you give it outside the basics like author and year
+            
+            //notice the ids are the same as the item was simply updated, rather than replaced
+            //however, for advanced changes the id may not stay the same
+            
+            
+        }, 2000 );
+            
+            setTimeout( () => { 
+            this.world.find( "ball" ).then( ball => { 
+                console.log( ball );
+                //book.update( { color : "red" } );
+            } );
+            // returns a copied instance of what the book is at that moment. Read only
+            //such as the color, id, name, x, y, z, width, height, etc
+            //includes any other properties you give it outside the basics like author and year
+            
+            //notice the ids are the same as the item was simply updated, rather than replaced
+            //however, for advanced changes the id may not stay the same
+            
+            
+        }, 10000 );
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );

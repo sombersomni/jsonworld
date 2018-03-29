@@ -32,7 +32,7 @@ function WorldController (options) {
     this.sounds = options.sounds;
     this.worldObjects = options.worldObjects;
     this.mainFont = options.font;
-
+    this.sceneLoaded = new Promise( () => {} );
     //packages for storing
     this.audioControllers = [];
     this.animationManager = {
@@ -47,6 +47,8 @@ function WorldController (options) {
     this.hashed = [];
     this.counter = 0;
     //
+    
+    this.isWorldLoaded = false;
 
     this.canvas = this.getCanvas();
     this.camera = this.setupCamera( options );
@@ -104,16 +106,17 @@ const framework = {
     convertToRadians : value => (Math.PI * 2 ) / 180 * value,
     createAnime,
     createGeometry,
-    createPreloader: function ( options = {} ) {
+    createPreloader: function ( id, options = {} ) {
         
         return new Promise( ( res, rej ) => {
                 
                 options.name = "preloader";
-                this.setupMesh( options, this.scenes.length - 1 );
+            
+                this.setupMesh( options, id );
                 res( options.hasOwnProperty( "message" ) && options.message !== undefined ? options.message: defaultOptions.preloader.message );
         } );
     },
-    createFont: function ( fontJSON, title = "hi" ) {
+    createFont: function ( id, fontJSON, title = "hi" ) {
         new THREE.FontLoader().load( fontJSON, ( font ) => {
             this.fonts[0] = font;
             const options = {
@@ -128,14 +131,14 @@ const framework = {
                 
             };
             
-            this.setupMesh( options, this.scenes.length - 1 );
+            this.setupMesh( options, id );
         } );
     },
     createMaterial,
-    decideTimelineOrder : function ( animation, mesh, options = {} ) {
+    decideTimelineOrder : function (id, animation, mesh, options = {} ) {
         try {
             if ( mesh.id !== undefined ) {
-                let obj = this.objManager.all[ mesh.id ];
+                let obj = this.objManager.all[ mesh.id * id ];
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
                     for ( var i = 0; i <= animation.length - 1; i++ ) {
@@ -145,11 +148,12 @@ const framework = {
 
                 } else if ( animation instanceof Function ) {
 
-                    this.animationManager.all[ mesh.id ].push( animation );
+                    this.animationManager.all[ mesh.id * id ] = animation;
                     
                 } else {
-                    
+                      
                        obj.animeTimeline.add( animation );
+                     console.log( obj );
                 }
                 
             } else throw new Error( "you need a mesh id to create animation timelines " );
@@ -267,7 +271,7 @@ const framework = {
 
         }
         
-        camera.position.set(0, 200, 200 );
+        camera.position.set(0, 0, 100 );
 
         if (this.cameras.length > 0) {
             camera.name = "cam_" + this.cameras.length.toString();
@@ -350,12 +354,13 @@ const framework = {
         
     },
     packAnimations: function ( mesh, options ) {
-        const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, run, offset, positionRelativeTo } = options;
+        const { animTarget, asymmetry, began, canPack, complete, delay, duration, elasticity, finished, keyframes, loop, run, offset, positionRelativeTo } = options;
 
         let animation = {
+            duration,
             elasticity,
+            loop,
             offset,
-            duration
         } ;
         
         let modifier;
@@ -419,7 +424,7 @@ const framework = {
             return newAnimation;
         }
     },
-    setupAnimationForMesh: function ( mesh, options ) {
+    setupAnimationForMesh: function ( id, mesh, options ) {
         //set up animation for this mesh
                 let animationOptions = {
                     animationType: options.animationType,
@@ -449,19 +454,19 @@ const framework = {
                         
                             const opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
                             if ( opts !== undefined ) {
-                               this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                               this.decideTimelineOrder( id, this.createAnime( mesh, opts ), mesh, opts );
                             }
                         }
                     } else {
                         const opts = this.optionParser( options.animation , animationOptions, "animation" );
                         if ( opts !== undefined ) {
-                               this.decideTimelineOrder( this.createAnime( mesh, opts ), mesh, opts );
+                               this.decideTimelineOrder( id, this.createAnime( mesh, opts ), mesh, opts );
                         }
                     }
                     
                 } else {
                     
-                    this.decideTimelineOrder( this.createAnime( mesh, animationOptions ), mesh, animationOptions );
+                    this.decideTimelineOrder( id, this.createAnime( mesh, animationOptions ), mesh, animationOptions );
                 }
                 
                 return mesh;
@@ -493,11 +498,11 @@ const framework = {
                 }
                 group.name = options.name !== undefined ? options.name : "bundle";
                 
-                this.setupWorldClone( group );
+                this.setupWorldClone( sI, group );
                     
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    this.scenes[sI].add( this.setupAnimationForMesh( group, options ) );
+                    this.scenes[sI].add( this.setupAnimationForMesh( sI, group, options ) );
                 } else {
                     
                     this.scenes[sI].add( group );
@@ -542,8 +547,6 @@ const framework = {
                 
                 mesh.name = options.name !== undefined ? options.name : "";
                 
-                this.setupWorldClone( mesh );
-                
                 if ( options.debug === true ) {
                     const debugVerts = new THREE.Group();
                     mesh.geometry.vertices.forEach( ( v, i ) => {
@@ -563,9 +566,11 @@ const framework = {
                 
                 mesh = this.setObjectTransforms( mesh, options );
                 
+                this.setupWorldClone( sI, mesh );
+                
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    this.scenes[sI].add( this.setupAnimationForMesh( mesh, options ) );
+                    this.scenes[sI].add( this.setupAnimationForMesh( sI, mesh, options ) );
                 } else {
                     
                     this.scenes[sI].add( mesh );
@@ -603,12 +608,13 @@ const framework = {
     },
     setupScene: function( options = {}, audioControllers = {} ) {
         //wraps into a promise for preloader to wait on data to be completed
+        let scene = new THREE.Scene();
+        this.scenes[ scene.id ] = scene;
         const intensity = this.options.sunIntensity !== undefined ? this.options.sunIntensity : defaultOptions.sunIntensity,
               sunColor = this.options.sunColor !== undefined ? this.options.sunColor : defaultOptions.sunColor;
         return new Promise ( ( res, rej ) => { 
-            this.scenes.push( new THREE.Scene() );
-            this.scenes[ this.scenes.length - 1 ].name = this.scenes.length === 1 ? "menu" : "main";
-            this.scenes[ this.scenes.length - 1 ].fog = this.fog;
+            this.scenes[ scene.id ].name = this.scenes.length === 1 ? "preloader" : "main";
+            this.scenes[ scene.id ].fog = this.fog;
             //creates the sun light for the whole world
             const sunlight = new THREE.DirectionalLight( sunColor, intensity );
             sunlight.name = "sunlight";
@@ -622,9 +628,9 @@ const framework = {
                 sunlight.shadow.camera.near = defaultOptions.cameraNear;
                 //debug shadow camera
                 const shadowCamera = new THREE.CameraHelper( sunlight.shadow.camera );
-                this.scenes[ this.scenes.length -1 ].add( shadowCamera );
+                this.scenes[ scene.id ].add( shadowCamera );
             }
-            this.scenes[ this.scenes.length - 1 ].add( sunlight );
+            this.scenes[ scene.id ].add( sunlight );
             
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
@@ -635,16 +641,16 @@ const framework = {
                                 
                                 o = Object.assign( {}, o, { size: o.size !== undefined ? o.size : [ texture.image.naturalWidth / 2, texture.image.naturalHeight / 2, 0 ],
                                                           texture } );
-                                this.setupMesh( o, this.scenes.length - 1 ); 
+                                this.setupMesh( o, scene.id ); 
                             } );
                             
                         } else {
-                            this.setupMesh( o, this.scenes.length - 1 ); 
+                            this.setupMesh( o, scene.id ); 
                         }
                     }
                 });
                 //sends an animation type for scene transition
-                res( defaultOptions.sceneTransition );
+                res( { id : scene.id, animation: defaultOptions.sceneTransition } );
             } else if ( Object.keys(options).length > 0 && options.constructor === Object ) {
                 
                 if ( options.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( options.texture) ) {
@@ -656,9 +662,9 @@ const framework = {
                             } );
                             
                         } else {
-                            this.setupMesh( options, this.scenes.length - 1 ); 
+                            this.setupMesh( options, scene.id ); 
                         }
-                res( defaultOptions.sceneTransition );
+                res( { id : scene.id, animation: defaultOptions.sceneTransition }  );
             } else {
                 return;
             }
@@ -718,9 +724,9 @@ const framework = {
         }
         
     },
-    setupWorldClone : function ( mesh ) {
+    setupWorldClone : function ( id, mesh ) {
         
-        this.objManager.all[ mesh.id ] =  {
+        this.objManager.all[ mesh.id * id ] =  {
             pos : new THREE.Vector3( mesh.position.x !== undefined ? mesh.position.x : 0,
                                     mesh.position.y !== undefined ? mesh.position.y : 0,
                                     mesh.position.z !== undefined ? mesh.position.z : 0 ),
@@ -758,7 +764,6 @@ const framework = {
                 return this.typeChecker( defaults, type, defaults );
         } else {
             
-            console.log( arr );
             if ( arr.length < 3 ) {
                 
                 for ( var x = 0; x <= 3 - arr.length - 1; x++ ) {
@@ -772,26 +777,27 @@ const framework = {
         
         
     },
-    initWorld : function () {
+    initWorld : function ( id ) {
         //initializes world after clicking and removes event listener to prevent memory leaks
         let title;
-        const delay = 1000;
+        const delay = 4000;
         
         if ( this.options.hasOwnProperty("menu") && this.options.menu !== undefined ) {
             //menu options start
             this.canvas.removeEventListener("click", this.initWorld, false);
-            title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
+            title = this.scene.getObjectByName( "title" );
             if ( title !== undefined ) {
                 const camData = calculateCameraView( title.position.z, this.camera );
                 if ( title.hasOwnProperty("geometry") && title.geometry.parameters !== undefined && title.geometry.parameters.height !== undefined ) {
                     title.scale.set( 1 * ( camData.width / title.geometry.parameters.width ), 1 * ( camData.width / title.geometry.parameters.height ), 1 );
                 }
                 
-                this.decideTimelineOrder( this.createAnime( mesh, options ), title, options );
+                this.decideTimelineOrder( id, this.createAnime( mesh, options ), title, options );
             }
         }
        
-        const preloaderPromise = this.createPreloader( this.options.preloader !== undefined ? this.options.preloader : defaultOptions.preloader );
+        console.log( this.scenes );
+        const preloaderPromise = this.createPreloader( this.scene.id, this.options.preloader !== undefined ? this.options.preloader : defaultOptions.preloader );
         
         if ( this.options.hasOwnProperty( "sounds") && this.options.sounds !== undefined ) {
             
@@ -801,16 +807,12 @@ const framework = {
                 progressEmitter.emit( "world-message", { message } );
                 audioPromise.then( controllers => {
                         this.audioControllers = controllers;
-                        const scenePromise = this.setupScene( this.worldObjects, controllers );
-                        scenePromise.then( animationType => { 
-                            let preloader = this.scene.getObjectByName( "preloader" );
-                            //clears the timeline for a new batch of animations
-                            
-                            this.decideTimelineOrder( this.createAnime( preloader, { animationType } ), preloader );
+                        this.sceneLoaded = this.setupScene( this.worldObjects, controllers );
+                        this.sceneLoaded.then( completed => { 
                             
                             window.setTimeout( () => {
                                 progressEmitter.emit( "world-message", { message: "" } );
-                                this.scene = this.scenes[ this.scenes.length - 1 ];
+                                this.scene = this.scenes[ completed.id ];
                             }, delay );
                         } )
                     } )
@@ -818,25 +820,24 @@ const framework = {
     
         } else {
                 preloaderPromise.then( message => {
+                    this.sceneLoaded = this.setupScene( this.worldObjects );
                     progressEmitter.emit( "world-message", { message } );
                     /* 
                         if the scene can't be made then the promise is never fulfilled and
                     the preloader will never stop 
                     
                     */
+                    const preloader = this.scene.getObjectByName( "preloader" );
+                    const options = Object.assign( {}, this.optionParser( "fade-out 1s ease-out-quart", this.options, "animation" ) );
                     
-                    const scenePromise = this.setupScene( this.worldObjects );
-                    
-                    scenePromise.then( animationType => {
-                        let preloader = this.scene.getObjectByName( "preloader" );
+                    this.sceneLoaded.then( completed => {
+                        this.decideTimelineOrder( completed.id, this.createAnime( preloader, options ), preloader, options );
                         window.setTimeout( () => {
-                           //clears the timeline for a new batch of animations
-                            
-                            this.decideTimelineOrder( this.createAnime( preloader, { animationType : "fade-out" } ), preloader );
+                            //need to delay based on animation settings
                             progressEmitter.emit( "world-message", { message: "" } );
-                            this.scene = this.scenes[ this.scenes.length - 1 ];
-                            console.log( this.scene, this.objManager, this.animationManger );
-                        }, delay );
+                            this.scene = this.scenes[ completed.id ];
+                            
+                        }, options.animationDuration !== undefined ? options.animationDuration: delay );
                     } )
                 } )            
             
@@ -845,59 +846,65 @@ const framework = {
     },
     start: function () {
         
-        this.setupScene( {} );
-        this.scene = this.scenes[ 0 ];
-        //start event listeners
-        this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
-        window.addEventListener( "resize" , ( e ) => {
-            this.onWindowResize();
-        }, false );
-        //run animation cycle for all scenes
-        window.requestAnimationFrame( this.runScene );
-        if ( this.options.hasOwnProperty( "menu" ) && this.options.menu !== undefined ) {
-            this.canvas.addEventListener("click", this.initWorld );
-            const menu = this.options.menu;
-            let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
-            const isImgLink = checkFormat.test( menu.title );
-            
-            if (isImgLink) {
-                
-                try {
-                   new THREE.TextureLoader().load( menu.title, (tex) => {
-                    
-                    const options = {
-                        type: "plane",
-                        name: "title",
-                        material: "basic",
-                        animationType: "zoom_normal",
-                        animationDuration: 5000,
-                        animationDelay: 1000,
-                        animationDirection: "alternate",
-                        transparent: true,
-                        loop: true,
-                        color: new THREE.Color(),
-                        size: [ tex.image.naturalWidth, tex.image.naturalHeight, 0 ],
-                        texture: tex
-                    };
-                    
-                    this.setupMesh( options, this.scenes.length - 1 );
-                    //calculate title mesh so if img is too large it will fit inside the camera viewW
-                    let title = this.scenes[ this.scenes.length - 1 ].getObjectByName( "title" );
-                    this.fitOnScreen( title );
-                }, undefined, ( err ) =>  { throw new Error( "Couldn't load texture, check your img path" )  } );
-                    
-                } catch( err ) {
-                    console.warn( err.message );
+        this.setupScene( { worldObjects: {} } ).then( completed => {
+            //makes sure the scene is fully loaded
+            console.log( completed );
+            this.scene = this.scenes[ completed.id ];
+            //start event listeners
+            this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
+            this.canvas.addEventListener( "mousemove", this.doMouseMove,  false );
+            window.addEventListener( "resize" , ( e ) => {
+                this.onWindowResize();
+            }, false );
+            //run animation cycle for all scenes
+            window.requestAnimationFrame( this.runScene );
+            if ( this.options.hasOwnProperty( "menu" ) && this.options.menu !== undefined ) {
+                this.canvas.addEventListener("click", this.initWorld );
+                const menu = this.options.menu;
+                let checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
+                const isImgLink = checkFormat.test( menu.title );
+
+                if (isImgLink) {
+
+                    try {
+                       new THREE.TextureLoader().load( menu.title, (tex) => {
+
+                            const options = {
+                                type: "plane",
+                                name: "title",
+                                material: "basic",
+                                animationType: "zoom_normal",
+                                animationDuration: 5000,
+                                animationDelay: 1000,
+                                animationDirection: "alternate",
+                                transparent: true,
+                                loop: true,
+                                color: new THREE.Color(),
+                                size: [ tex.image.naturalWidth, tex.image.naturalHeight, 0 ],
+                                texture: tex
+                            };
+
+                            this.setupMesh( options, completed.id );
+                            //calculate title mesh so if img is too large it will fit inside the camera viewW
+                            let title = this.scenes[ completed.id ].getObjectByName( "title" );
+                            this.fitOnScreen( title );
+                        }, undefined, ( err ) =>  { throw new Error( "Couldn't load texture, check your img path" )  } );
+
+                    } catch( err ) {
+                        console.warn( err.message );
+                    }
+                } else {
+                    console.log("turn into a 3D font");
+                    //will create a font in 3D space based on font family
+                    this.createFont( this.scene.id, this.mainFont, menu.title );
+
                 }
             } else {
-                console.log("turn into a 3D font");
-                //will create a font in 3D space based on font family
-                this.createFont( this.mainFont, menu.title );
-                
+                this.initWorld( this.scene.id );
             }
-        } else {
-            this.initWorld();
-        }
+        } );
+        
+        
        
     },
     doMouseMove: function ( e ) {
@@ -927,6 +934,40 @@ const framework = {
         this.runAnimations( elaspedTime );
 
         this.renderer.render( this.scene, this.camera );
+        
+    },
+    find: function ( query ) {
+        //sceneLoaded his a promise that keeps recycling itself after each initiation
+        //this makes sure everything is loaded before we mess with the object
+            return this.sceneLoaded.then( completed => {
+                //read only
+                progressEmitter.emit( "world-message", { message : "loading " + query } );
+                
+                const mesh = this.scenes[ completed.id ].getObjectByName( query );
+                const clone = this.objManager.all[ mesh.id * completed.id ];
+                
+                console.log( this.objManager.all[ mesh.id * completed.id ], completed.id , this.objManager );
+                return {
+                    mesh : mesh,
+                    name: mesh.name,
+                    color: mesh.material.color,
+                    id: mesh.id,
+                    x: clone.x,
+                    y: clone.y,
+                    z: clone.z,
+                    update: this.update.call( this, options );
+                    
+                }
+
+            } );
+  
+ 
+        
+        
+    },
+    update: function ( id, options = {} ) {
+        
+        console.log( id, options );
         
     }
 };
