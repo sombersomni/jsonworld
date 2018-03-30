@@ -38,6 +38,11 @@ class World extends Component {
                 
                 console.log( this.world.scene );
                 
+                this.world.find( "book" ).then( book => {
+                    
+                    book.update( { material: "lambert" } );
+                } );
+                
             }, 8000 );
         
 	}

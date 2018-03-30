@@ -46121,7 +46121,7 @@ var config = {
         "color": "red"
     }, {
         "name": "book",
-        "type": "box",
+        "type": "dodecahedron",
         "size": [10, 18, 5],
         "scale": 10,
         "position": [100, 0, -60],
@@ -46129,7 +46129,7 @@ var config = {
         "material": "basic",
         "shadow": true,
         "transition": "color 2s",
-        "texture": ["imgs/ball.jpg", "imgs/harrypotter.jpg", "imgs/ball.jpg", "imgs/harrypotter.jpg", "imgs/ball.jpg", "imgs/harrypotter.jpg"]
+        "texture": ["imgs/a.jpg", "imgs/b.jpg", "imgs/c.jpg"]
     }]
 
     /* 
@@ -63568,6 +63568,11 @@ var World = function (_Component) {
 			setTimeout(function () {
 
 				console.log(_this2.world.scene);
+
+				_this2.world.find("book").then(function (book) {
+
+					book.update({ material: "lambert" });
+				});
 			}, 8000);
 		}
 	}, {
@@ -64556,14 +64561,15 @@ var framework = {
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
         try {
+            // @param g stands for geometry
+            var g = this.createGeometry(options);
 
             if (options.texture instanceof Array) {
                 //if you get an array of textuers back, then we can pack them here
                 console.log(options, "before setupMesh begins");
-                options.texture.forEach(function (tex) {
-
-                    multiMaterials.push(_this4.createMaterial(Object.assign({}, options, { texture: tex })));
-                });
+                for (var f = 0; f <= g.faces.length - 1; f++) {
+                    multiMaterials.push(this.createMaterial(Object.assign({}, options, { texture: options.texture[f % options.texture.length] })));
+                }
 
                 m = multiMaterials;
             } else {
@@ -64576,10 +64582,10 @@ var framework = {
             if (options.count !== undefined && options.count > 1) {
                 var group = new THREE.Group();
                 for (var _i = 0; _i <= options.count - 1; _i++) {
-                    var g = this.createGeometry(options);
+                    var _g = this.createGeometry(options);
                     //create a grid to place each object correctly so no objects touch or collide 
 
-                    mesh = this.gridMeshPosition(new THREE.Mesh(g, m), options, _i);
+                    mesh = this.gridMeshPosition(new THREE.Mesh(_g, m), options, _i);
 
                     if (options.hasOwnProperty("shadow") && options.shadow === true) {
                         mesh.receiveShadow = true;
@@ -64600,10 +64606,8 @@ var framework = {
                     this.scenes[sI].add(group);
                 }
             } else {
-                // @param g stands for geometry
-                var _g = this.createGeometry(options);
 
-                mesh = new THREE.Mesh(_g, m);
+                mesh = new THREE.Mesh(g, m);
 
                 if (options.hasOwnProperty("shadow") && options.shadow == true) {
 
@@ -64621,9 +64625,9 @@ var framework = {
 
                             mesh.material.vertexColors = THREE.VertexColors;
 
-                            var f = mesh.geometry.faces[a];
+                            var _f = mesh.geometry.faces[a];
                             for (var i = 0; i <= faceIndices.length - 1; i++) {
-                                var vertexIndex = f[faceIndices[i]];
+                                var vertexIndex = _f[faceIndices[i]];
                                 var p = mesh.geometry.vertices[vertexIndex];
                                 console.log(vertexIndex);
                                 var color = new THREE.Color(0xffffff);
@@ -64634,7 +64638,6 @@ var framework = {
                     }
                 }
 
-                console.log(options.name, "current name");
                 mesh.name = options.name !== undefined ? options.name : "";
 
                 if (options.debug === true) {
@@ -65160,21 +65163,12 @@ var framework = {
 
                     if (typeof options.material !== "string") throw new TypeError("material needs to be a string");
 
-                    var filteredOptions = Object.assign({}, options, {
-                        position: clone.transitions.position !== undefined || options.transition !== undefined ? [m.position.x, m.position.y, m.position.z] : this.typeChecker(options, "position", _defaults2.default),
-                        color: clone.transitions.color !== undefined || options.transition !== undefined ? [m.material.color.r, m.material.color.g, m.material.color.b] : this.typeChecker(options, "color", _defaults2.default)
-                    });
-                    this.setupMesh(Object.assign({}, clone.originalOptions, filteredOptions), this.scene.id);
-                    this.scene.remove(mesh);
-                    var newObj = this.scene.getObjectByName(clone.originalOptions.name);
+                    m.material.needsUpdate = true;
 
-                    console.log(newObj, "new Object");
-                    var newClone = this.objManager.all[newObj.id * this.scene.id] = Object.assign({}, clone);
+                    console.log(m);
+                    var newMaterial = this.createMaterial(Object.assign({}, { color: m.material[0].color.clone(), texture: m.material[0].map.clone(), material: options.material }));
 
-                    clone = newClone;
-                    m = newObj;
-
-                    console.log(clone, "new Clone");
+                    m.material = newMaterial;
                 }
 
                 if (options.hasOwnProperty("transition") && options.transition !== undefined && typeof options.transition === "string") {

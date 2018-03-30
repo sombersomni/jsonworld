@@ -529,15 +529,17 @@ const framework = {
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
         try{
-                
+                // @param g stands for geometry
+                const g = this.createGeometry( options );
+            
                 if ( options.texture instanceof Array ) {
                     //if you get an array of textuers back, then we can pack them here
                     console.log( options, "before setupMesh begins" );
-                    options.texture.forEach( tex => {
+                    for ( let f = 0; f <= g.faces.length - 1; f++ ) {
+                        multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : options.texture[ f % options.texture.length ] } ) ) );
+                    }
                         
-                        multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : tex } ) ) );
-                        
-                    } );
+           
                     
                     m = multiMaterials;
                     
@@ -580,8 +582,6 @@ const framework = {
                     this.scenes[sI].add( group );
                 }
             } else {
-                // @param g stands for geometry
-                const g = this.createGeometry( options );
                 
                 mesh = new THREE.Mesh( g, m );
                 
@@ -618,7 +618,6 @@ const framework = {
                 
                 } 
                 
-                console.log( options.name, "current name" );
                 mesh.name = options.name !== undefined ? options.name : "";
                 
                 if ( options.debug === true ) {
@@ -1140,24 +1139,16 @@ const framework = {
                 // transitions are animations that aren't remembered by the timeline, they always play once
                 
                 if ( options.material !== undefined ) {
-
+                        
                         if ( typeof options.material !== "string" ) throw new TypeError ( "material needs to be a string" );
-                        
-                        const filteredOptions = Object.assign( {}, options, {
-                            position : clone.transitions.position !== undefined || options.transition !== undefined ? [ m.position.x, m.position.y, m.position.z ] : this.typeChecker( options, "position", defaultOptions ),
-                            color: clone.transitions.color !== undefined || options.transition !== undefined ? [ m.material.color.r, m.material.color.g, m.material.color.b ] : this.typeChecker( options, "color", defaultOptions )
-                        } );
-                        this.setupMesh( Object.assign( {}, clone.originalOptions, filteredOptions ), this.scene.id );
-                        this.scene.remove( mesh );
-                        let newObj = this.scene.getObjectByName( clone.originalOptions.name );
-                        
-                        console.log( newObj, "new Object" );
-                        let newClone = this.objManager.all[ newObj.id * this.scene.id ] = Object.assign( {}, clone );
+                    
+                            m.material.needsUpdate = true;
 
-                        clone = newClone;
-                        m = newObj;
+                            console.log( m );
+                            let newMaterial = this.createMaterial( Object.assign( {}, { color: m.material[0].color.clone(), texture: m.material[0].map.clone(), material : options.material } ) );
 
-                        console.log( clone, "new Clone" );
+
+                            m.material = newMaterial;
                     }
                 
                         if ( ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) ) {

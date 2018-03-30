@@ -42,7 +42,7 @@ const config = {
         },
         {
             "name" : "book",
-            "type" : "box",
+            "type" : "dodecahedron",
             "size" : [ 10, 18, 5 ],
             "scale" : 10,
             "position": [ 100, 0, -60 ],
@@ -50,7 +50,7 @@ const config = {
             "material" : "basic",
             "shadow" : true,
             "transition" : "color 2s",
-            "texture" : [ "imgs/ball.jpg", "imgs/harrypotter.jpg","imgs/ball.jpg", "imgs/harrypotter.jpg","imgs/ball.jpg", "imgs/harrypotter.jpg" ]
+            "texture" : [ "imgs/a.jpg", "imgs/b.jpg","imgs/c.jpg" ]
         }
       
     ]
