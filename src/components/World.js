@@ -52,7 +52,7 @@ class World extends Component {
             setTimeout( () => { 
             this.world.find( "book" ).then( book => { 
                 
-                book.update( { color : "red", material: "lambert", position: "0 300 0" } );
+                book.update( { color : "red", material: "lambert", position: "0 300 0", transition: "position 10s" } );
             } );
             // returns a copied instance of what the book is at that moment. Read only
             //such as the color, id, name, x, y, z, width, height, etc
@@ -65,6 +65,10 @@ class World extends Component {
         }, 10000 );
             
             setTimeout( () => {
+                this.world.find( "book" ).then( book => { 
+                
+                book.update( { color : "red", scale: 20, transition: "scale 5s" } );
+            } );
                 
                 console.log( this.world.scene, "this is the world scene" );
                 

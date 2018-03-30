@@ -137,11 +137,9 @@ const framework = {
     createMaterial,
     createTransition : function ( id, mesh, options = {} ) {
         //takes the transition type and keeps track of any 
-        console.log( mesh, "in the function createTransition" );
         let clone = this.objManager.all[ mesh.id * id ];
-        console.log( clone , "clone in function");
         // transition options parse over options for animation instead of adding duplicate attributes for transition
-        const type = "color";
+        const type = options.animationType !== undefined ? options.animationType : "default";
         switch( type ) {
                 
             case "color":
@@ -149,9 +147,29 @@ const framework = {
                 
                 clone.transitions.color = anime( this.createAnime( mesh, Object.assign( {}, options, { animationKeyframes : { color: [ { r: color.r, g: color.g, b: color.b } ] } } ) ) );
                 
-                console.log( clone, "end of function" );
+                break;
+                
+            case "position":
+                
+                const position = this.typeChecker( options, "position", defaultOptions );
+                console.log( clone, " in the position transition" );
+                clone.transitions.position = anime( this.createAnime( mesh, Object.assign( {}, options, { animationKeyframes : { position : [ { x : position[ 0 ] , y: position[ 1 ], z: position[ 2 ] } ] } } ) ) );
+                
+                break;
+                
+            case "scale":
+                
+                const scale = this.typeChecker( options, "scale", defaultOptions );
+                console.log( clone, " in the position transition" );
+                clone.transitions.scale = anime( this.createAnime( mesh, Object.assign( {}, options, { animationKeyframes : { scale : [ { scaleX : scale[ 0 ] , scaleY: scale[ 1 ], scaleZ: scale[ 2 ] } ] } } ) ) );
+                
+                console.log( clone.transitions, "chosen" );
+                
                 break;
             default:
+                
+                console.log( "going to default" );
+                return;
         }
     },
     decideTimelineOrder : function (id, animation, mesh, options = {} ) {
@@ -276,7 +294,7 @@ const framework = {
             fov = opt.fov !== undefined ? opt.fov : defaultOptions.cameraFov,
             far = opt.far !== undefined ? opt.far : defaultOptions.cameraFar,
             type = opt.type !== undefined ? opt.type : defaultOptions.cameraType,
-            near = opt.near !== undefined ? opt.near : .01; //cant put floats in defaultOptions so we will leave them here.
+            near = opt.near !== undefined ? opt.near : defaultOptions.cameraNear; //cant put floats in defaultOptions so we will leave them here.
 
         switch (type.toLowerCase()) {
             case "perspective":
@@ -353,11 +371,10 @@ const framework = {
 
                     case "color" : 
 
-                        return colorInterpreter( target.trim() );
+                        return colorInterpreter( target );
                         
                     case "typeHandler" :
-                        
-                        console.log( target.trim() );
+                        break;
 
                     default:
                         
@@ -1028,8 +1045,9 @@ const framework = {
     },
     update: function ( mesh, options = {} ) {
         
-        try{
-                if ( mesh.type === "Mesh" ) {
+        try {
+            
+            if ( mesh.type === "Mesh" ) {
 
                     //@param m stands for mesh, it may change during update
                     let clone = this.objManager.all[ mesh.id  * this.scene.id ];
@@ -1037,23 +1055,53 @@ const framework = {
                     const originalMesh = mesh;
 
                     let m = mesh;
-
-                    if ( options.material !== undefined ) {
+                
+                // transitions are animations that aren't remembered by the timeline, they always play once
+                
+                if ( options.material !== undefined ) {
 
                         if ( typeof options.material !== "string" ) throw new TypeError ( "material needs to be a string" );
-                        this.setupMesh( Object.assign( {}, clone.originalOptions, options ), this.scene.id );
-
-                        let newObj = this.scene.getObjectByName( clone.originalOptions.name );
-
+                        
+                        const filteredOptions = Object.assign( {}, options, {
+                            position : clone.transitions.position !== undefined || options.transition !== undefined ? [ m.position.x, m.position.y, m.position.z ] : this.typeChecker( options, "position", defaultOptions ),
+                            color: clone.transitions.color !== undefined || options.transition !== undefined ? [ m.material.color.r, m.material.color.g, m.material.color.b ] : this.typeChecker( options, "color", defaultOptions )
+                        } );
+                        this.setupMesh( Object.assign( {}, clone.originalOptions, filteredOptions ), this.scene.id );
                         this.scene.remove( mesh );
-                        let newClone = this.objManager.all[ newObj.id * this.scene.id ];
-                        newClone = Object.assign( {}, clone, { mesh : newObj } );
+                        let newObj = this.scene.getObjectByName( clone.originalOptions.name );
+                        
+                        console.log( newObj, "new Object" );
+                        let newClone = this.objManager.all[ newObj.id * this.scene.id ] = Object.assign( {}, clone );
 
                         clone = newClone;
                         m = newObj;
 
-                        console.log( m, "new mesh" );
+                        console.log( clone, "new Clone" );
                     }
+                
+                        if ( ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) ) {
+
+                            if ( /\,/.test( options.transition ) ) {
+
+                                const seperateTransitions = options.transition.slice().split(",");
+                                for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
+
+                                    const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
+                                    if ( opts !== undefined ) {
+
+                                       this.createTransition( this.scene.id, m, Object.assign( {}, opts, playOnce ) );
+                                    }
+                                }
+                            } else {
+                                const opts = this.optionParser( options.transition , options, "animation" );
+                                console.log( opts, "options parsed" );
+                                if ( opts !== undefined ) {
+                                       this.createTransition( this.scene.id, m, Object.assign( {}, opts, playOnce ) );
+                                }
+                            }
+
+                        } 
+
 
                     if ( options.color !== undefined ) {
                         const color = this.typeChecker( options, "color", defaultOptions );
@@ -1090,48 +1138,64 @@ const framework = {
                         m.material.needsUpdate = false;
                     }
 
-                        // transitions are animations that aren't remembered by the timeline, they always play once
-                        if ( ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) ) {
-
-                            if ( /\,/.test( options.transition ) ) {
-
-                                const seperateTransitions = options.transition.slice().split(",");
-                                for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
-
-                                    const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
-                                    if ( opts !== undefined ) {
-
-                                       this.createTransition( this.scene.id, m, Object.assign( {}, opts, playOnce ) );
-                                    }
-                                }
-                            } else {
-                                const opts = this.optionParser( options.transition , options, "animation" );
-                                if ( opts !== undefined ) {
-                                       this.createTransition( this.scene.id, m, opts, playOnce );
-                                }
-                            }
-
-                        } 
+                        
                     
                     if ( options.position !== undefined ) {
                         
                         //equivalent to teleporting your object
                         
-                        const position = this.optionParser( options.position, options, "default" );
-                        console.log( position );
                         if ( clone.transitions.position !== undefined ) {
+                            //changes the color, but if transition is in place, color will smoothly change to next one
+                            const type = "position";
                             
+                            console.log( type );
+                            const originalOptions = {
+                                animationDuration: clone.transitions[ type ].duration,
+                                animationDelay: clone.transitions[ type ].delay,
+                                animationType: type,
+                                loop: clone.transitions[ type ].loop,
+                                animationDirection: clone.transitions[ type ].direction,
+                                
+                            };
+                            
+                            this.createTransition( this.scene.id, m, Object.assign( {}, options, originalOptions ) );
+
                         }  else {
-                            
+                            const position = this.typeChecker( options, "position", defaultOptions );
+                            mesh.position.set( position[ 0 ], position[ 1 ], position[ 2 ] );
                         }
                     }
-                }
-        } catch ( err ) { 
-            console.warn( err.message );
-        }
-            
+                
+                if ( options.size !== undefined || options.scale !== undefined ) {
+                    if ( clone.transitions.scale !== undefined ) {
+                            //changes the color, but if transition is in place, color will smoothly change to next one
+                            const type = "scale";
+                            
+                            console.log( type );
+                            const originalOptions = {
+                                animationDuration: clone.transitions[ type ].duration,
+                                animationDelay: clone.transitions[ type ].delay,
+                                animationType: type,
+                                loop: clone.transitions[ type ].loop,
+                                animationDirection: clone.transitions[ type ].direction,
+                                
+                            };
+                            
+                            this.createTransition( this.scene.id, m, Object.assign( {}, options, originalOptions ) );
 
-    }
+                        }  else {
+                            const scale = this.typeChecker( options, "scale", defaultOptions );
+                            mesh.scale.set( scale[ 0 ], scale[ 1 ], scale[ 2 ] );
+                        }
+                }
+                
+                }
+            }
+            catch ( err ) {
+        
+                console.error( err.message );
+            }
+        }
 };
 Object.assign( WorldController.prototype, framework );
 

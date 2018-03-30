@@ -45497,7 +45497,7 @@ module.exports = emptyObject;
 /* 6 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":0.01,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationKeframes":{},"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"orthographic","cameraNear":-100,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#F9AE0D","sunIntensity":1,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 7 */
@@ -63475,7 +63475,7 @@ module.exports = camelize;
 
 
 Object.defineProperty(exports, "__esModule", {
-  value: true
+    value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -63512,111 +63512,115 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 var World = function (_Component) {
-  _inherits(World, _Component);
+    _inherits(World, _Component);
 
-  function World(props) {
-    _classCallCheck(this, World);
+    function World(props) {
+        _classCallCheck(this, World);
 
-    var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
+        var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
 
-    _this.world = new _WorldController2.default(_this.props.config);
-    _this.state = {
-      message: "click the screen to start.",
-      currentUUID: _this.world.scene.uuid
-    };
-    return _this;
-  }
-
-  _createClass(World, [{
-    key: "createLinks",
-    value: function createLinks(links) {
-      var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
-      var domLinks = [];
-      for (var i = 0; i < links.length; i++) {
-        var match = links[i].match(pattern);
-        domLinks.push(_react2.default.createElement(
-          "a",
-          { href: links[i], key: match[0] },
-          _react2.default.createElement(
-            "span",
-            { className: "fa-stack fa-lg" },
-            _react2.default.createElement("i", { className: "fa fa-square-o fa-stack-2x" }),
-            _react2.default.createElement("i", { className: "fa fa-" + match[0] + " fa-stack-1x" })
-          ),
-          " "
-        ));
-      }
-      return _react2.default.createElement(
-        "div",
-        { className: "links" },
-        " domLinks "
-      );
+        _this.world = new _WorldController2.default(_this.props.config);
+        _this.state = {
+            message: "click the screen to start.",
+            currentUUID: _this.world.scene.uuid
+        };
+        return _this;
     }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var _this2 = this;
 
-      _progressEmitter2.default.on("world-message", function (e) {
-        _this2.setState({ message: e.message });
-      });
-      this.world.start();
+    _createClass(World, [{
+        key: "createLinks",
+        value: function createLinks(links) {
+            var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
+            var domLinks = [];
+            for (var i = 0; i < links.length; i++) {
+                var match = links[i].match(pattern);
+                domLinks.push(_react2.default.createElement(
+                    "a",
+                    { href: links[i], key: match[0] },
+                    _react2.default.createElement(
+                        "span",
+                        { className: "fa-stack fa-lg" },
+                        _react2.default.createElement("i", { className: "fa fa-square-o fa-stack-2x" }),
+                        _react2.default.createElement("i", { className: "fa fa-" + match[0] + " fa-stack-1x" })
+                    ),
+                    " "
+                ));
+            }
+            return _react2.default.createElement(
+                "div",
+                { className: "links" },
+                " domLinks "
+            );
+        }
+    }, {
+        key: "componentDidMount",
+        value: function componentDidMount() {
+            var _this2 = this;
 
-      setTimeout(function () {
-        _this2.world.find("book").then(function (book) {
+            _progressEmitter2.default.on("world-message", function (e) {
+                _this2.setState({ message: e.message });
+            });
+            this.world.start();
 
-          book.update({ texture: "imgs/harrypotter.jpg" });
-        });
-        // returns a copied instance of what the book is at that moment. Read only
-        //such as the color, id, name, x, y, z, width, height, etc
-        //includes any other properties you give it outside the basics like author and year
+            setTimeout(function () {
+                _this2.world.find("book").then(function (book) {
 
-        //notice the ids are the same as the item was simply updated, rather than replaced
-        //however, for advanced changes the id may not stay the same
+                    book.update({ texture: "imgs/harrypotter.jpg" });
+                });
+                // returns a copied instance of what the book is at that moment. Read only
+                //such as the color, id, name, x, y, z, width, height, etc
+                //includes any other properties you give it outside the basics like author and year
 
-      }, 6000);
+                //notice the ids are the same as the item was simply updated, rather than replaced
+                //however, for advanced changes the id may not stay the same
 
-      setTimeout(function () {
-        _this2.world.find("book").then(function (book) {
+            }, 6000);
 
-          book.update({ color: "red", material: "lambert", position: "0 300 0" });
-        });
-        // returns a copied instance of what the book is at that moment. Read only
-        //such as the color, id, name, x, y, z, width, height, etc
-        //includes any other properties you give it outside the basics like author and year
+            setTimeout(function () {
+                _this2.world.find("book").then(function (book) {
 
-        //notice the ids are the same as the item was simply updated, rather than replaced
-        //however, for advanced changes the id may not stay the same
+                    book.update({ color: "red", material: "lambert", position: "0 300 0", transition: "position 10s" });
+                });
+                // returns a copied instance of what the book is at that moment. Read only
+                //such as the color, id, name, x, y, z, width, height, etc
+                //includes any other properties you give it outside the basics like author and year
 
-        console.log(_this2.world.scene, "this is the world scene");
-      }, 10000);
+                //notice the ids are the same as the item was simply updated, rather than replaced
+                //however, for advanced changes the id may not stay the same
 
-      setTimeout(function () {
+                console.log(_this2.world.scene, "this is the world scene");
+            }, 10000);
 
-        console.log(_this2.world.scene, "this is the world scene");
-      }, 14000);
-    }
-  }, {
-    key: "componentWillReceiveProps",
-    value: function componentWillReceiveProps(nextProps) {
-      console.log(nextProps);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var config = this.props.config;
+            setTimeout(function () {
+                _this2.world.find("book").then(function (book) {
 
-      return _react2.default.createElement(
-        "div",
-        null,
-        config.hasOwnProperty("menu") && config.menu.links !== undefined ? this.createLinks(config.menu.links) : null,
-        _react2.default.createElement("canvas", null),
-        _react2.default.createElement(_Progress2.default, { message: this.state.message })
-      );
-    }
-  }]);
+                    book.update({ color: "red", scale: 20, transition: "scale 5s" });
+                });
 
-  return World;
+                console.log(_this2.world.scene, "this is the world scene");
+            }, 14000);
+        }
+    }, {
+        key: "componentWillReceiveProps",
+        value: function componentWillReceiveProps(nextProps) {
+            console.log(nextProps);
+        }
+    }, {
+        key: "render",
+        value: function render() {
+            var config = this.props.config;
+
+            return _react2.default.createElement(
+                "div",
+                null,
+                config.hasOwnProperty("menu") && config.menu.links !== undefined ? this.createLinks(config.menu.links) : null,
+                _react2.default.createElement("canvas", null),
+                _react2.default.createElement(_Progress2.default, { message: this.state.message })
+            );
+        }
+    }]);
+
+    return World;
 }(_react.Component);
 
 exports.default = World;
@@ -64167,11 +64171,9 @@ var framework = {
         var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
         //takes the transition type and keeps track of any 
-        console.log(mesh, "in the function createTransition");
         var clone = this.objManager.all[mesh.id * id];
-        console.log(clone, "clone in function");
         // transition options parse over options for animation instead of adding duplicate attributes for transition
-        var type = "color";
+        var type = options.animationType !== undefined ? options.animationType : "default";
         switch (type) {
 
             case "color":
@@ -64179,9 +64181,29 @@ var framework = {
 
                 clone.transitions.color = (0, _animejs2.default)(this.createAnime(mesh, Object.assign({}, options, { animationKeyframes: { color: [{ r: color.r, g: color.g, b: color.b }] } })));
 
-                console.log(clone, "end of function");
+                break;
+
+            case "position":
+
+                var position = this.typeChecker(options, "position", _defaults2.default);
+                console.log(clone, " in the position transition");
+                clone.transitions.position = (0, _animejs2.default)(this.createAnime(mesh, Object.assign({}, options, { animationKeyframes: { position: [{ x: position[0], y: position[1], z: position[2] }] } })));
+
+                break;
+
+            case "scale":
+
+                var scale = this.typeChecker(options, "scale", _defaults2.default);
+                console.log(clone, " in the position transition");
+                clone.transitions.scale = (0, _animejs2.default)(this.createAnime(mesh, Object.assign({}, options, { animationKeyframes: { scale: [{ scaleX: scale[0], scaleY: scale[1], scaleZ: scale[2] }] } })));
+
+                console.log(clone.transitions, "chosen");
+
                 break;
             default:
+
+                console.log("going to default");
+                return;
         }
     },
     decideTimelineOrder: function decideTimelineOrder(id, animation, mesh) {
@@ -64311,7 +64333,7 @@ var framework = {
             fov = opt.fov !== undefined ? opt.fov : _defaults2.default.cameraFov,
             far = opt.far !== undefined ? opt.far : _defaults2.default.cameraFar,
             type = opt.type !== undefined ? opt.type : _defaults2.default.cameraType,
-            near = opt.near !== undefined ? opt.near : .01; //cant put floats in defaultOptions so we will leave them here.
+            near = opt.near !== undefined ? opt.near : _defaults2.default.cameraNear; //cant put floats in defaultOptions so we will leave them here.
 
         switch (type.toLowerCase()) {
             case "perspective":
@@ -64389,11 +64411,10 @@ var framework = {
 
                     case "color":
 
-                        return (0, _colorInterpreter2.default)(target.trim());
+                        return (0, _colorInterpreter2.default)(target);
 
                     case "typeHandler":
-
-                        console.log(target.trim());
+                        break;
 
                     default:
 
@@ -65087,6 +65108,7 @@ var framework = {
 
 
         try {
+
             if (mesh.type === "Mesh") {
 
                 //@param m stands for mesh, it may change during update
@@ -65096,21 +65118,49 @@ var framework = {
 
                 var m = mesh;
 
+                // transitions are animations that aren't remembered by the timeline, they always play once
+
                 if (options.material !== undefined) {
 
                     if (typeof options.material !== "string") throw new TypeError("material needs to be a string");
-                    this.setupMesh(Object.assign({}, clone.originalOptions, options), this.scene.id);
 
+                    var filteredOptions = Object.assign({}, options, {
+                        position: clone.transitions.position !== undefined || options.transition !== undefined ? [m.position.x, m.position.y, m.position.z] : this.typeChecker(options, "position", _defaults2.default),
+                        color: clone.transitions.color !== undefined || options.transition !== undefined ? [m.material.color.r, m.material.color.g, m.material.color.b] : this.typeChecker(options, "color", _defaults2.default)
+                    });
+                    this.setupMesh(Object.assign({}, clone.originalOptions, filteredOptions), this.scene.id);
+                    this.scene.remove(mesh);
                     var newObj = this.scene.getObjectByName(clone.originalOptions.name);
 
-                    this.scene.remove(mesh);
-                    var newClone = this.objManager.all[newObj.id * this.scene.id];
-                    newClone = Object.assign({}, clone, { mesh: newObj });
+                    console.log(newObj, "new Object");
+                    var newClone = this.objManager.all[newObj.id * this.scene.id] = Object.assign({}, clone);
 
                     clone = newClone;
                     m = newObj;
 
-                    console.log(m, "new mesh");
+                    console.log(clone, "new Clone");
+                }
+
+                if (options.hasOwnProperty("transition") && options.transition !== undefined && typeof options.transition === "string") {
+
+                    if (/\,/.test(options.transition)) {
+
+                        var seperateTransitions = options.transition.slice().split(",");
+                        for (var x = 0; x <= seperateTransitions.length - 1; x++) {
+
+                            var opts = this.optionParser(seperateTransitions[x].trim(), options, "animation");
+                            if (opts !== undefined) {
+
+                                this.createTransition(this.scene.id, m, Object.assign({}, opts, playOnce));
+                            }
+                        }
+                    } else {
+                        var _opts3 = this.optionParser(options.transition, options, "animation");
+                        console.log(_opts3, "options parsed");
+                        if (_opts3 !== undefined) {
+                            this.createTransition(this.scene.id, m, Object.assign({}, _opts3, playOnce));
+                        }
+                    }
                 }
 
                 if (options.color !== undefined) {
@@ -65147,39 +65197,56 @@ var framework = {
                     m.material.needsUpdate = false;
                 }
 
-                // transitions are animations that aren't remembered by the timeline, they always play once
-                if (options.hasOwnProperty("transition") && options.transition !== undefined && typeof options.transition === "string") {
-
-                    if (/\,/.test(options.transition)) {
-
-                        var seperateTransitions = options.transition.slice().split(",");
-                        for (var x = 0; x <= seperateTransitions.length - 1; x++) {
-
-                            var opts = this.optionParser(seperateTransitions[x].trim(), options, "animation");
-                            if (opts !== undefined) {
-
-                                this.createTransition(this.scene.id, m, Object.assign({}, opts, playOnce));
-                            }
-                        }
-                    } else {
-                        var _opts3 = this.optionParser(options.transition, options, "animation");
-                        if (_opts3 !== undefined) {
-                            this.createTransition(this.scene.id, m, _opts3, playOnce);
-                        }
-                    }
-                }
-
                 if (options.position !== undefined) {
 
                     //equivalent to teleporting your object
 
-                    var position = this.optionParser(options.position, options, "default");
-                    console.log(position);
-                    if (clone.transitions.position !== undefined) {} else {}
+                    if (clone.transitions.position !== undefined) {
+                        //changes the color, but if transition is in place, color will smoothly change to next one
+                        var _type = "position";
+
+                        console.log(_type);
+                        var _originalOptions = {
+                            animationDuration: clone.transitions[_type].duration,
+                            animationDelay: clone.transitions[_type].delay,
+                            animationType: _type,
+                            loop: clone.transitions[_type].loop,
+                            animationDirection: clone.transitions[_type].direction
+
+                        };
+
+                        this.createTransition(this.scene.id, m, Object.assign({}, options, _originalOptions));
+                    } else {
+                        var position = this.typeChecker(options, "position", _defaults2.default);
+                        mesh.position.set(position[0], position[1], position[2]);
+                    }
+                }
+
+                if (options.size !== undefined || options.scale !== undefined) {
+                    if (clone.transitions.scale !== undefined) {
+                        //changes the color, but if transition is in place, color will smoothly change to next one
+                        var _type2 = "scale";
+
+                        console.log(_type2);
+                        var _originalOptions2 = {
+                            animationDuration: clone.transitions[_type2].duration,
+                            animationDelay: clone.transitions[_type2].delay,
+                            animationType: _type2,
+                            loop: clone.transitions[_type2].loop,
+                            animationDirection: clone.transitions[_type2].direction
+
+                        };
+
+                        this.createTransition(this.scene.id, m, Object.assign({}, options, _originalOptions2));
+                    } else {
+                        var scale = this.typeChecker(options, "scale", _defaults2.default);
+                        mesh.scale.set(scale[0], scale[1], scale[2]);
+                    }
                 }
             }
         } catch (err) {
-            console.warn(err.message);
+
+            console.error(err.message);
         }
     }
 };
@@ -66261,7 +66328,7 @@ function parseKeyframes(str) {
 function determineTarget(type, mesh) {
 
     try {
-        console.log(type, "the type");
+
         switch (type) {
 
             case "r":

@@ -12,7 +12,7 @@ function parseKeyframes( str ) {
 function determineTarget( type, mesh ) {
     
     try {
-        console.log( type, "the type" );
+        
         switch( type ) {
                 
             case "r" :

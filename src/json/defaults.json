@@ -18,7 +18,7 @@
     "cameraFar" : 10000,
     "cameraFov" : 60,
     "cameraType" : "orthographic",
-    "cameraNear" : 0.01,
+    "cameraNear" : -100,
     "layoutLimit" : [ 50, 50, 50 ],
     "emissiveColor" : "yellow",
     "fogDensity" : 0.0003,
