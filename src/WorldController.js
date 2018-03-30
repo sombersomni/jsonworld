@@ -173,9 +173,13 @@ const framework = {
         }
     },
     decideTimelineOrder : function (id, animation, mesh, options = {} ) {
+        
+        console.log( animation, "animation inside deciscion" );
         try {
             if ( mesh.id !== undefined ) {
+                console.log( id , mesh.id, "id and mesh id" );
                 let obj = this.objManager.all[ mesh.id * id ];
+                console.log( obj, "this is the obj manager clone" );
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
                     for ( var i = 0; i <= animation.length - 1; i++ ) {
@@ -188,9 +192,15 @@ const framework = {
                     this.animationManager.all[ mesh.id * id ] = animation;
                     
                 } else {
-                      
-                       obj.animeTimeline.add( animation );
-                     console.log( obj );
+        
+                       this.objManager.all[ mesh.id * id ].animeTimeline.add( animation );
+                    console.log( obj, "after attachment" );
+                     
+                }
+                
+                if ( obj.animeTimeline.children !== undefined ) {
+                    console.log( "has children" );
+                    obj.animeTimeline.children[ 0 ].play();
                 }
                 
             } else throw new Error( "you need a mesh id to create animation timelines " );
@@ -302,7 +312,7 @@ const framework = {
                 camera = new THREE.PerspectiveCamera( fov, aspectRatio, near, far );
                 break;
             case "orthographic":
-                camera = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, near, far);
+                camera = new THREE.OrthographicCamera( width / -1.5, width / 1.5, height / 1.5, height / -1.5, near, far);
                 break;
             default:
                 console.warn("this camera type is not acceptable");
@@ -494,7 +504,7 @@ const framework = {
         
                 //for testing purposes we keep the whole timeline of the mesh on a loop so we can see all the animations repeat in sequence
         
-        
+                console.log( "set up for animation has begun" );
                 if ( options.hasOwnProperty( "animation" ) && options.animation !== undefined && typeof options.animation === "string" ) {
 
                     if ( /\,/.test( options.animation ) ) {
@@ -509,6 +519,7 @@ const framework = {
                         }
                     } else {
                         const opts = this.optionParser( options.animation , animationOptions, "animation" );
+                        console.log( opts, "animation parsed" );
                         if ( opts !== undefined ) {
                                this.decideTimelineOrder( id, this.createAnime( mesh, opts ), mesh, opts );
                         }
@@ -643,13 +654,15 @@ const framework = {
                 
                 this.setupWorldClone( sI, mesh, options );
                 
-                let newMesh = mesh;
-                
+                console.log( options, "right before setup Animation for Mesh" );
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    newMesh = this.setupAnimationForMesh( sI, mesh, options );
-                } 
+                    this.scenes[sI].add( this.setupAnimationForMesh( sI, mesh, options ) );
+                } else {
+                    this.scenes[sI].add( mesh );
+                }
                 
+                /*
                 if ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) {
                     
                     if ( /\,/.test( options.transition ) ) {
@@ -670,8 +683,7 @@ const framework = {
                         }
                     }
                 }
-                
-                this.scenes[sI].add( newMesh );
+                */
             }
 
             return;
@@ -720,7 +732,7 @@ const framework = {
             //creates the sun light for the whole world
             const sunlight = new THREE.DirectionalLight( sunColor, intensity );
             sunlight.name = "sunlight";
-            sunlight.position.set( 0, 100000,  0 );
+            sunlight.position.set( 0, 100000,  100000 );
             
             if ( this.options.hasOwnProperty( "enableShadows" ) && this.options.enableShadows ) {
                 sunlight.castShadow = true;
@@ -732,8 +744,10 @@ const framework = {
                 const shadowCamera = new THREE.CameraHelper( sunlight.shadow.camera );
                 this.scenes[ scene.id ].add( shadowCamera );
             }
-            this.scenes[ scene.id ].add( sunlight );
             
+            sunlight.lookAt( new THREE.Vector3() );
+            this.scenes[ scene.id ].add( sunlight );
+
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
                     if ( Object.keys( o ).length > 0 ) {
@@ -880,7 +894,7 @@ const framework = {
             
             let mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
             console.log( mat.color, "material in world clone for " + mesh.name );
-
+            console.log( mesh.id, id, "mesh.id and id in clone construction" );
             this.objManager.all[ mesh.id * id ] =  {
                 worldProps: {
                     health: 100,
@@ -1091,10 +1105,7 @@ const framework = {
     runAnimations: function ( time ) {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
-            
-            if ( name === "book" ) {
-                obj.rotation.y += 0.01;
-            }
+     
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
                 obj.target.position.clone( this.scene.position );

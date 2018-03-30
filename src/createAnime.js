@@ -41,18 +41,18 @@ function determineTarget( type, mesh ) {
                     animProp: "opacity"
                     
                 };
-            case "rotationX" :
+            case "rotateX" :
                 return {
                     animTarget: "rotation",
                     animProp: "x",
                 };
 
-            case "rotationY" :
+            case "rotateY" :
                 return {
                     animTarget: "rotation",
                     animProp: "y",
                 };
-            case "rotationZ" :
+            case "rotateZ" :
                 return {
                     animTarget: "rotation",
                     animProp: "z",
@@ -296,9 +296,12 @@ export default function ( mesh, options = {} ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin-basic" :
-            
+            console.log(" spin basic workking" );
             newOptions.animTarget = "rotation";
-            newOptions.keyframes = { animProp: "y", value: ( Math.PI / 180 ) * defaultOptions.rotation };
+            
+            if ( newOptions.keyframes === undefined ) {
+                newOptions.keyframes = [ { animProp: "y", value: ( Math.PI / 180 ) * defaultOptions.rotation } ];
+            }
             
             return this.packAnimations( mesh, Object.assign( {}, newOptions ) );
             
