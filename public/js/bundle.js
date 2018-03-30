@@ -46126,7 +46126,10 @@ var config = {
         "scale": 10,
         "position": [100, 0, -60],
         "color": "white",
-        "transition": "color 2s"
+        "material": "basic",
+        "shadow": true,
+        "transition": "color 2s",
+        "texture": ["imgs/ball.jpg", "imgs/harrypotter.jpg", "imgs/ball.jpg", "imgs/harrypotter.jpg", "imgs/ball.jpg", "imgs/harrypotter.jpg"]
     }]
 
     /* 
@@ -63475,7 +63478,7 @@ module.exports = camelize;
 
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+	value: true
 });
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -63512,115 +63515,82 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
 var World = function (_Component) {
-    _inherits(World, _Component);
+	_inherits(World, _Component);
 
-    function World(props) {
-        _classCallCheck(this, World);
+	function World(props) {
+		_classCallCheck(this, World);
 
-        var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
+		var _this = _possibleConstructorReturn(this, (World.__proto__ || Object.getPrototypeOf(World)).call(this, props));
 
-        _this.world = new _WorldController2.default(_this.props.config);
-        _this.state = {
-            message: "click the screen to start.",
-            currentUUID: _this.world.scene.uuid
-        };
-        return _this;
-    }
+		_this.world = new _WorldController2.default(_this.props.config);
+		_this.state = {
+			message: "click the screen to start.",
+			currentUUID: _this.world.scene.uuid
+		};
+		return _this;
+	}
 
-    _createClass(World, [{
-        key: "createLinks",
-        value: function createLinks(links) {
-            var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
-            var domLinks = [];
-            for (var i = 0; i < links.length; i++) {
-                var match = links[i].match(pattern);
-                domLinks.push(_react2.default.createElement(
-                    "a",
-                    { href: links[i], key: match[0] },
-                    _react2.default.createElement(
-                        "span",
-                        { className: "fa-stack fa-lg" },
-                        _react2.default.createElement("i", { className: "fa fa-square-o fa-stack-2x" }),
-                        _react2.default.createElement("i", { className: "fa fa-" + match[0] + " fa-stack-1x" })
-                    ),
-                    " "
-                ));
-            }
-            return _react2.default.createElement(
-                "div",
-                { className: "links" },
-                " domLinks "
-            );
-        }
-    }, {
-        key: "componentDidMount",
-        value: function componentDidMount() {
-            var _this2 = this;
+	_createClass(World, [{
+		key: "createLinks",
+		value: function createLinks(links) {
+			var pattern = /(bandcamp|instagram|soundcloud|spotify|twitter|tumblr|youtube){1}/;
+			var domLinks = [];
+			for (var i = 0; i < links.length; i++) {
+				var match = links[i].match(pattern);
+				domLinks.push(_react2.default.createElement(
+					"a",
+					{ href: links[i], key: match[0] },
+					_react2.default.createElement(
+						"span",
+						{ className: "fa-stack fa-lg" },
+						_react2.default.createElement("i", { className: "fa fa-square-o fa-stack-2x" }),
+						_react2.default.createElement("i", { className: "fa fa-" + match[0] + " fa-stack-1x" })
+					),
+					" "
+				));
+			}
+			return _react2.default.createElement(
+				"div",
+				{ className: "links" },
+				" domLinks "
+			);
+		}
+	}, {
+		key: "componentDidMount",
+		value: function componentDidMount() {
+			var _this2 = this;
 
-            _progressEmitter2.default.on("world-message", function (e) {
-                _this2.setState({ message: e.message });
-            });
-            this.world.start();
+			_progressEmitter2.default.on("world-message", function (e) {
+				_this2.setState({ message: e.message });
+			});
+			this.world.start();
 
-            setTimeout(function () {
-                _this2.world.find("book").then(function (book) {
+			setTimeout(function () {
 
-                    book.update({ texture: "imgs/harrypotter.jpg" });
-                });
-                // returns a copied instance of what the book is at that moment. Read only
-                //such as the color, id, name, x, y, z, width, height, etc
-                //includes any other properties you give it outside the basics like author and year
+				console.log(_this2.world.scene);
+			}, 8000);
+		}
+	}, {
+		key: "componentWillReceiveProps",
+		value: function componentWillReceiveProps(nextProps) {
+			console.log(nextProps);
+		}
+	}, {
+		key: "render",
+		value: function render() {
+			var config = this.props.config;
 
-                //notice the ids are the same as the item was simply updated, rather than replaced
-                //however, for advanced changes the id may not stay the same
+			return _react2.default.createElement(
+				"div",
+				null,
+				config.hasOwnProperty("menu") && config.menu.links !== undefined ? this.createLinks(config.menu.links) : null,
+				_react2.default.createElement("canvas", null),
+				_react2.default.createElement(_Progress2.default, { message: this.state.message })
+			);
+		}
+	}]);
 
-            }, 6000);
-
-            setTimeout(function () {
-                _this2.world.find("book").then(function (book) {
-
-                    book.update({ color: "red", material: "lambert", position: "0 300 0", transition: "position 10s" });
-                });
-                // returns a copied instance of what the book is at that moment. Read only
-                //such as the color, id, name, x, y, z, width, height, etc
-                //includes any other properties you give it outside the basics like author and year
-
-                //notice the ids are the same as the item was simply updated, rather than replaced
-                //however, for advanced changes the id may not stay the same
-
-                console.log(_this2.world.scene, "this is the world scene");
-            }, 10000);
-
-            setTimeout(function () {
-                _this2.world.find("book").then(function (book) {
-
-                    book.update({ color: "red", scale: 20, transition: "scale 5s" });
-                });
-
-                console.log(_this2.world.scene, "this is the world scene");
-            }, 14000);
-        }
-    }, {
-        key: "componentWillReceiveProps",
-        value: function componentWillReceiveProps(nextProps) {
-            console.log(nextProps);
-        }
-    }, {
-        key: "render",
-        value: function render() {
-            var config = this.props.config;
-
-            return _react2.default.createElement(
-                "div",
-                null,
-                config.hasOwnProperty("menu") && config.menu.links !== undefined ? this.createLinks(config.menu.links) : null,
-                _react2.default.createElement("canvas", null),
-                _react2.default.createElement(_Progress2.default, { message: this.state.message })
-            );
-        }
-    }]);
-
-    return World;
+	return World;
 }(_react.Component);
 
 exports.default = World;
@@ -64577,131 +64547,150 @@ var framework = {
         var _this4 = this;
 
         var m = void 0,
-            mesh = void 0;
+            mesh = void 0,
+            multiMaterials = [];
         //@params sI - the index of the scene
         /*
         @params m - stands for material 
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-        m = this.createMaterial(options);
+        try {
 
-        if (options.count !== undefined && options.count > 1) {
-            var group = new THREE.Group();
-            for (var i = 0; i <= options.count - 1; i++) {
-                var g = this.createGeometry(options);
-                //create a grid to place each object correctly so no objects touch or collide 
+            if (options.texture instanceof Array) {
+                //if you get an array of textuers back, then we can pack them here
+                console.log(options, "before setupMesh begins");
+                options.texture.forEach(function (tex) {
 
-                mesh = this.gridMeshPosition(new THREE.Mesh(g, m), options, i);
+                    multiMaterials.push(_this4.createMaterial(Object.assign({}, options, { texture: tex })));
+                });
 
-                if (options.hasOwnProperty("shadow") && options.shadow === true) {
+                m = multiMaterials;
+            } else {
+
+                m = this.createMaterial(options);
+            }
+
+            console.log(multiMaterials, "multiMaterials should be full");
+
+            if (options.count !== undefined && options.count > 1) {
+                var group = new THREE.Group();
+                for (var _i = 0; _i <= options.count - 1; _i++) {
+                    var g = this.createGeometry(options);
+                    //create a grid to place each object correctly so no objects touch or collide 
+
+                    mesh = this.gridMeshPosition(new THREE.Mesh(g, m), options, _i);
+
+                    if (options.hasOwnProperty("shadow") && options.shadow === true) {
+                        mesh.receiveShadow = true;
+                        mesh.castShadow = true;
+                    }
+
+                    group.add(mesh);
+                }
+                group.name = options.name !== undefined ? options.name : "bundle";
+
+                this.setupWorldClone(sI, group);
+
+                if (options.animation !== undefined || options.animationType !== undefined) {
+
+                    this.scenes[sI].add(this.setupAnimationForMesh(sI, group, options));
+                } else {
+
+                    this.scenes[sI].add(group);
+                }
+            } else {
+                // @param g stands for geometry
+                var _g = this.createGeometry(options);
+
+                mesh = new THREE.Mesh(_g, m);
+
+                if (options.hasOwnProperty("shadow") && options.shadow == true) {
+
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
 
-                group.add(mesh);
-            }
-            group.name = options.name !== undefined ? options.name : "bundle";
+                //accepts a gradient that is either linear or radial
+                if (/gradient/.test(options.color)) {
 
-            this.setupWorldClone(sI, group);
+                    if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
+                        mesh.material.needsUpdate = true;
+                        var faceIndices = ["a", "b", "c"];
+                        for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
 
-            if (options.animation !== undefined || options.animationType !== undefined) {
+                            mesh.material.vertexColors = THREE.VertexColors;
 
-                this.scenes[sI].add(this.setupAnimationForMesh(sI, group, options));
-            } else {
-
-                this.scenes[sI].add(group);
-            }
-        } else {
-
-            var _g = this.createGeometry(options);
-            mesh = new THREE.Mesh(_g, m);
-
-            if (options.hasOwnProperty("shadow") && options.shadow == true) {
-
-                mesh.receiveShadow = true;
-                mesh.castShadow = true;
-            }
-
-            /*
-            if ( /gradient/.test( options.color ) ) {
-                            
-                if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
-                    mesh.material.needsUpdate = true;
-                    const faceIndices = [ "a", "b", "c" ];
-                    for ( let a = 0; a <= mesh.geometry.faces.length - 1; a++ ) {
-                        
-                        
-                        mesh.material.vertexColors = THREE.VertexColors;
-                        
-                        let f = mesh.geometry.faces[ a ];
-                        for ( var i = 0; i <= faceIndices.length - 1; i++ ) {
-                            let vertexIndex = f[ faceIndices[ i ] ];
-                            const p = mesh.geometry.vertices[vertexIndex];
-                            console.log( vertexIndex );
-                            let color = new THREE.Color( 0xffffff );
-                            console.log( p );
-                            mesh.geometry.faces[a].vertexColors[i] = color.setRGB( a / mesh.geometry.faces.length, 1, 1 );
-                            
+                            var f = mesh.geometry.faces[a];
+                            for (var i = 0; i <= faceIndices.length - 1; i++) {
+                                var vertexIndex = f[faceIndices[i]];
+                                var p = mesh.geometry.vertices[vertexIndex];
+                                console.log(vertexIndex);
+                                var color = new THREE.Color(0xffffff);
+                                console.log(p);
+                                mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
+                            }
                         }
-                    }
-                  }
-            
-            } */
-
-            mesh.name = options.name !== undefined ? options.name : "";
-
-            if (options.debug === true) {
-                var debugVerts = new THREE.Group();
-                mesh.geometry.vertices.forEach(function (v, i) {
-
-                    var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
-                    var geo = _this4.createGeometry({ type: "sphere", size: 0.5, segments: 8 });
-                    var debugMesh = new THREE.Mesh(geo, material);
-                    //copies the position of this vertice
-                    debugMesh.position.set(v.x, v.y, v.z);
-                    debugVerts.add(debugMesh);
-                });
-
-                mesh.add(debugVerts);
-            }
-
-            mesh = this.setObjectTransforms(mesh, options);
-
-            this.setupWorldClone(sI, mesh, options);
-
-            var newMesh = mesh;
-            console.log(newMesh);
-            if (options.animation !== undefined || options.animationType !== undefined) {
-
-                newMesh = this.setupAnimationForMesh(sI, mesh, options);
-            }
-
-            if (options.hasOwnProperty("transition") && options.transition !== undefined && typeof options.transition === "string") {
-
-                if (/\,/.test(options.transition)) {
-
-                    var seperateTransitions = options.transition.slice().split(",");
-                    for (var x = 0; x <= seperateTransitions.length - 1; x++) {
-
-                        var opts = this.optionParser(seperateTransitions[x].trim(), options, "animation");
-                        if (opts !== undefined) {
-                            this.createTransition(sI, newMesh, Object.assign({}, opts, { autoplay: true, loop: 1 }));
-                        }
-                    }
-                } else {
-
-                    var _opts2 = this.optionParser(options.transition, options, "animation");
-                    if (_opts2 !== undefined) {
-                        this.createTransition(sI, newMesh, Object.assign({}, _opts2, { autoplay: true, loop: 1 }));
                     }
                 }
+
+                console.log(options.name, "current name");
+                mesh.name = options.name !== undefined ? options.name : "";
+
+                if (options.debug === true) {
+                    var debugVerts = new THREE.Group();
+                    mesh.geometry.vertices.forEach(function (v, i) {
+
+                        var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
+                        var geo = _this4.createGeometry({ type: "sphere", size: 0.5, segments: 8 });
+                        var debugMesh = new THREE.Mesh(geo, material);
+                        //copies the position of this vertice
+                        debugMesh.position.set(v.x, v.y, v.z);
+                        debugVerts.add(debugMesh);
+                    });
+
+                    mesh.add(debugVerts);
+                }
+
+                mesh = this.setObjectTransforms(mesh, options);
+
+                this.setupWorldClone(sI, mesh, options);
+
+                var newMesh = mesh;
+
+                if (options.animation !== undefined || options.animationType !== undefined) {
+
+                    newMesh = this.setupAnimationForMesh(sI, mesh, options);
+                }
+
+                if (options.hasOwnProperty("transition") && options.transition !== undefined && typeof options.transition === "string") {
+
+                    if (/\,/.test(options.transition)) {
+
+                        var seperateTransitions = options.transition.slice().split(",");
+                        for (var x = 0; x <= seperateTransitions.length - 1; x++) {
+
+                            var opts = this.optionParser(seperateTransitions[x].trim(), options, "animation");
+                            if (opts !== undefined) {
+                                this.createTransition(sI, newMesh, Object.assign({}, opts, { autoplay: true, loop: 1 }));
+                            }
+                        }
+                    } else {
+
+                        var _opts2 = this.optionParser(options.transition, options, "animation");
+                        if (_opts2 !== undefined) {
+                            this.createTransition(sI, newMesh, Object.assign({}, _opts2, { autoplay: true, loop: 1 }));
+                        }
+                    }
+                }
+
+                this.scenes[sI].add(newMesh);
             }
 
-            this.scenes[sI].add(newMesh);
+            return;
+        } catch (err) {
+            console.error(err.message);
         }
-
-        return;
     },
     setObjectTransforms: function setObjectTransforms(mesh) {
         var _this5 = this;
@@ -64774,7 +64763,7 @@ var framework = {
             if (options instanceof Array) {
                 options.forEach(function (o) {
                     if (Object.keys(o).length > 0) {
-                        if (o.hasOwnProperty("texture") && /[jpg|png|gif]{1}$/.test(o.texture)) {
+                        if (o.hasOwnProperty("texture") && typeof o.texture === "string" && /[jpg|png|gif]{1}$/.test(o.texture)) {
 
                             new THREE.TextureLoader().load(o.texture, function (texture) {
 
@@ -64782,7 +64771,30 @@ var framework = {
                                     texture: texture });
                                 _this7.setupMesh(o, scene.id);
                             });
+                        } else if (o.hasOwnProperty("texture") && o.texture instanceof Array) {
+                            var promisePack = [];
+
+                            o.texture.forEach(function (url) {
+                                promisePack.push(new Promise(function (res, rej) {
+
+                                    new THREE.TextureLoader().load(url, function (tex) {
+
+                                        res(tex);
+                                    }, undefined, function (err) {
+
+                                        console.error(err.message);
+                                        rej(err);
+                                    });
+                                }));
+                            });
+
+                            Promise.all(promisePack).then(function (textures) {
+
+                                console.log(textures, "after promise");
+                                _this7.setupMesh(Object.assign({}, o, { texture: textures }), scene.id);
+                            });
                         } else {
+
                             _this7.setupMesh(o, scene.id);
                         }
                     }
@@ -64797,6 +64809,28 @@ var framework = {
 
                         options = Object.assign({}, options, { size: options.size !== undefined ? options.size : [texture.image.naturalWidth / 2, texture.image.naturalHeight / 2, 0],
                             texture: texture });
+                    });
+                } else if (options.hasOwnProperty("texture") && options.texture instanceof Array) {
+                    var promisePack = [];
+
+                    options.texture.forEach(function (url) {
+                        promisePack.push(new Promise(function (res, rej) {
+
+                            new THREE.TextureLoader().load(url, function (tex) {
+
+                                res(tex);
+                            }, undefined, function (err) {
+
+                                console.error(err.message);
+                                rej(err);
+                            });
+                        }));
+                    });
+
+                    Promise.all(promisePack).then(function (textures) {
+
+                        console.log(textures, "after promise");
+                        _this7.setupMesh(Object.assign({}, options, { texture: textures }), scene.id);
                     });
                 } else {
                     _this7.setupMesh(options, scene.id);
@@ -64941,7 +64975,6 @@ var framework = {
             }
         }
 
-        console.log(this.scenes);
         var preloaderPromise = this.createPreloader(this.scene.id, this.options.preloader !== undefined ? this.options.preloader : _defaults2.default.preloader);
 
         if (this.options.hasOwnProperty("sounds") && this.options.sounds !== undefined) {
@@ -65060,6 +65093,9 @@ var framework = {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
+            if (name === "book") {
+                obj.rotation.y += 0.01;
+            }
             if (/Light/.test(obj.type)) {
                 //checks for light objects
                 obj.target.position.clone(_this10.scene.position);
@@ -66803,11 +66839,12 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+    console.log(options, "inside createMaterial");
     var color = options.color !== undefined ? this.optionParser(options.color, undefined, "color") : new THREE.Color(),
         emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color(_defaults2.default.emissiveColor),
         emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
         material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default",
-        map = options.texture !== undefined || options.texture !== "none" ? options.texture : null,
+        map = options.texture !== undefined && options.texture instanceof THREE.Texture ? options.texture : null,
         overdraw = options.overdraw !== undefined ? options.overdraw : _defaults2.default.overdraw,
         roughness = options.roughness !== undefined ? options.roughness : _defaults2.default.roughness,
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
@@ -66826,6 +66863,8 @@ exports.default = function () {
         side: side,
         transparent: transparent
     };
+
+    console.log(matOpts, "ending material");
     switch (material) {
         case "basic":
             return new THREE.MeshBasicMaterial(Object.assign({}, matOpts));

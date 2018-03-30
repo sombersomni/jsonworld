@@ -521,14 +521,37 @@ const framework = {
                 return mesh;
     },
     setupMesh: function ( options, sI ) {
-        let m, mesh;
+        let m, mesh, multiMaterials = [];
         //@params sI - the index of the scene
         /*
         @params m - stands for material 
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-                m = this.createMaterial( options );
+        try{
+                
+                if ( options.texture instanceof Array ) {
+                    //if you get an array of textuers back, then we can pack them here
+                    console.log( options, "before setupMesh begins" );
+                    options.texture.forEach( tex => {
+                        
+                        multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : tex } ) ) );
+                        
+                    } );
+                    
+                    m = multiMaterials;
+                    
+                } else {
+                    
+                    m = this.createMaterial( options );
+                }
+            
+                console.log( multiMaterials, "multiMaterials should be full" );
+            
+                
+            
+                
+               
         
                 if ( options.count !== undefined && options.count > 1 ) {
                 const group = new THREE.Group();
@@ -557,8 +580,9 @@ const framework = {
                     this.scenes[sI].add( group );
                 }
             } else {
-                
+                // @param g stands for geometry
                 const g = this.createGeometry( options );
+                
                 mesh = new THREE.Mesh( g, m );
                 
                 if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
@@ -567,7 +591,7 @@ const framework = {
                     mesh.castShadow = true;
                 }
                 
-                /*
+                //accepts a gradient that is either linear or radial
                 if ( /gradient/.test( options.color ) ) {
                                 
                     if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
@@ -592,8 +616,9 @@ const framework = {
 
                     }
                 
-                } */
+                } 
                 
+                console.log( options.name, "current name" );
                 mesh.name = options.name !== undefined ? options.name : "";
                 
                 if ( options.debug === true ) {
@@ -618,7 +643,7 @@ const framework = {
                 this.setupWorldClone( sI, mesh, options );
                 
                 let newMesh = mesh;
-                console.log( newMesh );
+                
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
                     newMesh = this.setupAnimationForMesh( sI, mesh, options );
@@ -649,6 +674,12 @@ const framework = {
             }
 
             return;
+            
+        } catch ( err ) {
+            console.error( err.message );
+        }
+        
+            
     },
     setObjectTransforms : function( mesh, options = {} ) {
         
@@ -705,7 +736,7 @@ const framework = {
             if (options instanceof Array) {
                 options.forEach( ( o ) => {
                     if ( Object.keys( o ).length > 0 ) {
-                        if ( o.hasOwnProperty( "texture" ) && /[jpg|png|gif]{1}$/.test( o.texture ) ) {
+                        if ( o.hasOwnProperty( "texture" ) && typeof o.texture === "string" && /[jpg|png|gif]{1}$/.test( o.texture ) ) {
                             
                             new THREE.TextureLoader().load( o.texture, ( texture ) => {
                                 
@@ -714,9 +745,35 @@ const framework = {
                                 this.setupMesh( o, scene.id ); 
                             } );
                             
-                        } else {
-                            this.setupMesh( o, scene.id ); 
-                        }
+                        } 
+                        else if ( o.hasOwnProperty( "texture" ) && o.texture instanceof Array ) {
+                            let promisePack = [];
+                            
+                            o.texture.forEach( url => {
+                                promisePack.push( new Promise( ( res, rej ) => {
+                                        
+                                        new THREE.TextureLoader().load( url, tex => {
+                                            
+                                            res( tex )
+                                    }, undefined, err => { 
+                                    
+                                    console.error( err.message ); 
+                                    rej( err );
+                                
+                                    } ) } ) );
+                            } );
+                            
+                            Promise.all( promisePack ).then( textures => { 
+                                
+                                console.log( textures, "after promise" );
+                                this.setupMesh( Object.assign( {}, o, { texture: textures } ), scene.id ); 
+                            } );
+                        } 
+                        
+                        else {
+                            
+                            this.setupMesh( o, scene.id );
+                        } 
                     }
                 });
                 //sends an animation type for scene transition
@@ -731,7 +788,29 @@ const framework = {
                                                           texture } );
                             } );
                             
-                        } else {
+                        }  else if ( options.hasOwnProperty( "texture" ) && options.texture instanceof Array ) {
+                            let promisePack = [];
+                            
+                            options.texture.forEach( url => {
+                                promisePack.push( new Promise( ( res, rej ) => {
+                                        
+                                        new THREE.TextureLoader().load( url, tex => {
+                                            
+                                            res( tex )
+                                    }, undefined, err => { 
+                                    
+                                    console.error( err.message ); 
+                                    rej( err );
+                                
+                                    } ) } ) );
+                            } );
+                            
+                            Promise.all( promisePack ).then( textures => { 
+                                
+                                console.log( textures, "after promise" );
+                                this.setupMesh( Object.assign( {}, options, { texture: textures } ), scene.id ); 
+                            } );
+            } else {
                             this.setupMesh( options, scene.id ); 
                         }
                 res( { id : scene.id, animation: defaultOptions.sceneTransition }  );
@@ -879,7 +958,6 @@ const framework = {
             }
         }
        
-        console.log( this.scenes );
         const preloaderPromise = this.createPreloader( this.scene.id, this.options.preloader !== undefined ? this.options.preloader : defaultOptions.preloader );
         
         if ( this.options.hasOwnProperty( "sounds") && this.options.sounds !== undefined ) {
@@ -1003,6 +1081,9 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
             
+            if ( name === "book" ) {
+                obj.rotation.y += 0.01;
+            }
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
                 obj.target.position.clone( this.scene.position );

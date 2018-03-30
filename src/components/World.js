@@ -34,45 +34,12 @@ class World extends Component {
         } );
 		this.world.start();
             
-        setTimeout( () => { 
-            this.world.find( "book" ).then( book => { 
-                
-                book.update( { texture: "imgs/harrypotter.jpg" } );
-            } );
-            // returns a copied instance of what the book is at that moment. Read only
-            //such as the color, id, name, x, y, z, width, height, etc
-            //includes any other properties you give it outside the basics like author and year
-            
-            //notice the ids are the same as the item was simply updated, rather than replaced
-            //however, for advanced changes the id may not stay the same
-            
-            
-        }, 6000 );
-            
-            setTimeout( () => { 
-            this.world.find( "book" ).then( book => { 
-                
-                book.update( { color : "red", material: "lambert", position: "0 300 0", transition: "position 10s" } );
-            } );
-            // returns a copied instance of what the book is at that moment. Read only
-            //such as the color, id, name, x, y, z, width, height, etc
-            //includes any other properties you give it outside the basics like author and year
-            
-            //notice the ids are the same as the item was simply updated, rather than replaced
-            //however, for advanced changes the id may not stay the same
-            
-            console.log( this.world.scene, "this is the world scene" );
-        }, 10000 );
-            
             setTimeout( () => {
-                this.world.find( "book" ).then( book => { 
                 
-                book.update( { color : "red", scale: 20, transition: "scale 5s" } );
-            } );
+                console.log( this.world.scene );
                 
-                console.log( this.world.scene, "this is the world scene" );
-                
-            }, 14000 );
+            }, 8000 );
+        
 	}
 	componentWillReceiveProps( nextProps ) {
 		console.log( nextProps );

@@ -2,11 +2,12 @@ import * as THREE from "three";
 import defaultOptions from "./json/defaults.json";
 
 export default function ( options = {} ) {
+    console.log( options, "inside createMaterial" );
     const color = options.color !== undefined ? this.optionParser( options.color, undefined, "color" ) : new THREE.Color(),
           emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( defaultOptions.emissiveColor ),
           emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
           material = options.hasOwnProperty( "material" ) && options.material !== undefined ? options.material : "default",
-          map = options.texture !== undefined  || options.texture !== "none" ? options.texture : null, 
+          map = options.texture !== undefined && options.texture instanceof THREE.Texture ? options.texture : null, 
           overdraw = options.overdraw !== undefined ? options.overdraw : defaultOptions.overdraw,
           roughness = options.roughness !== undefined ? options.roughness : defaultOptions.roughness,
           shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,
@@ -15,7 +16,7 @@ export default function ( options = {} ) {
           wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth: defaultOptions.wireframeLinewidth,
           wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : defaultOptions.wireframeLinecap,
           wireframeLinejoin = options.wireframeLinejoin !== undefined ? options.wireframeLinejoin : defaultOptions.wireframeLinejoin;
-    
+
     const matOpts = {
         color,
         emissive,
@@ -25,6 +26,8 @@ export default function ( options = {} ) {
         side,
         transparent
     }
+    
+    console.log( matOpts, "ending material" );
     switch( material ) {
         case "basic" :
             return new THREE.MeshBasicMaterial( Object.assign( {}, matOpts  ) );

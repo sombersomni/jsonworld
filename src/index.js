@@ -47,7 +47,10 @@ const config = {
             "scale" : 10,
             "position": [ 100, 0, -60 ],
             "color" : "white",
-            "transition" : "color 2s"
+            "material" : "basic",
+            "shadow" : true,
+            "transition" : "color 2s",
+            "texture" : [ "imgs/ball.jpg", "imgs/harrypotter.jpg","imgs/ball.jpg", "imgs/harrypotter.jpg","imgs/ball.jpg", "imgs/harrypotter.jpg" ]
         }
       
     ]
