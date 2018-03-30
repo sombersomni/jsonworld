@@ -210,7 +210,6 @@ export default function ( mesh, options = {} ) {
             speed
     };
     
-    console.log( newOptions, "createAnime inside");
     switch( type ) {
         case "atom":
             return function ( time ) {
@@ -299,7 +298,7 @@ export default function ( mesh, options = {} ) {
         case "spin-basic" :
             
             newOptions.animTarget = "rotation";
-            newOptions.keyframes = { animProp: "y", value: ( Math.PI * 2 / 180 ) * defaultOptions.rotation };
+            newOptions.keyframes = { animProp: "y", value: ( Math.PI / 180 ) * defaultOptions.rotation };
             
             return this.packAnimations( mesh, Object.assign( {}, newOptions ) );
             

@@ -103,7 +103,7 @@ const framework = {
                 return { radius : defaultOptions.radius, center };
             }
     },
-    convertToRadians : value => (Math.PI * 2 ) / 180 * value,
+    convertToRadians : value => ( Math.PI / 180 ) * value,
     createAnime,
     createGeometry,
     createPreloader: function ( id, options = {} ) {
@@ -296,19 +296,20 @@ const framework = {
             type = opt.type !== undefined ? opt.type : defaultOptions.cameraType,
             near = opt.near !== undefined ? opt.near : defaultOptions.cameraNear; //cant put floats in defaultOptions so we will leave them here.
 
-        switch (type.toLowerCase()) {
+        console.log( options, type, "camera type" );
+        switch ( type.toLowerCase() ) {
             case "perspective":
-                camera = new THREE.PerspectiveCamera(fov, aspectRatio, near, far);
+                camera = new THREE.PerspectiveCamera( fov, aspectRatio, near, far );
                 break;
             case "orthographic":
-                camera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, near, far);
+                camera = new THREE.OrthographicCamera( width / -2, width / 2, height / 2, height / -2, near, far);
                 break;
             default:
                 console.warn("this camera type is not acceptable");
 
         }
         
-        camera.position.set(0, 0, 100 );
+        camera.position.set( 0, 0, 500 );
 
         if (this.cameras.length > 0) {
             camera.name = "cam_" + this.cameras.length.toString();
@@ -528,6 +529,7 @@ const framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
+        
         try{
                 // @param g stands for geometry
                 const g = this.createGeometry( options );
@@ -620,13 +622,13 @@ const framework = {
                 
                 mesh.name = options.name !== undefined ? options.name : "";
                 
-                if ( options.debug === true ) {
+                if ( this.options.debug === true ) {
                     const debugVerts = new THREE.Group();
                     mesh.geometry.vertices.forEach( ( v, i ) => {
                         
                         
                         const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
-                        const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
+                        const geo = this.createGeometry( { type: "sphere", size: 1, segments: 8 } );
                         let debugMesh = new THREE.Mesh( geo, material );
                         //copies the position of this vertice
                         debugMesh.position.set( v.x, v.y, v.z );
@@ -874,25 +876,35 @@ const framework = {
     },
     setupWorldClone : function ( id, mesh, options = {} ) {
         
-        this.objManager.all[ mesh.id * id ] =  {
-            pos : new THREE.Vector3( mesh.position.x !== undefined ? mesh.position.x : 0,
-                                    mesh.position.y !== undefined ? mesh.position.y : 0,
-                                    mesh.position.z !== undefined ? mesh.position.z : 0 ),
-            animeTimeline : anime.timeline( { autoplay: true, loop : true } ),
-            originalOptions: options,
-            transitions : {
-                opacity: undefined,
-                color: undefined,
-                position: undefined,
-                scale: undefined,
-                size: undefined,
-                width: undefined,
-                height: undefined,
-                depth: undefined,
-                rotation: undefined
-                
-            }
-        };
+        if ( mesh.type === "Mesh" ) {
+            
+            let mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
+            console.log( mat.color, "material in world clone for " + mesh.name );
+
+            this.objManager.all[ mesh.id * id ] =  {
+                worldProps: {
+                    health: 100,
+                },
+                x: mesh.position.x,
+                y: mesh.position.y,
+                z: mesh.position.z,
+                animeTimeline : anime.timeline( { autoplay: true, loop : true } ),
+                originalOptions: options,
+                transitions : {
+                    opacity: undefined,
+                    color: undefined,
+                    position: undefined,
+                    scale: undefined,
+                    size: undefined,
+                    width: undefined,
+                    height: undefined,
+                    depth: undefined,
+                    rotation: undefined
+
+                }
+            };
+        }
+        
     },
     typeChecker : function ( options, type, defaults ) {
         //goes through each option attribute and returns an array with the information sorted for app use
@@ -1103,7 +1115,6 @@ const framework = {
         //this makes sure everything is loaded before we mess with the object
             return this.sceneLoaded.then( completed => {
                 //read only
-                progressEmitter.emit( "world-message", { message : "loading " + query } );
                 
                 const mesh = this.scenes[ completed.id ].getObjectByName( query );
                 const clone = this.objManager.all[ mesh.id * completed.id ];
@@ -1111,14 +1122,17 @@ const framework = {
                 return {
                     mesh : mesh,
                     name: mesh.name,
-                    color: mesh.material.color,
                     id: mesh.id,
-                    x: clone.pos.x,
-                    y: clone.pos.y,
-                    z: clone.pos.z,
+                    x: clone.x,
+                    y: clone.y,
+                    z: clone.z,
+                    worldProps: clone.worldProps,
                     update: ( config ) => this.update.call( this, mesh, config )
                     
                 }
+                
+                //this.objManager.all[ mesh.id * completed.id ] = item;
+
 
             } ).catch( err => { console.warn( err.message ) } );
         
@@ -1267,6 +1281,7 @@ const framework = {
         
                 console.error( err.message );
             }
+        
         }
 };
 Object.assign( WorldController.prototype, framework );

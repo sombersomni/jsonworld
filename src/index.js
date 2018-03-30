@@ -5,23 +5,26 @@ import World from "./components/World.js";
 
 const wallColor = "yellow";
 const config = {
-    "antialias" : true,
+    
     "enableShadows": true,
+    "camera" : {
+        "type" : "perspective",
+    },
     "worldObjects" : [
         {
             "name" : "floor",
             "type" : "plane",
-            "color" : wallColor,
+            "color" : "yellow",
             "material" : "phong",
-            "size" : "10000 10000",
-            "rotation" : " 45 0 0",
-            "position" : [ 0, -200, 0 ],
+            "size" : "20000 20000",
+            "rotation" : "90 0 0",
+            "position" : [ 0, -500, 10000 ],
             "shadow" : true
         },
         {
             "name" : "hearts",
             "material" : "lambert",
-            "count" : 100,
+            "count" : 10,
             "color" : "#FF000A",
             "type" : "heart",
             "extrude" : {
@@ -39,20 +42,7 @@ const config = {
             "position" : 0,
             "size" : 3,
             "color" : "red"
-        },
-        {
-            "name" : "book",
-            "type" : "dodecahedron",
-            "size" : [ 10, 18, 5 ],
-            "scale" : 10,
-            "position": [ 100, 0, -60 ],
-            "color" : "white",
-            "material" : "basic",
-            "shadow" : true,
-            "transition" : "color 2s",
-            "texture" : [ "imgs/a.jpg", "imgs/b.jpg","imgs/c.jpg" ]
         }
-      
     ]
 }
 

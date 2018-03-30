@@ -2,7 +2,7 @@ import * as THREE from "three";
 import defaultOptions from "./json/defaults.json";
 
 export default function ( options = {} ) {
-    console.log( options, "inside createMaterial" );
+    
     const color = options.color !== undefined ? this.optionParser( options.color, undefined, "color" ) : new THREE.Color(),
           emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color( defaultOptions.emissiveColor ),
           emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
@@ -11,7 +11,7 @@ export default function ( options = {} ) {
           overdraw = options.overdraw !== undefined ? options.overdraw : defaultOptions.overdraw,
           roughness = options.roughness !== undefined ? options.roughness : defaultOptions.roughness,
           shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,
-          side = options.side !== undefined ? options.side : THREE.DoubleSide,
+          side = options.side !== undefined ? options.side : THREE.FrontSide,
           transparent = options.transparent !== undefined ? options.transparent : false,
           wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth: defaultOptions.wireframeLinewidth,
           wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : defaultOptions.wireframeLinecap,
@@ -23,11 +23,10 @@ export default function ( options = {} ) {
         emissiveIntensity : 0.0025,
         map,
         overdraw,
-        side,
+        side : options.type === "plane" ? THREE.DoubleSide : side,
         transparent
     }
     
-    console.log( matOpts, "ending material" );
     switch( material ) {
         case "basic" :
             return new THREE.MeshBasicMaterial( Object.assign( {}, matOpts  ) );
