@@ -11,6 +11,7 @@ import defaultOptions from "./json/defaults.json"
 //UTILS
 import colorInterpreter from "./utils/colorInterpreter.js";
 import calculateCameraView from "./utils/cameraView.js";
+import hashID from "./utils/hashID.js";
 
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
@@ -46,7 +47,9 @@ function WorldController (options) {
     this.scenes = [];
     this.hashed = [];
     this.counter = 0;
-    //
+    //sets
+    
+    this.groupNames = new Set();
     
     this.isWorldLoaded = false;
 
@@ -137,7 +140,7 @@ const framework = {
     createMaterial,
     createTransition : function ( id, mesh, options = {} ) {
         //takes the transition type and keeps track of any 
-        let clone = this.objManager.all[ mesh.id * id ];
+        let clone = this.objManager.all[ hashID( mesh.id , id ) ];
         // transition options parse over options for animation instead of adding duplicate attributes for transition
         const type = options.animationType !== undefined ? options.animationType : "default";
         switch( type ) {
@@ -178,7 +181,7 @@ const framework = {
         try {
             if ( mesh.id !== undefined ) {
                 console.log( id , mesh.id, "id and mesh id" );
-                let obj = this.objManager.all[ mesh.id * id ];
+                let obj = this.objManager.all[ hashID( mesh.id,  id ) ];
                 console.log( obj, "this is the obj manager clone" );
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
@@ -189,11 +192,11 @@ const framework = {
 
                 } else if ( animation instanceof Function ) {
 
-                    this.animationManager.all[ mesh.id * id ] = animation;
+                    this.animationManager.all[ hashID( mesh.id, id ) ] = animation;
                     
                 } else {
         
-                       this.objManager.all[ mesh.id * id ].animeTimeline.add( animation );
+                       this.objManager.all[ hashID( mesh.id, id ) ].animeTimeline.add( animation );
                     console.log( obj, "after attachment" );
                      
                 }
@@ -532,7 +535,7 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI ) {
+    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 ) {
         let m, mesh, multiMaterials = [];
         //@params sI - the index of the scene
         /*
@@ -560,6 +563,7 @@ const framework = {
                     
                     m = this.createMaterial( options );
                 }
+                /*
             
                 console.log( multiMaterials, "multiMaterials should be full" );
             
@@ -570,6 +574,7 @@ const framework = {
         
                 if ( options.count !== undefined && options.count > 1 ) {
                 const group = new THREE.Group();
+                    
                 for ( let i = 0; i <= options.count - 1; i++ ) {
                     const g = this.createGeometry( options );
                     //create a grid to place each object correctly so no objects touch or collide 
@@ -583,6 +588,7 @@ const framework = {
                     
                     group.add( mesh );
                 }
+                
                 group.name = options.name !== undefined ? options.name : "bundle";
                 
                 this.setupWorldClone( sI, group );
@@ -596,6 +602,7 @@ const framework = {
                 }
             } else {
                 
+                */
                 mesh = new THREE.Mesh( g, m );
                 
                 if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
@@ -653,13 +660,47 @@ const framework = {
                 mesh = this.setObjectTransforms( mesh, options );
                 
                 this.setupWorldClone( sI, mesh, options );
-                
-                console.log( options, "right before setup Animation for Mesh" );
+            
+                let upgradeMesh;
+            
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    this.scenes[sI].add( this.setupAnimationForMesh( sI, mesh, options ) );
+                    upgradeMesh = this.setupAnimationForMesh( sI, mesh, options );
                 } else {
-                    this.scenes[sI].add( mesh );
+                    upgradeMesh =  mesh;
+                }
+                
+                console.log( options, "right before setup Animation for Mesh" );
+            
+                if( options.group !== undefined && typeof options.group === "string" ) {
+                    
+                    if ( this.groupNames.has( options.group ) ) {
+                        
+                        let grp = this.scenes[sI].getObjectByName( options.group );
+                        grp.add( mesh );
+                        
+                    } else {
+                        
+                        this.groupNames.add( options.group );
+                        let grp = new THREE.Group();
+                        grp.name = options.group;
+                        grp.add( mesh );
+                        this.scenes[sI].add( grp );
+                    }
+                    
+                } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
+                    
+                    i++;
+                    group.add( mesh );
+                    this.setupMesh( options, sI, group, i );
+                    
+                }else {
+                    
+                    if ( group.children.length > 0 ) {
+                        this.scenes[sI].add( group );
+                    } else {
+                        this.scenes[sI].add( mesh ); 
+                    }
                 }
                 
                 /*
@@ -683,8 +724,8 @@ const framework = {
                         }
                     }
                 }
-                */
-            }
+                
+            } */
 
             return;
             
@@ -724,8 +765,8 @@ const framework = {
         //wraps into a promise for preloader to wait on data to be completed
         let scene = new THREE.Scene();
         this.scenes[ scene.id ] = scene;
-        const intensity = this.options.sunIntensity !== undefined ? this.options.sunIntensity : defaultOptions.sunIntensity,
-              sunColor = this.options.sunColor !== undefined ? this.options.sunColor : defaultOptions.sunColor;
+        const intensity = defaultOptions.sunIntensity,
+              sunColor = defaultOptions.sunColor;
         return new Promise ( ( res, rej ) => { 
             this.scenes[ scene.id ].name = this.scenes.length === 1 ? "preloader" : "main";
             this.scenes[ scene.id ].fog = this.fog;
@@ -822,7 +863,7 @@ const framework = {
                             
                             Promise.all( promisePack ).then( textures => { 
                                 
-                                console.log( textures, "after promise" );
+                                console.log( textures, "after promise all is complete" );
                                 this.setupMesh( Object.assign( {}, options, { texture: textures } ), scene.id ); 
                             } );
             } else {
@@ -895,13 +936,15 @@ const framework = {
             let mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
             console.log( mat.color, "material in world clone for " + mesh.name );
             console.log( mesh.id, id, "mesh.id and id in clone construction" );
-            this.objManager.all[ mesh.id * id ] =  {
+            const newID = hashID( mesh.id, id );
+            this.objManager.all[ newID ] =  {
                 worldProps: {
                     health: 100,
                 },
                 x: mesh.position.x,
                 y: mesh.position.y,
                 z: mesh.position.z,
+                id: newID,
                 animeTimeline : anime.timeline( { autoplay: true, loop : true } ),
                 originalOptions: options,
                 transitions : {
@@ -1128,7 +1171,7 @@ const framework = {
                 //read only
                 
                 const mesh = this.scenes[ completed.id ].getObjectByName( query );
-                const clone = this.objManager.all[ mesh.id * completed.id ];
+                const clone = this.objManager.all[ hashID( mesh.id, completed.id ) ];
                 
                 return {
                     mesh : mesh,
@@ -1155,7 +1198,7 @@ const framework = {
             if ( mesh.type === "Mesh" ) {
 
                     //@param m stands for mesh, it may change during update
-                    let clone = this.objManager.all[ mesh.id  * this.scene.id ];
+                    let clone = this.objManager.all[ hashID( mesh.id, this.scene.id  ) ];
                     const playOnce = { autoplay: true, loop: 1 };
                     const originalMesh = mesh;
 

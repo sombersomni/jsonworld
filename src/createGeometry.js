@@ -11,6 +11,7 @@ import rotatePoint from "./utils/rotatePoint.js";
 export default function (options = {} ) {
     //goes through every geometry type plus custom ones
     const extrude = options.extrude !== undefined && options.hasOwnProperty( "extrude" ) ? options.extrude : undefined,
+          path = options.path !== undefined && options.hasOwnProperty( "path" ) && options.path instanceof Array ? options.path.map( vector => new THREE.Vector2( vector.x, vector.y ) ) : undefined,
           segments = options.segments !== undefined ? options.segments : defaultOptions.segments,
           thetaStart = this.convertToRadians( options.angleStart !== undefined ? options.angleStart : 0 ),
           thetaLength = this.convertToRadians( options.arcAngle !== undefined ? options.arcAngle : 360 ),
@@ -114,16 +115,24 @@ export default function (options = {} ) {
             
         case "lathe" :
             
-            let points = [];
+            if ( path !== undefined && path.every( vector => vector instanceof THREE.Vector2 ) ) {
+                
+                return new THREE.LatheGeometry( path );
+                
+            } else {
+                
+                let points = [];
             
-            let angleArr = this.typeChecker( options, "typeHandler", { typeHandler: defaultOptions.latheHandler } );
-            
-            const ang = ( Math.PI / 180 ) * 45;
-                  length = 20;
-            for ( var i = 0; i <= length - 1; i++ ) {
-                points.push( new THREE.Vector2( ( Math.sin( i * ( ang / length ) ) * 10 + 5 ) * ( size[ 0 ] > 0 ? size[ 0 ] : 1 ) , ( ( i - ( length / 2 ) ) * 2 ) * size[ 1 ] ) );
+                let angleArr = this.typeChecker( options, "typeHandler", { typeHandler: defaultOptions.latheHandler } );
+
+                const ang = ( Math.PI / 180 ) * angleArr[0];
+                      length = 20;
+                for ( var i = 0; i <= length - 1; i++ ) {
+                    points.push( new THREE.Vector2( ( Math.sin( i * ( ang / length ) ) * 10 + 5 ) * ( size[ 0 ] > 0 ? size[ 0 ] : 1 ) , ( ( i - ( length / 2 ) ) * 2 ) * size[ 1 ] ) );
+                }
+                return new THREE.LatheGeometry( points );
+                
             }
-            return new THREE.LatheGeometry( points );
             
         case "parametric" :
             let parametric;

@@ -36,7 +36,6 @@ class World extends Component {
         
         axios.get( "./albums" ). then( response => {
             
-            console.log( response );
             let albums = [];
             for ( let i = 0; i <= 5; i++ ) {
                 const eachAlbum = response.data.items[ i ];
@@ -47,6 +46,7 @@ class World extends Component {
                     "position": [ eachAlbum.images[ 1 ].width * i * 2 * ( i % 2 == 0 ? -1 : 1 ), 0, -1000 ],
                     "color" : "white",
                     "material" : "lambert",
+                    "group" : "albums",
                     "shadow" : true,
                     "animation" : "rotation 2s",
                     "animationKeyframes" : {
@@ -58,8 +58,31 @@ class World extends Component {
                 albums.push( album );
             }
             
+            const vaseSize = {
+                
+                w: 50,
+                h: 200,
+            }
+            
+            const vase = {
+                type: "lathe",
+                size: vaseSize,
+                color: "blue",
+                path: function () {
+                    
+                    let arr = [];
+                    for ( let x = 0; x < vaseSize.h; x+= 2 ) {
+                        
+                        arr.push( { x : Math.sin( ( x / 40 )  + 1 ) * vaseSize.w, y : x }  );
+                    }
+                    
+                    return arr;
+                }()
+            };
+            
             const floor = {
                 "type" : "plane",
+                "name" : "floor",
                 "size" : [ 10000, 10000 ],
                 "material" : "phong",
                 "color" : "yellow",
@@ -75,7 +98,7 @@ class World extends Component {
                 "position" : "0 0 -5000"
             }
 
-		  this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor ].concat( albums ) } ) );
+this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, vase ].concat( albums ) } ) );
             
             this.world.start();
             

@@ -64243,7 +64243,6 @@ var World = function (_Component) {
 
             axios.get("./albums").then(function (response) {
 
-                console.log(response);
                 var albums = [];
                 for (var i = 0; i <= 5; i++) {
                     var eachAlbum = response.data.items[i];
@@ -64254,6 +64253,7 @@ var World = function (_Component) {
                         "position": [eachAlbum.images[1].width * i * 2 * (i % 2 == 0 ? -1 : 1), 0, -1000],
                         "color": "white",
                         "material": "lambert",
+                        "group": "albums",
                         "shadow": true,
                         "animation": "rotation 2s",
                         "animationKeyframes": {
@@ -64265,8 +64265,31 @@ var World = function (_Component) {
                     albums.push(album);
                 }
 
+                var vaseSize = {
+
+                    w: 50,
+                    h: 200
+                };
+
+                var vase = {
+                    type: "lathe",
+                    size: vaseSize,
+                    color: "blue",
+                    path: function () {
+
+                        var arr = [];
+                        for (var x = 0; x < vaseSize.h; x += 2) {
+
+                            arr.push({ x: Math.sin(x / 40 + 1) * vaseSize.w, y: x });
+                        }
+
+                        return arr;
+                    }()
+                };
+
                 var floor = {
                     "type": "plane",
+                    "name": "floor",
                     "size": [10000, 10000],
                     "material": "phong",
                     "color": "yellow",
@@ -64282,7 +64305,7 @@ var World = function (_Component) {
                     "position": "0 0 -5000"
                 };
 
-                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor].concat(albums) }));
+                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, vase].concat(albums) }));
 
                 _this2.world.start();
 
@@ -64695,6 +64718,10 @@ var _cameraView = __webpack_require__(46);
 
 var _cameraView2 = _interopRequireDefault(_cameraView);
 
+var _hashID = __webpack_require__(79);
+
+var _hashID2 = _interopRequireDefault(_hashID);
+
 var _createAnime = __webpack_require__(47);
 
 var _createAnime2 = _interopRequireDefault(_createAnime);
@@ -64758,7 +64785,9 @@ function WorldController(options) {
     this.scenes = [];
     this.hashed = [];
     this.counter = 0;
-    //
+    //sets
+
+    this.groupNames = new Set();
 
     this.isWorldLoaded = false;
 
@@ -64863,7 +64892,7 @@ var framework = {
         var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
         //takes the transition type and keeps track of any 
-        var clone = this.objManager.all[mesh.id * id];
+        var clone = this.objManager.all[(0, _hashID2.default)(mesh.id, id)];
         // transition options parse over options for animation instead of adding duplicate attributes for transition
         var type = options.animationType !== undefined ? options.animationType : "default";
         switch (type) {
@@ -64906,7 +64935,7 @@ var framework = {
         try {
             if (mesh.id !== undefined) {
                 console.log(id, mesh.id, "id and mesh id");
-                var obj = this.objManager.all[mesh.id * id];
+                var obj = this.objManager.all[(0, _hashID2.default)(mesh.id, id)];
                 console.log(obj, "this is the obj manager clone");
                 //takes the mesh and adds a animation timeline to the root object
                 if (animation instanceof Array) {
@@ -64916,10 +64945,10 @@ var framework = {
                     }
                 } else if (animation instanceof Function) {
 
-                    this.animationManager.all[mesh.id * id] = animation;
+                    this.animationManager.all[(0, _hashID2.default)(mesh.id, id)] = animation;
                 } else {
 
-                    this.objManager.all[mesh.id * id].animeTimeline.add(animation);
+                    this.objManager.all[(0, _hashID2.default)(mesh.id, id)].animeTimeline.add(animation);
                     console.log(obj, "after attachment");
                 }
 
@@ -65279,6 +65308,9 @@ var framework = {
     setupMesh: function setupMesh(options, sI) {
         var _this4 = this;
 
+        var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
+        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
         var m = void 0,
             mesh = void 0,
             multiMaterials = [];
@@ -65305,120 +65337,156 @@ var framework = {
 
                 m = this.createMaterial(options);
             }
-
-            console.log(multiMaterials, "multiMaterials should be full");
-
-            if (options.count !== undefined && options.count > 1) {
-                var group = new THREE.Group();
-                for (var _i = 0; _i <= options.count - 1; _i++) {
-                    var _g = this.createGeometry(options);
-                    //create a grid to place each object correctly so no objects touch or collide 
-
-                    mesh = this.gridMeshPosition(new THREE.Mesh(_g, m), options, _i);
-
-                    if (options.hasOwnProperty("shadow") && options.shadow === true) {
-                        mesh.receiveShadow = true;
-                        mesh.castShadow = true;
-                    }
-
-                    group.add(mesh);
-                }
-                group.name = options.name !== undefined ? options.name : "bundle";
-
-                this.setupWorldClone(sI, group);
-
-                if (options.animation !== undefined || options.animationType !== undefined) {
-
-                    this.scenes[sI].add(this.setupAnimationForMesh(sI, group, options));
-                } else {
-
-                    this.scenes[sI].add(group);
-                }
-            } else {
-
-                mesh = new THREE.Mesh(g, m);
-
-                if (options.hasOwnProperty("shadow") && options.shadow == true) {
-
+            /*
+                          console.log( multiMaterials, "multiMaterials should be full" );
+                          
+                          
+            
+                      if ( options.count !== undefined && options.count > 1 ) {
+            const group = new THREE.Group();
+                
+            for ( let i = 0; i <= options.count - 1; i++ ) {
+                const g = this.createGeometry( options );
+                //create a grid to place each object correctly so no objects touch or collide 
+                 
+                 mesh = this.gridMeshPosition( new THREE.Mesh( g, m ), options, i );
+                
+                if ( options.hasOwnProperty( "shadow" ) && options.shadow === true ) {
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
+                
+                group.add( mesh );
+            }
+            
+            group.name = options.name !== undefined ? options.name : "bundle";
+            
+            this.setupWorldClone( sI, group );
+                
+            if ( options.animation !== undefined || options.animationType !== undefined ) {
+                
+                this.scenes[sI].add( this.setupAnimationForMesh( sI, group, options ) );
+            } else {
+                
+                this.scenes[sI].add( group );
+            }
+            } else {
+            
+            */
+            mesh = new THREE.Mesh(g, m);
 
-                //accepts a gradient that is either linear or radial
-                if (/gradient/.test(options.color)) {
+            if (options.hasOwnProperty("shadow") && options.shadow == true) {
 
-                    if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
-                        mesh.material.needsUpdate = true;
-                        var faceIndices = ["a", "b", "c"];
-                        for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
+                mesh.receiveShadow = true;
+                mesh.castShadow = true;
+            }
 
-                            mesh.material.vertexColors = THREE.VertexColors;
+            //accepts a gradient that is either linear or radial
+            if (/gradient/.test(options.color)) {
 
-                            var _f = mesh.geometry.faces[a];
-                            for (var i = 0; i <= faceIndices.length - 1; i++) {
-                                var vertexIndex = _f[faceIndices[i]];
-                                var p = mesh.geometry.vertices[vertexIndex];
-                                console.log(vertexIndex);
-                                var color = new THREE.Color(0xffffff);
-                                console.log(p);
-                                mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
-                            }
+                if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
+                    mesh.material.needsUpdate = true;
+                    var faceIndices = ["a", "b", "c"];
+                    for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
+
+                        mesh.material.vertexColors = THREE.VertexColors;
+
+                        var _f = mesh.geometry.faces[a];
+                        for (var i = 0; i <= faceIndices.length - 1; i++) {
+                            var vertexIndex = _f[faceIndices[i]];
+                            var p = mesh.geometry.vertices[vertexIndex];
+                            console.log(vertexIndex);
+                            var color = new THREE.Color(0xffffff);
+                            console.log(p);
+                            mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
                         }
                     }
                 }
+            }
 
-                mesh.name = options.name !== undefined ? options.name : "";
+            mesh.name = options.name !== undefined ? options.name : "";
 
-                if (this.options.debug === true) {
-                    var debugVerts = new THREE.Group();
-                    mesh.geometry.vertices.forEach(function (v, i) {
+            if (this.options.debug === true) {
+                var debugVerts = new THREE.Group();
+                mesh.geometry.vertices.forEach(function (v, i) {
 
-                        var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
-                        var geo = _this4.createGeometry({ type: "sphere", size: 1, segments: 8 });
-                        var debugMesh = new THREE.Mesh(geo, material);
-                        //copies the position of this vertice
-                        debugMesh.position.set(v.x, v.y, v.z);
-                        debugVerts.add(debugMesh);
-                    });
+                    var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
+                    var geo = _this4.createGeometry({ type: "sphere", size: 1, segments: 8 });
+                    var debugMesh = new THREE.Mesh(geo, material);
+                    //copies the position of this vertice
+                    debugMesh.position.set(v.x, v.y, v.z);
+                    debugVerts.add(debugMesh);
+                });
 
-                    mesh.add(debugVerts);
+                mesh.add(debugVerts);
+            }
+
+            mesh = this.setObjectTransforms(mesh, options);
+
+            this.setupWorldClone(sI, mesh, options);
+
+            var upgradeMesh = void 0;
+
+            if (options.animation !== undefined || options.animationType !== undefined) {
+
+                upgradeMesh = this.setupAnimationForMesh(sI, mesh, options);
+            } else {
+                upgradeMesh = mesh;
+            }
+
+            console.log(options, "right before setup Animation for Mesh");
+
+            if (options.group !== undefined && typeof options.group === "string") {
+
+                if (this.groupNames.has(options.group)) {
+
+                    var grp = this.scenes[sI].getObjectByName(options.group);
+                    grp.add(mesh);
+                } else {
+
+                    this.groupNames.add(options.group);
+                    var _grp = new THREE.Group();
+                    _grp.name = options.group;
+                    _grp.add(mesh);
+                    this.scenes[sI].add(_grp);
                 }
+            } else if (options.count !== undefined && options.count > 1 && i < options.count) {
 
-                mesh = this.setObjectTransforms(mesh, options);
+                i++;
+                group.add(mesh);
+                this.setupMesh(options, sI, group, i);
+            } else {
 
-                this.setupWorldClone(sI, mesh, options);
-
-                console.log(options, "right before setup Animation for Mesh");
-                if (options.animation !== undefined || options.animationType !== undefined) {
-
-                    this.scenes[sI].add(this.setupAnimationForMesh(sI, mesh, options));
+                if (group.children.length > 0) {
+                    this.scenes[sI].add(group);
                 } else {
                     this.scenes[sI].add(mesh);
                 }
+            }
 
-                /*
-                if ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) {
+            /*
+            if ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) {
+                
+                if ( /\,/.test( options.transition ) ) {
                     
-                    if ( /\,/.test( options.transition ) ) {
+                    const seperateTransitions = options.transition.slice().split(",");
+                    for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
                         
-                        const seperateTransitions = options.transition.slice().split(",");
-                        for ( let x = 0 ; x <= seperateTransitions.length - 1; x++ ) {
-                            
-                            const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
-                            if ( opts !== undefined ) {
-                                this.createTransition( sI, newMesh, Object.assign( {}, opts, { autoplay: true, loop: 1 } ) );
-                            }
-                        }
-                    } else {
-                        
-                        const opts = this.optionParser( options.transition , options, "animation" );
+                        const opts = this.optionParser( seperateTransitions[ x ].trim() , options, "animation" );
                         if ( opts !== undefined ) {
                             this.createTransition( sI, newMesh, Object.assign( {}, opts, { autoplay: true, loop: 1 } ) );
                         }
                     }
+                } else {
+                    
+                    const opts = this.optionParser( options.transition , options, "animation" );
+                    if ( opts !== undefined ) {
+                        this.createTransition( sI, newMesh, Object.assign( {}, opts, { autoplay: true, loop: 1 } ) );
+                    }
                 }
-                */
             }
+            
+            } */
 
             return;
         } catch (err) {
@@ -65471,8 +65539,8 @@ var framework = {
         //wraps into a promise for preloader to wait on data to be completed
         var scene = new THREE.Scene();
         this.scenes[scene.id] = scene;
-        var intensity = this.options.sunIntensity !== undefined ? this.options.sunIntensity : _defaults2.default.sunIntensity,
-            sunColor = this.options.sunColor !== undefined ? this.options.sunColor : _defaults2.default.sunColor;
+        var intensity = _defaults2.default.sunIntensity,
+            sunColor = _defaults2.default.sunColor;
         return new Promise(function (res, rej) {
             _this7.scenes[scene.id].name = _this7.scenes.length === 1 ? "preloader" : "main";
             _this7.scenes[scene.id].fog = _this7.fog;
@@ -65564,7 +65632,7 @@ var framework = {
 
                     Promise.all(promisePack).then(function (textures) {
 
-                        console.log(textures, "after promise");
+                        console.log(textures, "after promise all is complete");
                         _this7.setupMesh(Object.assign({}, options, { texture: textures }), scene.id);
                     });
                 } else {
@@ -65639,13 +65707,15 @@ var framework = {
             var mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
             console.log(mat.color, "material in world clone for " + mesh.name);
             console.log(mesh.id, id, "mesh.id and id in clone construction");
-            this.objManager.all[mesh.id * id] = {
+            var newID = (0, _hashID2.default)(mesh.id, id);
+            this.objManager.all[newID] = {
                 worldProps: {
                     health: 100
                 },
                 x: mesh.position.x,
                 y: mesh.position.y,
                 z: mesh.position.z,
+                id: newID,
                 animeTimeline: _animejs2.default.timeline({ autoplay: true, loop: true }),
                 originalOptions: options,
                 transitions: {
@@ -65862,7 +65932,7 @@ var framework = {
             //read only
 
             var mesh = _this11.scenes[completed.id].getObjectByName(query);
-            var clone = _this11.objManager.all[mesh.id * completed.id];
+            var clone = _this11.objManager.all[(0, _hashID2.default)(mesh.id, completed.id)];
 
             return {
                 mesh: mesh,
@@ -65893,7 +65963,7 @@ var framework = {
             if (mesh.type === "Mesh") {
 
                 //@param m stands for mesh, it may change during update
-                var clone = this.objManager.all[mesh.id * this.scene.id];
+                var clone = this.objManager.all[(0, _hashID2.default)(mesh.id, this.scene.id)];
                 var playOnce = { autoplay: true, loop: 1 };
                 var originalMesh = mesh;
 
@@ -67206,6 +67276,9 @@ exports.default = function () {
 
     //goes through every geometry type plus custom ones
     var extrude = options.extrude !== undefined && options.hasOwnProperty("extrude") ? options.extrude : undefined,
+        path = options.path !== undefined && options.hasOwnProperty("path") && options.path instanceof Array ? options.path.map(function (vector) {
+        return new THREE.Vector2(vector.x, vector.y);
+    }) : undefined,
         segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
         thetaStart = this.convertToRadians(options.angleStart !== undefined ? options.angleStart : 0),
         thetaLength = this.convertToRadians(options.arcAngle !== undefined ? options.arcAngle : 360),
@@ -67257,8 +67330,8 @@ exports.default = function () {
                 var geometries = [];
                 for (var _i2 = 0; _i2 < shapes.length; _i2++) {
                     var _shape = shapes[_i2];
-                    var _points = _shape.getPoints();
-                    var geometry = new THREE.BufferGeometry().setFromPoints(_points);
+                    var points = _shape.getPoints();
+                    var geometry = new THREE.BufferGeometry().setFromPoints(points);
                     geometries.push(geometry);
                 }
 
@@ -67308,16 +67381,24 @@ exports.default = function () {
 
         case "lathe":
 
-            var points = [];
+            if (path !== undefined && path.every(function (vector) {
+                return vector instanceof THREE.Vector2;
+            })) {
 
-            var angleArr = this.typeChecker(options, "typeHandler", { typeHandler: _defaults2.default.latheHandler });
+                return new THREE.LatheGeometry(path);
+            } else {
 
-            var ang = Math.PI / 180 * 45;
-            length = 20;
-            for (var i = 0; i <= length - 1; i++) {
-                points.push(new THREE.Vector2((Math.sin(i * (ang / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
+                var _points = [];
+
+                var angleArr = this.typeChecker(options, "typeHandler", { typeHandler: _defaults2.default.latheHandler });
+
+                var ang = Math.PI / 180 * angleArr[0];
+                length = 20;
+                for (var i = 0; i <= length - 1; i++) {
+                    _points.push(new THREE.Vector2((Math.sin(i * (ang / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
+                }
+                return new THREE.LatheGeometry(_points);
             }
-            return new THREE.LatheGeometry(points);
 
         case "parametric":
             var parametric = void 0;
@@ -114322,6 +114403,24 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 77 */,
+/* 78 */,
+/* 79 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function (meshID, id) {
+
+    return Math.ceil(id / meshID * 1000);
+};
 
 /***/ })
 /******/ ]);
