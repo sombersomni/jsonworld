@@ -546,6 +546,8 @@ const framework = {
         
         try{
                 // @param g stands for geometry
+                // @param sI is the current scene index
+            
                 const g = this.createGeometry( options );
             
                 if ( options.texture instanceof Array ) {
@@ -563,46 +565,7 @@ const framework = {
                     
                     m = this.createMaterial( options );
                 }
-                /*
             
-                console.log( multiMaterials, "multiMaterials should be full" );
-            
-                
-            
-                
-               
-        
-                if ( options.count !== undefined && options.count > 1 ) {
-                const group = new THREE.Group();
-                    
-                for ( let i = 0; i <= options.count - 1; i++ ) {
-                    const g = this.createGeometry( options );
-                    //create a grid to place each object correctly so no objects touch or collide 
-                     
-                     mesh = this.gridMeshPosition( new THREE.Mesh( g, m ), options, i );
-                    
-                    if ( options.hasOwnProperty( "shadow" ) && options.shadow === true ) {
-                        mesh.receiveShadow = true;
-                        mesh.castShadow = true;
-                    }
-                    
-                    group.add( mesh );
-                }
-                
-                group.name = options.name !== undefined ? options.name : "bundle";
-                
-                this.setupWorldClone( sI, group );
-                    
-                if ( options.animation !== undefined || options.animationType !== undefined ) {
-                    
-                    this.scenes[sI].add( this.setupAnimationForMesh( sI, group, options ) );
-                } else {
-                    
-                    this.scenes[sI].add( group );
-                }
-            } else {
-                
-                */
                 mesh = new THREE.Mesh( g, m );
                 
                 if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
@@ -646,7 +609,7 @@ const framework = {
                         
                         
                         const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
-                        const geo = this.createGeometry( { type: "sphere", size: 1, segments: 8 } );
+                        const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
                         let debugMesh = new THREE.Mesh( geo, material );
                         //copies the position of this vertice
                         debugMesh.position.set( v.x, v.y, v.z );
@@ -663,43 +626,57 @@ const framework = {
             
                 let upgradeMesh;
             
+                console.log( options, "right before setup Animation for Mesh" );
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
                     upgradeMesh = this.setupAnimationForMesh( sI, mesh, options );
                 } else {
                     upgradeMesh =  mesh;
                 }
+            
+                console.log( upgradeMesh, group, "at the end of mesh manipulation " );
                 
-                console.log( options, "right before setup Animation for Mesh" );
+                /*
+                if( options.hasOwnProperty( "children" ) && options.children instanceof Array ) {
+                    
+                    options.children.forEach( ( child, x ) => {
+                           
+                        console.log( child, "this is a child" );
+                        this.setupMesh( Object.assign( {}, child, { group: options.group !== undefined ? options.group : options.name } ) , sI, group, x );
+                            
+                        
+                    } );
+                }
+                */
             
                 if( options.group !== undefined && typeof options.group === "string" ) {
                     
                     if ( this.groupNames.has( options.group ) ) {
                         
                         let grp = this.scenes[sI].getObjectByName( options.group );
-                        grp.add( mesh );
+                        grp.add( upgradeMesh );
                         
                     } else {
                         
                         this.groupNames.add( options.group );
                         let grp = new THREE.Group();
                         grp.name = options.group;
-                        grp.add( mesh );
+                        grp.add( upgradeMesh );
                         this.scenes[sI].add( grp );
                     }
                     
                 } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
                     
                     i++;
-                    group.add( mesh );
+                    group.add( upgradeMesh );
                     this.setupMesh( options, sI, group, i );
                     
-                }else {
+                } else {
                     
                     if ( group.children.length > 0 ) {
                         this.scenes[sI].add( group );
                     } else {
-                        this.scenes[sI].add( mesh ); 
+                        this.scenes[sI].add( upgradeMesh ); 
                     }
                 }
                 
@@ -740,7 +717,7 @@ const framework = {
             [ "position", "rotation", "scale" ].forEach( type  => {
                 
                 const transform = this.typeChecker( options, type, defaultOptions );
-                
+                console.log( transform );
                 mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
                 
             } );
@@ -770,6 +747,19 @@ const framework = {
         return new Promise ( ( res, rej ) => { 
             this.scenes[ scene.id ].name = this.scenes.length === 1 ? "preloader" : "main";
             this.scenes[ scene.id ].fog = this.fog;
+            //adds arrowhelper and other debugs
+            if ( this.options.hasOwnProperty( "debug") && this.options.debug ) {
+                const origin = new THREE.Vector3( 1, 0, 0 );
+                const length = 200;
+                const xAxisHelper = new THREE.ArrowHelper( new THREE.Vector3( 1, 0, 0 ).normalize(), origin, length, 0xff0000 );
+                const yAxisHelper = new THREE.ArrowHelper( new THREE.Vector3( 0, 1, 0 ).normalize(), origin, length, 0x00ff00 );
+                const zAxisHelper = new THREE.ArrowHelper( new THREE.Vector3( 0, 0, -1 ).normalize(), origin, length, 0x0000ff );
+
+                this.scenes[ scene.id ].add( xAxisHelper );
+                this.scenes[ scene.id ].add( yAxisHelper );
+                this.scenes[ scene.id ].add( zAxisHelper );
+                
+            }
             //creates the sun light for the whole world
             const sunlight = new THREE.DirectionalLight( sunColor, intensity );
             sunlight.name = "sunlight";
@@ -996,7 +986,7 @@ const framework = {
             
             if ( arr.length < 3 ) {
                 
-                for ( var x = 0; x <= 3 - arr.length - 1; x++ ) {
+                for ( let x = 0; x <= 3 - arr.length - 1; x++ ) {
                     arr.push( arr[ 0 ] !== undefined ? arr[ 0 ] : 1 );
                 }
             }
@@ -1149,6 +1139,13 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
      
+            if ( obj.name === "tube" ) {
+                obj.rotation.y += 0.005;
+                obj.material.map.needsUpdate = true;
+                obj.material.map.offset.x += 0.01;
+               // console.log( obj );
+            }
+            
             if ( /Light/.test( obj.type ) ) {
                 //checks for light objects
                 obj.target.position.clone( this.scene.position );

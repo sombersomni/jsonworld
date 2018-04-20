@@ -35,7 +35,7 @@ class World extends Component {
         } );
         
         axios.get( "./albums" ). then( response => {
-            
+            /*
             let albums = [];
             for ( let i = 0; i <= 5; i++ ) {
                 const eachAlbum = response.data.items[ i ];
@@ -57,28 +57,8 @@ class World extends Component {
 
                 albums.push( album );
             }
-            
-            const vaseSize = {
-                
-                w: 50,
-                h: 200,
-            }
-            
-            const vase = {
-                type: "lathe",
-                size: vaseSize,
-                color: "blue",
-                path: function () {
-                    
-                    let arr = [];
-                    for ( let x = 0; x < vaseSize.h; x+= 2 ) {
-                        
-                        arr.push( { x : Math.sin( ( x / 40 )  + 1 ) * vaseSize.w, y : x }  );
-                    }
-                    
-                    return arr;
-                }()
-            };
+            */
+           
             
             const floor = {
                 "type" : "plane",
@@ -90,15 +70,35 @@ class World extends Component {
                 "rotation" : [ 90, 0, 0 ]
             }
             
+            const flamingo = {
+                "name": "flamingo",
+                "color" : "pink",
+                "size" : [ 100, 100, 100 ],
+                "children" : [
+                    {
+                        "name" : "neck",
+                        "type" : "tube",
+                        "material" : "lambert",
+                        "color" : "pink",
+                        "path" : [ 
+                            { type: "quad", x: 0, y: 0, z: 0 },
+                            { type: "quad", x: 25, y: 25, z: 0 }
+                        ],
+                        "size": [ 25, 100, 0 ]
+                        
+                    }
+                ]
+            }
+            
             const wall = {
                 "type" : "plane",
                 "size" : [ 10000, 10000 ],
                 "material" : "phong",
                 "color" : "red",
-                "position" : "0 0 -5000"
+                "position" : "0 0 -10000"
             }
 
-this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, vase ].concat( albums ) } ) );
+this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, wall, flamingo ] } ) );
             
             this.world.start();
             

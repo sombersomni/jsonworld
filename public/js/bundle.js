@@ -261,7 +261,7 @@ process.umask = function() { return 0; };
 
 
 var bind = __webpack_require__(20);
-var isBuffer = __webpack_require__(59);
+var isBuffer = __webpack_require__(60);
 
 /*global toString:true*/
 
@@ -45967,7 +45967,7 @@ exports.default = progressEmitter;
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var normalizeHeaderName = __webpack_require__(61);
+var normalizeHeaderName = __webpack_require__(62);
 
 var DEFAULT_CONTENT_TYPE = {
   'Content-Type': 'application/x-www-form-urlencoded'
@@ -46504,12 +46504,12 @@ module.exports = function bind(fn, thisArg) {
 /* WEBPACK VAR INJECTION */(function(process) {
 
 var utils = __webpack_require__(1);
-var settle = __webpack_require__(62);
-var buildURL = __webpack_require__(64);
-var parseHeaders = __webpack_require__(65);
-var isURLSameOrigin = __webpack_require__(66);
+var settle = __webpack_require__(63);
+var buildURL = __webpack_require__(65);
+var parseHeaders = __webpack_require__(66);
+var isURLSameOrigin = __webpack_require__(67);
 var createError = __webpack_require__(22);
-var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(67);
+var btoa = (typeof window !== 'undefined' && window.btoa && window.btoa.bind(window)) || __webpack_require__(68);
 
 module.exports = function xhrAdapter(config) {
   return new Promise(function dispatchXhrRequest(resolve, reject) {
@@ -46606,7 +46606,7 @@ module.exports = function xhrAdapter(config) {
     // This is only done if running in a standard browser environment.
     // Specifically not if we're in a web worker, or react-native.
     if (utils.isStandardBrowserEnv()) {
-      var cookies = __webpack_require__(68);
+      var cookies = __webpack_require__(69);
 
       // Add xsrf header
       var xsrfValue = (config.withCredentials || isURLSameOrigin(config.url)) && config.xsrfCookieName ?
@@ -46691,7 +46691,7 @@ module.exports = function xhrAdapter(config) {
 "use strict";
 
 
-var enhanceError = __webpack_require__(63);
+var enhanceError = __webpack_require__(64);
 
 /**
  * Create an Error with the specified message, config, error code, request and response.
@@ -64189,8 +64189,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } //World Component
 
 
-var axios = __webpack_require__(57);
-var path = __webpack_require__(76);
+var axios = __webpack_require__(58);
+var path = __webpack_require__(77);
 
 var World = function (_Component) {
     _inherits(World, _Component);
@@ -64242,50 +64242,28 @@ var World = function (_Component) {
             });
 
             axios.get("./albums").then(function (response) {
-
-                var albums = [];
-                for (var i = 0; i <= 5; i++) {
-                    var eachAlbum = response.data.items[i];
-                    var album = {
-                        "name": eachAlbum.name,
-                        "type": "box",
-                        "size": [eachAlbum.images[1].width, eachAlbum.images[1].height, 10],
-                        "position": [eachAlbum.images[1].width * i * 2 * (i % 2 == 0 ? -1 : 1), 0, -1000],
-                        "color": "white",
-                        "material": "lambert",
-                        "group": "albums",
-                        "shadow": true,
-                        "animation": "rotation 2s",
-                        "animationKeyframes": {
-                            "rotation": [{ rotateY: 100 }]
+                /*
+                let albums = [];
+                for ( let i = 0; i <= 5; i++ ) {
+                    const eachAlbum = response.data.items[ i ];
+                    const album = {
+                        "name" : eachAlbum.name,
+                        "type" : "box",
+                        "size" : [ eachAlbum.images[ 1 ].width , eachAlbum.images[ 1 ].height, 10 ],
+                        "position": [ eachAlbum.images[ 1 ].width * i * 2 * ( i % 2 == 0 ? -1 : 1 ), 0, -1000 ],
+                        "color" : "white",
+                        "material" : "lambert",
+                        "group" : "albums",
+                        "shadow" : true,
+                        "animation" : "rotation 2s",
+                        "animationKeyframes" : {
+                            "rotation" : [ { rotateY: 100 } ]
                         },
-                        "texture": [eachAlbum.images[1].url]
+                        "texture" : [ eachAlbum.images[ 1 ].url ]
                     };
-
-                    albums.push(album);
+                      albums.push( album );
                 }
-
-                var vaseSize = {
-
-                    w: 50,
-                    h: 200
-                };
-
-                var vase = {
-                    type: "lathe",
-                    size: vaseSize,
-                    color: "blue",
-                    path: function () {
-
-                        var arr = [];
-                        for (var x = 0; x < vaseSize.h; x += 2) {
-
-                            arr.push({ x: Math.sin(x / 40 + 1) * vaseSize.w, y: x });
-                        }
-
-                        return arr;
-                    }()
-                };
+                */
 
                 var floor = {
                     "type": "plane",
@@ -64297,15 +64275,30 @@ var World = function (_Component) {
                     "rotation": [90, 0, 0]
                 };
 
+                var flamingo = {
+                    "name": "flamingo",
+                    "color": "pink",
+                    "size": [100, 100, 100],
+                    "children": [{
+                        "name": "neck",
+                        "type": "tube",
+                        "material": "lambert",
+                        "color": "pink",
+                        "path": [{ type: "quad", x: 0, y: 0, z: 0 }, { type: "quad", x: 25, y: 25, z: 0 }],
+                        "size": [25, 100, 0]
+
+                    }]
+                };
+
                 var wall = {
                     "type": "plane",
                     "size": [10000, 10000],
                     "material": "phong",
                     "color": "red",
-                    "position": "0 0 -5000"
+                    "position": "0 0 -10000"
                 };
 
-                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, vase].concat(albums) }));
+                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, wall, flamingo] }));
 
                 _this2.world.start();
 
@@ -64718,23 +64711,23 @@ var _cameraView = __webpack_require__(46);
 
 var _cameraView2 = _interopRequireDefault(_cameraView);
 
-var _hashID = __webpack_require__(79);
+var _hashID = __webpack_require__(47);
 
 var _hashID2 = _interopRequireDefault(_hashID);
 
-var _createAnime = __webpack_require__(47);
+var _createAnime = __webpack_require__(48);
 
 var _createAnime2 = _interopRequireDefault(_createAnime);
 
-var _createGeometry = __webpack_require__(48);
+var _createGeometry = __webpack_require__(49);
 
 var _createGeometry2 = _interopRequireDefault(_createGeometry);
 
-var _createMaterial = __webpack_require__(52);
+var _createMaterial = __webpack_require__(53);
 
 var _createMaterial2 = _interopRequireDefault(_createMaterial);
 
-var _audioInitializer = __webpack_require__(53);
+var _audioInitializer = __webpack_require__(54);
 
 var _audioInitializer2 = _interopRequireDefault(_audioInitializer);
 
@@ -64748,10 +64741,10 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var OBJLoader = __webpack_require__(54);
+var OBJLoader = __webpack_require__(55);
 OBJLoader(THREE);
 
-var MTLLoader = __webpack_require__(55);
+var MTLLoader = __webpack_require__(56);
 
 // JSON
 
@@ -65323,6 +65316,8 @@ var framework = {
 
         try {
             // @param g stands for geometry
+            // @param sI is the current scene index
+
             var g = this.createGeometry(options);
 
             if (options.texture instanceof Array) {
@@ -65337,42 +65332,7 @@ var framework = {
 
                 m = this.createMaterial(options);
             }
-            /*
-                          console.log( multiMaterials, "multiMaterials should be full" );
-                          
-                          
-            
-                      if ( options.count !== undefined && options.count > 1 ) {
-            const group = new THREE.Group();
-                
-            for ( let i = 0; i <= options.count - 1; i++ ) {
-                const g = this.createGeometry( options );
-                //create a grid to place each object correctly so no objects touch or collide 
-                 
-                 mesh = this.gridMeshPosition( new THREE.Mesh( g, m ), options, i );
-                
-                if ( options.hasOwnProperty( "shadow" ) && options.shadow === true ) {
-                    mesh.receiveShadow = true;
-                    mesh.castShadow = true;
-                }
-                
-                group.add( mesh );
-            }
-            
-            group.name = options.name !== undefined ? options.name : "bundle";
-            
-            this.setupWorldClone( sI, group );
-                
-            if ( options.animation !== undefined || options.animationType !== undefined ) {
-                
-                this.scenes[sI].add( this.setupAnimationForMesh( sI, group, options ) );
-            } else {
-                
-                this.scenes[sI].add( group );
-            }
-            } else {
-            
-            */
+
             mesh = new THREE.Mesh(g, m);
 
             if (options.hasOwnProperty("shadow") && options.shadow == true) {
@@ -65411,7 +65371,7 @@ var framework = {
                 mesh.geometry.vertices.forEach(function (v, i) {
 
                     var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
-                    var geo = _this4.createGeometry({ type: "sphere", size: 1, segments: 8 });
+                    var geo = _this4.createGeometry({ type: "sphere", size: 0.5, segments: 8 });
                     var debugMesh = new THREE.Mesh(geo, material);
                     //copies the position of this vertice
                     debugMesh.position.set(v.x, v.y, v.z);
@@ -65427,6 +65387,7 @@ var framework = {
 
             var upgradeMesh = void 0;
 
+            console.log(options, "right before setup Animation for Mesh");
             if (options.animation !== undefined || options.animationType !== undefined) {
 
                 upgradeMesh = this.setupAnimationForMesh(sI, mesh, options);
@@ -65434,33 +65395,46 @@ var framework = {
                 upgradeMesh = mesh;
             }
 
-            console.log(options, "right before setup Animation for Mesh");
+            console.log(upgradeMesh, group, "at the end of mesh manipulation ");
+
+            /*
+            if( options.hasOwnProperty( "children" ) && options.children instanceof Array ) {
+                
+                options.children.forEach( ( child, x ) => {
+                       
+                    console.log( child, "this is a child" );
+                    this.setupMesh( Object.assign( {}, child, { group: options.group !== undefined ? options.group : options.name } ) , sI, group, x );
+                        
+                    
+                } );
+            }
+            */
 
             if (options.group !== undefined && typeof options.group === "string") {
 
                 if (this.groupNames.has(options.group)) {
 
                     var grp = this.scenes[sI].getObjectByName(options.group);
-                    grp.add(mesh);
+                    grp.add(upgradeMesh);
                 } else {
 
                     this.groupNames.add(options.group);
                     var _grp = new THREE.Group();
                     _grp.name = options.group;
-                    _grp.add(mesh);
+                    _grp.add(upgradeMesh);
                     this.scenes[sI].add(_grp);
                 }
             } else if (options.count !== undefined && options.count > 1 && i < options.count) {
 
                 i++;
-                group.add(mesh);
+                group.add(upgradeMesh);
                 this.setupMesh(options, sI, group, i);
             } else {
 
                 if (group.children.length > 0) {
                     this.scenes[sI].add(group);
                 } else {
-                    this.scenes[sI].add(mesh);
+                    this.scenes[sI].add(upgradeMesh);
                 }
             }
 
@@ -65502,7 +65476,7 @@ var framework = {
         ["position", "rotation", "scale"].forEach(function (type) {
 
             var transform = _this5.typeChecker(options, type, _defaults2.default);
-
+            console.log(transform);
             mesh[type]["set"](type === "rotation" ? _this5.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this5.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this5.convertToRadians(transform[2]) : transform[2]);
         });
 
@@ -65544,6 +65518,18 @@ var framework = {
         return new Promise(function (res, rej) {
             _this7.scenes[scene.id].name = _this7.scenes.length === 1 ? "preloader" : "main";
             _this7.scenes[scene.id].fog = _this7.fog;
+            //adds arrowhelper and other debugs
+            if (_this7.options.hasOwnProperty("debug") && _this7.options.debug) {
+                var origin = new THREE.Vector3(1, 0, 0);
+                var length = 200;
+                var xAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0).normalize(), origin, length, 0xff0000);
+                var yAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0).normalize(), origin, length, 0x00ff00);
+                var zAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1).normalize(), origin, length, 0x0000ff);
+
+                _this7.scenes[scene.id].add(xAxisHelper);
+                _this7.scenes[scene.id].add(yAxisHelper);
+                _this7.scenes[scene.id].add(zAxisHelper);
+            }
             //creates the sun light for the whole world
             var sunlight = new THREE.DirectionalLight(sunColor, intensity);
             sunlight.name = "sunlight";
@@ -65908,6 +65894,13 @@ var framework = {
 
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
+
+            if (obj.name === "tube") {
+                obj.rotation.y += 0.005;
+                obj.material.map.needsUpdate = true;
+                obj.material.map.offset.x += 0.01;
+                // console.log( obj );
+            }
 
             if (/Light/.test(obj.type)) {
                 //checks for light objects
@@ -66893,6 +66886,22 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+exports.default = function (meshID, id) {
+
+    return Math.ceil(id / meshID * 1000);
+};
+
+/***/ }),
+/* 48 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
 exports.default = function (mesh) {
     var _this = this;
 
@@ -67261,7 +67270,7 @@ function determineTarget(type, mesh) {
 }
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67276,13 +67285,11 @@ exports.default = function () {
 
     //goes through every geometry type plus custom ones
     var extrude = options.extrude !== undefined && options.hasOwnProperty("extrude") ? options.extrude : undefined,
-        path = options.path !== undefined && options.hasOwnProperty("path") && options.path instanceof Array ? options.path.map(function (vector) {
-        return new THREE.Vector2(vector.x, vector.y);
-    }) : undefined,
         segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
         thetaStart = this.convertToRadians(options.angleStart !== undefined ? options.angleStart : 0),
         thetaLength = this.convertToRadians(options.arcAngle !== undefined ? options.arcAngle : 360),
         type = options.type !== undefined ? options.type : "default",
+        path = options.path !== undefined && options.hasOwnProperty("path") && options.path instanceof Array ? createPath(type, options.path) : undefined,
         openEnded = options.openEnd !== undefined ? options.openEnd : false;
 
     var size = this.typeChecker(options, "size", _defaults2.default),
@@ -67300,6 +67307,18 @@ exports.default = function () {
         case "cone":
 
             return new THREE.ConeGeometry(size[0], size[1], segments, segments, openEnded, thetaStart, thetaLength);
+
+        case "tube":
+
+            if (path !== undefined) {
+
+                return new THREE.TubeGeometry(path, size[0] / 2, 2, segments, false);
+            } else {
+
+                var newPath = createPath("tube", { x: 0, y: size[1], z: 0 });
+                console.log(newPath, "tube uses height as path");
+                return new THREE.TubeGeometry(newPath, size[0] / 2, segments / 4, segments, false);
+            }
 
         case "cylinder":
 
@@ -67392,10 +67411,11 @@ exports.default = function () {
 
                 var angleArr = this.typeChecker(options, "typeHandler", { typeHandler: _defaults2.default.latheHandler });
 
-                var ang = Math.PI / 180 * angleArr[0];
-                length = 20;
+                var ang = Math.PI / 180 * angleArr[0],
+                    length = size[1];
+
                 for (var i = 0; i <= length - 1; i++) {
-                    _points.push(new THREE.Vector2((Math.sin(i * (ang / length)) * 10 + 5) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
+                    _points.push(new THREE.Vector2(Math.sin(i * ang) * (size[0] > 0 ? size[0] : 1), (i - length / 2) * 2 * size[1]));
                 }
                 return new THREE.LatheGeometry(_points);
             }
@@ -67442,15 +67462,15 @@ var _defaults = __webpack_require__(7);
 
 var _defaults2 = _interopRequireDefault(_defaults);
 
-var _parametricHandlers = __webpack_require__(49);
+var _parametricHandlers = __webpack_require__(50);
 
 var _parametricHandlers2 = _interopRequireDefault(_parametricHandlers);
 
-var _proceduralTree = __webpack_require__(50);
+var _proceduralTree = __webpack_require__(51);
 
 var _proceduralTree2 = _interopRequireDefault(_proceduralTree);
 
-var _rotatePoint = __webpack_require__(51);
+var _rotatePoint = __webpack_require__(52);
 
 var _rotatePoint2 = _interopRequireDefault(_rotatePoint);
 
@@ -67458,8 +67478,133 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+function chooseCurve(path) {
+    var i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var arr = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    var curvePath = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new THREE.CurvePath();
+
+
+    var curve = void 0,
+        cp = void 0,
+        cpTwo = void 0;
+
+    if (i <= path.length - 1) {
+
+        var current = path[i];
+        var next = path[i + 1] !== undefined ? path[i + 1] : { x: 0, y: 0, z: 0 };
+
+        console.log(next, "next path");
+
+        var xOffset = -50,
+            yOffset = 0,
+            zOffset = 0;
+
+        var type = current.type !== undefined ? current.type : "default";
+        switch (type) {
+
+            case "quad":
+
+                if (current.cp instanceof Array) {
+
+                    cp = current.cp[0];
+                } else if (current.cp instanceof Object) {
+
+                    cp = current.cp;
+                } else {
+
+                    cp = { x: next.x + xOffset,
+                        y: next.y + yOffset,
+                        z: next.z + zOffset
+                    };
+                }
+
+                curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(current.x, current.y, current.z), new THREE.Vector3(next.x, next.y, next.z), new THREE.Vector3(cp.x, cp.y, cp.z));
+
+                curvePath.add(curve);
+                i++;
+
+                console.log(curvePath, curve);
+
+                return chooseCurve(path, i, [], curvePath);
+
+            case "spline":
+
+                arr.push(new THREE.Vector3(current.x, current.y, current.z));
+                if (next.type === "spline") {
+                    i++;
+
+                    return chooseCurve(path, i, arr, curvePath);
+                } else {
+                    curvePath.add(new THREE.CatmullRomCurve3(arr));
+
+                    i++;
+                    return chooseCurve(path, i, [], curvePath);
+                }
+                break;
+
+            case "cubic":
+
+                if (current.cp instanceof Array) {
+                    var cpOne = current.cp[0],
+                        _cpTwo = current.cp[1];
+
+                    curve = new THREE.CubicBezierCurve3(new THREE.Vector3(current.x, current.y, current.z), new THREE.Vector3(next.x, next.y, next.z), new THREE.Vector3(cpOne.x, cpOne.y, cpOne.z), new THREE.Vector3(_cpTwo.x, _cpTwo.y, _cpTwo.z));
+                } else {
+                    curve = new THREE.CubicBezierCurve3(new THREE.Vector3(current.x, current.y, current.z), new THREE.Vector3(next.x, next.y, next.z), new THREE.Vector3(current.x, current.y, current.z), new THREE.Vector3(next.x, next.y, next.z));
+                }
+
+                curvePath.add(curve);
+
+                i++;
+                return chooseCurve(path, i, [], curvePath);
+
+            default:
+
+                curve = new THREE.LineCurve3(new THREE.Vector3(current.x, current.y, current.z));
+
+                curvePath.add(curve);
+                i++;
+
+                return chooseCurve(path, i, [], curvePath);
+
+        }
+    } else {
+
+        /*
+        if ( curvePath.curves.length <= 1 ) {
+            //if there is only one curve point, curvePath will use the world orgin
+            curvePath.add( new THREE.LineCurve3( 0, 0, 0 ) );
+        }
+        */
+        return curvePath;
+    }
+}
+
+//UTILS
+
+function createPath() {
+    var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "default";
+    var path = arguments[1];
+
+
+    switch (type) {
+
+        case "tube":
+
+            var curve = chooseCurve(path);
+            return curve;
+        case "lathe":
+            //returns a new array of THREE Vectors
+            return path instanceof Array ? path.map(function (vector) {
+                return new THREE.Vector2(vector.x, vector.y);
+            }) : new THREE.Vector2(path.x, path.y);
+        default:
+            return path;
+    }
+}
+
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67517,7 +67662,7 @@ var parametricHandlers = {
 exports.default = parametricHandlers;
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67626,7 +67771,7 @@ function generateBranch() {
 }
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67645,7 +67790,7 @@ exports.default = function (x, y, angle) {
 };
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67662,16 +67807,36 @@ exports.default = function () {
     var color = options.color !== undefined ? this.optionParser(options.color, undefined, "color") : new THREE.Color(),
         emissive = options.emissiveColor !== undefined ? options.emissiveColor : new THREE.Color(_defaults2.default.emissiveColor),
         emissiveIntensity = options.emissiveIntensity !== undefined ? options.emissiveIntensity : .1,
-        material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default",
-        map = options.texture !== undefined && options.texture instanceof THREE.Texture ? options.texture : null,
         overdraw = options.overdraw !== undefined ? options.overdraw : _defaults2.default.overdraw,
         roughness = options.roughness !== undefined ? options.roughness : _defaults2.default.roughness,
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
-        side = options.side !== undefined ? options.side : THREE.FrontSide,
+        side = options.side !== undefined && typeof options.side === "string" ? options.side : THREE.FrontSide,
         transparent = options.transparent !== undefined ? options.transparent : false,
         wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth : _defaults2.default.wireframeLinewidth,
         wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : _defaults2.default.wireframeLinecap,
         wireframeLinejoin = options.wireframeLinejoin !== undefined ? options.wireframeLinejoin : _defaults2.default.wireframeLinejoin;
+
+    var material = options.hasOwnProperty("material") && options.material !== undefined ? options.material : "default",
+        map = options.texture !== undefined && options.texture instanceof THREE.Texture ? options.texture : null;
+
+    //set texture settings
+    if (map !== null) {
+        if (typeof options.textureWrapping === "string" && options.textureWrapping === "repeat") {
+
+            map.wrapS = THREE.RepeatWrapping;
+            map.wrapT = THREE.RepeatWrapping;
+        } else if (typeof options.textureWrapping === "string" && options.textureWrapping === "mirror") {
+
+            map.wrapS = THREE.MirroredRepeatWrapping;
+            map.wrapT = THREE.MirroredRepeatWrapping;
+        } else {
+
+            map.wrapS = THREE.ClampToEdgeWrapping;
+            map.wrapT = THREE.ClampToEdgeWrapping;
+        }
+
+        //map.repeat.set( 64, 8 );
+    }
 
     var matOpts = {
         color: color,
@@ -67679,9 +67844,13 @@ exports.default = function () {
         emissiveIntensity: 0.0025,
         map: map,
         overdraw: overdraw,
-        side: options.type === "plane" ? THREE.DoubleSide : side,
+        side: chooseSide(side),
         transparent: transparent
     };
+
+    if (this.options.hasOwnProperty("debug") && this.options.debug) {
+        material = "wireframe";
+    }
 
     switch (material) {
         case "basic":
@@ -67733,8 +67902,21 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+var chooseSide = function chooseSide(side) {
+
+    switch (side) {
+
+        case "front":
+            return THREE.FrontSide;
+        case "back":
+            return THREE.BackSide;
+        default:
+            return THREE.DoubleSide;
+    }
+};
+
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -67835,7 +68017,7 @@ function seperateSoundName(path) {
 exports.default = initializeAudio;
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -68506,7 +68688,7 @@ module.exports = function (THREE) {
 };
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /**
@@ -68514,7 +68696,7 @@ module.exports = function (THREE) {
  *
  * @author angelxuanchang
  */
-var THREE = __webpack_require__(56);
+var THREE = __webpack_require__(57);
 function MTLLoader( manager ) {
 
   this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
@@ -69048,7 +69230,7 @@ module.exports = MTLLoader;
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -113286,13 +113468,13 @@ function CanvasRenderer() {
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ (function(module, exports, __webpack_require__) {
 
-module.exports = __webpack_require__(58);
+module.exports = __webpack_require__(59);
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113300,7 +113482,7 @@ module.exports = __webpack_require__(58);
 
 var utils = __webpack_require__(1);
 var bind = __webpack_require__(20);
-var Axios = __webpack_require__(60);
+var Axios = __webpack_require__(61);
 var defaults = __webpack_require__(11);
 
 /**
@@ -113335,14 +113517,14 @@ axios.create = function create(instanceConfig) {
 
 // Expose Cancel & CancelToken
 axios.Cancel = __webpack_require__(24);
-axios.CancelToken = __webpack_require__(74);
+axios.CancelToken = __webpack_require__(75);
 axios.isCancel = __webpack_require__(23);
 
 // Expose all/spread
 axios.all = function all(promises) {
   return Promise.all(promises);
 };
-axios.spread = __webpack_require__(75);
+axios.spread = __webpack_require__(76);
 
 module.exports = axios;
 
@@ -113351,7 +113533,7 @@ module.exports.default = axios;
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ (function(module, exports) {
 
 /*!
@@ -113378,7 +113560,7 @@ function isSlowBuffer (obj) {
 
 
 /***/ }),
-/* 60 */
+/* 61 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113386,8 +113568,8 @@ function isSlowBuffer (obj) {
 
 var defaults = __webpack_require__(11);
 var utils = __webpack_require__(1);
-var InterceptorManager = __webpack_require__(69);
-var dispatchRequest = __webpack_require__(70);
+var InterceptorManager = __webpack_require__(70);
+var dispatchRequest = __webpack_require__(71);
 
 /**
  * Create a new instance of Axios
@@ -113464,7 +113646,7 @@ module.exports = Axios;
 
 
 /***/ }),
-/* 61 */
+/* 62 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113483,7 +113665,7 @@ module.exports = function normalizeHeaderName(headers, normalizedName) {
 
 
 /***/ }),
-/* 62 */
+/* 63 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113516,7 +113698,7 @@ module.exports = function settle(resolve, reject, response) {
 
 
 /***/ }),
-/* 63 */
+/* 64 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113544,7 +113726,7 @@ module.exports = function enhanceError(error, config, code, request, response) {
 
 
 /***/ }),
-/* 64 */
+/* 65 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113617,7 +113799,7 @@ module.exports = function buildURL(url, params, paramsSerializer) {
 
 
 /***/ }),
-/* 65 */
+/* 66 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113677,7 +113859,7 @@ module.exports = function parseHeaders(headers) {
 
 
 /***/ }),
-/* 66 */
+/* 67 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113752,7 +113934,7 @@ module.exports = (
 
 
 /***/ }),
-/* 67 */
+/* 68 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113795,7 +113977,7 @@ module.exports = btoa;
 
 
 /***/ }),
-/* 68 */
+/* 69 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113855,7 +114037,7 @@ module.exports = (
 
 
 /***/ }),
-/* 69 */
+/* 70 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -113914,18 +114096,18 @@ module.exports = InterceptorManager;
 
 
 /***/ }),
-/* 70 */
+/* 71 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 
 var utils = __webpack_require__(1);
-var transformData = __webpack_require__(71);
+var transformData = __webpack_require__(72);
 var isCancel = __webpack_require__(23);
 var defaults = __webpack_require__(11);
-var isAbsoluteURL = __webpack_require__(72);
-var combineURLs = __webpack_require__(73);
+var isAbsoluteURL = __webpack_require__(73);
+var combineURLs = __webpack_require__(74);
 
 /**
  * Throws a `Cancel` if cancellation has been requested.
@@ -114007,7 +114189,7 @@ module.exports = function dispatchRequest(config) {
 
 
 /***/ }),
-/* 71 */
+/* 72 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114034,7 +114216,7 @@ module.exports = function transformData(data, headers, fns) {
 
 
 /***/ }),
-/* 72 */
+/* 73 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114055,7 +114237,7 @@ module.exports = function isAbsoluteURL(url) {
 
 
 /***/ }),
-/* 73 */
+/* 74 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114076,7 +114258,7 @@ module.exports = function combineURLs(baseURL, relativeURL) {
 
 
 /***/ }),
-/* 74 */
+/* 75 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114140,7 +114322,7 @@ module.exports = CancelToken;
 
 
 /***/ }),
-/* 75 */
+/* 76 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -114174,7 +114356,7 @@ module.exports = function spread(callback) {
 
 
 /***/ }),
-/* 76 */
+/* 77 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -114403,24 +114585,6 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
-
-/***/ }),
-/* 77 */,
-/* 78 */,
-/* 79 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-exports.default = function (meshID, id) {
-
-    return Math.ceil(id / meshID * 1000);
-};
 
 /***/ })
 /******/ ]);
