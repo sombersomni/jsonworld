@@ -15,17 +15,15 @@ function chooseCurve( path, i = 0, arr = [], curvePath = new THREE.CurvePath() )
     if ( i <= path.length - 1 ) {
         
         const current = path[ i ];
-        const next = path[ i + 1 ] !== undefined ? path[ i + 1 ] : { x: 0, y: 0, z: 0 };
+        const next = path[ i + 1 ] !== undefined && i === 0 ? path[ i + 1 ] : { x: 0, y: 0, z: 0 };
         
-        console.log( next, "next path" );
-        
-        const xOffset = -50,
+        const xOffset = 0,
               yOffset = 0,
               zOffset = 0;
         
         const type = current.type !== undefined ? current.type : "default";
         switch( type ) {
-
+                
             case "quad" :
                 
                 if ( current.cp instanceof Array ) {
@@ -44,6 +42,7 @@ function chooseCurve( path, i = 0, arr = [], curvePath = new THREE.CurvePath() )
                          };
                 }
                 
+                console.log( cp, current, next , "filed out");
                 curve = new THREE.QuadraticBezierCurve3( new THREE.Vector3( current.x, current.y, current.z ), new THREE.Vector3( next.x, next.y, next.z ), new THREE.Vector3( cp.x, cp.y, cp.z )  );
 
                 curvePath.add( curve );
@@ -156,11 +155,30 @@ export default function ( options = {} ) {
        
             if ( path !== undefined ) {
                 
-                return new THREE.TubeGeometry( path, size[ 0 ] / 2, 2, segments, false );
+                return new THREE.TubeGeometry( path, size[ 0 ] / 2, segments / 4, segments, false );
+                
+            } else if ( options.hasOwnProperty( "typeHandler" ) && options.typeHandler !== undefined ) {
+                
+                console.log( "this is working in typehandler" );
+                class CustomCurve extends THREE.Curve {
+                    
+                    constructor() {
+                        super();
+                    }
+                    
+                    getPoint( t ) {
+                        const points = options.typeHandler( t );
+                        return new THREE.Vector3( points.x, points.y, points.z );
+                    }
+                }
+                
+                const curve = new CustomCurve();
+                
+                return new THREE.TubeGeometry( curve, size[ 0 ] / 2, segments / 4, segments, false );
+                       
             } else {
                 
-                const newPath = createPath( "tube", { x: 0, y: size[ 1 ], z: 0 } );
-                console.log( newPath, "tube uses height as path" );
+                const newPath = createPath( "tube", [ { x: 0, y: size[ 1 ], z: 0 } ] );
                 return new THREE.TubeGeometry( newPath, size[ 0 ] / 2, segments / 4, segments, false );
             }
             

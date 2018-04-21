@@ -64275,23 +64275,65 @@ var World = function (_Component) {
                     "rotation": [90, 0, 0]
                 };
 
+                var bender = {
+                    "name": "bender",
+                    "type": "cylinder",
+                    "size": [5, 100, 0],
+                    "position": [100, 0, 0]
+
+                };
+                var knee = {
+                    "name": "knee",
+                    "type": "dodecahedron",
+                    "position": [100, -50, 0],
+                    "size": 20
+                };
+
+                var leg = {
+                    "name": "leg",
+                    "children": [bender, knee]
+                };
+                var head = {
+                    "name": "head",
+                    "type": "sphere",
+                    "size": 14,
+                    "position": [0, 75, 0],
+                    "relativeTo": "neck"
+                };
+
+                var neck = {
+                    "name": "neck",
+                    "type": "tube",
+                    "side": "front",
+                    "scale": 1,
+                    "typeHandler": function typeHandler(t) {
+                        //t gives a number from 0 to 1 to distribute points
+                        var yVal = void 0,
+                            xVal = void 0;
+                        var radius = 15;
+                        if (t < 0.25) {
+                            yVal = -10 * Math.sin(t * 4 * Math.PI);
+                            xVal = Math.sin(t * Math.PI * 2) * (radius * 2) - radius;
+                        } else {
+                            yVal = 100 * (t - 0.25);
+                            xVal = Math.sin(t * Math.PI * 2) * radius;
+                        }
+                        return { x: xVal, y: yVal, z: 0 };
+                    },
+                    "rotation": [0, 180, 0]
+                };
+
                 var flamingo = {
                     "name": "flamingo",
+                    "material": "lambert",
                     "color": "pink",
-                    "size": [100, 100, 100],
-                    "children": [{
-                        "name": "neck",
-                        "type": "tube",
-                        "material": "lambert",
-                        "color": "pink",
-                        "path": [{ type: "quad", x: 0, y: 0, z: 0 }, { type: "quad", x: 25, y: 25, z: 0 }],
-                        "size": [25, 100, 0]
+                    "children": [head, neck, leg]
 
-                    }]
                 };
 
                 var wall = {
                     "type": "plane",
+                    "name": "wall",
                     "size": [10000, 10000],
                     "material": "phong",
                     "color": "red",
@@ -65397,18 +65439,15 @@ var framework = {
 
             console.log(upgradeMesh, group, "at the end of mesh manipulation ");
 
-            /*
-            if( options.hasOwnProperty( "children" ) && options.children instanceof Array ) {
-                
-                options.children.forEach( ( child, x ) => {
-                       
-                    console.log( child, "this is a child" );
-                    this.setupMesh( Object.assign( {}, child, { group: options.group !== undefined ? options.group : options.name } ) , sI, group, x );
-                        
-                    
-                } );
+            if (options.hasOwnProperty("children") && options.children instanceof Array) {
+
+                options.children.forEach(function (child, x) {
+
+                    _this4.setupMesh(Object.assign({}, child, { group: options.group !== undefined ? options.group : options.name }), sI, group, x);
+                });
+
+                return;
             }
-            */
 
             if (options.group !== undefined && typeof options.group === "string") {
 
@@ -65895,10 +65934,10 @@ var framework = {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
-            if (obj.name === "tube") {
-                obj.rotation.y += 0.005;
-                obj.material.map.needsUpdate = true;
-                obj.material.map.offset.x += 0.01;
+            if (obj.name === "flamingo") {
+                // obj.rotation.y += 0.005;
+                //obj.material.map.needsUpdate = true;
+                //obj.material.map.offset.x += 0.01;
                 // console.log( obj );
             }
 
@@ -67280,6 +67319,8 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
@@ -67312,11 +67353,37 @@ exports.default = function () {
 
             if (path !== undefined) {
 
-                return new THREE.TubeGeometry(path, size[0] / 2, 2, segments, false);
+                return new THREE.TubeGeometry(path, size[0] / 2, segments / 4, segments, false);
+            } else if (options.hasOwnProperty("typeHandler") && options.typeHandler !== undefined) {
+
+                console.log("this is working in typehandler");
+
+                var CustomCurve = function (_THREE$Curve) {
+                    _inherits(CustomCurve, _THREE$Curve);
+
+                    function CustomCurve() {
+                        _classCallCheck(this, CustomCurve);
+
+                        return _possibleConstructorReturn(this, (CustomCurve.__proto__ || Object.getPrototypeOf(CustomCurve)).call(this));
+                    }
+
+                    _createClass(CustomCurve, [{
+                        key: "getPoint",
+                        value: function getPoint(t) {
+                            var points = options.typeHandler(t);
+                            return new THREE.Vector3(points.x, points.y, points.z);
+                        }
+                    }]);
+
+                    return CustomCurve;
+                }(THREE.Curve);
+
+                var curve = new CustomCurve();
+
+                return new THREE.TubeGeometry(curve, size[0] / 2, segments / 4, segments, false);
             } else {
 
-                var newPath = createPath("tube", { x: 0, y: size[1], z: 0 });
-                console.log(newPath, "tube uses height as path");
+                var newPath = createPath("tube", [{ x: 0, y: size[1], z: 0 }]);
                 return new THREE.TubeGeometry(newPath, size[0] / 2, segments / 4, segments, false);
             }
 
@@ -67478,6 +67545,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+//UTILS
+
 function chooseCurve(path) {
     var i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var arr = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
@@ -67491,11 +67566,9 @@ function chooseCurve(path) {
     if (i <= path.length - 1) {
 
         var current = path[i];
-        var next = path[i + 1] !== undefined ? path[i + 1] : { x: 0, y: 0, z: 0 };
+        var next = path[i + 1] !== undefined && i === 0 ? path[i + 1] : { x: 0, y: 0, z: 0 };
 
-        console.log(next, "next path");
-
-        var xOffset = -50,
+        var xOffset = 0,
             yOffset = 0,
             zOffset = 0;
 
@@ -67518,6 +67591,7 @@ function chooseCurve(path) {
                     };
                 }
 
+                console.log(cp, current, next, "filed out");
                 curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(current.x, current.y, current.z), new THREE.Vector3(next.x, next.y, next.z), new THREE.Vector3(cp.x, cp.y, cp.z));
 
                 curvePath.add(curve);
@@ -67579,8 +67653,6 @@ function chooseCurve(path) {
         return curvePath;
     }
 }
-
-//UTILS
 
 function createPath() {
     var type = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "default";

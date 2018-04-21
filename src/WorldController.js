@@ -636,18 +636,16 @@ const framework = {
             
                 console.log( upgradeMesh, group, "at the end of mesh manipulation " );
                 
-                /*
                 if( options.hasOwnProperty( "children" ) && options.children instanceof Array ) {
                     
                     options.children.forEach( ( child, x ) => {
                            
-                        console.log( child, "this is a child" );
                         this.setupMesh( Object.assign( {}, child, { group: options.group !== undefined ? options.group : options.name } ) , sI, group, x );
                             
-                        
                     } );
+                    
+                    return;
                 }
-                */
             
                 if( options.group !== undefined && typeof options.group === "string" ) {
                     
@@ -1139,10 +1137,10 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
      
-            if ( obj.name === "tube" ) {
-                obj.rotation.y += 0.005;
-                obj.material.map.needsUpdate = true;
-                obj.material.map.offset.x += 0.01;
+            if ( obj.name === "flamingo" ) {
+               // obj.rotation.y += 0.005;
+                //obj.material.map.needsUpdate = true;
+                //obj.material.map.offset.x += 0.01;
                // console.log( obj );
             }
             

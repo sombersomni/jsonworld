@@ -70,28 +70,71 @@ class World extends Component {
                 "rotation" : [ 90, 0, 0 ]
             }
             
-            const flamingo = {
-                "name": "flamingo",
-                "color" : "pink",
-                "size" : [ 100, 100, 100 ],
+            const bender = {
+                "name" : "bender",
+                "type" : "cylinder",
+                "size" : [ 5, 100, 0 ],
+                "position" : [ 100, 0, 0 ]
+                
+            }
+            const knee = {
+                "name" : "knee",
+                "type" : "dodecahedron",
+                "position" : [ 100, -50, 0 ],
+                "size" : 20
+            }
+            
+            const leg = {
+                "name" : "leg",
                 "children" : [
-                    {
-                        "name" : "neck",
-                        "type" : "tube",
-                        "material" : "lambert",
-                        "color" : "pink",
-                        "path" : [ 
-                            { type: "quad", x: 0, y: 0, z: 0 },
-                            { type: "quad", x: 25, y: 25, z: 0 }
-                        ],
-                        "size": [ 25, 100, 0 ]
-                        
-                    }
+                    bender, 
+                    knee
                 ]
             }
+            const head = {
+                "name" : "head",
+                "type" : "sphere",
+                "size" : 14,
+                "position" : [ 0, 75, 0 ],
+                "relativeTo" : "neck"
+            }
+            
+            const neck = {
+                "name" : "neck",
+                "type" : "tube",
+                "side" : "front",
+                "scale" : 1,
+                "typeHandler" : ( t ) => {
+                    //t gives a number from 0 to 1 to distribute points
+                    let yVal, xVal;
+                    const radius = 15
+                    if ( t < 0.25 ) {
+                        yVal = - 10 * Math.sin( t * 4 * Math.PI );
+                        xVal = ( Math.sin( t * Math.PI * 2 ) * ( radius * 2 ) ) - radius;
+                    }  else {
+                        yVal = 100 * ( t - 0.25 );
+                        xVal = Math.sin( t * Math.PI * 2 ) * radius;
+                    }
+                    return { x: xVal, y :  yVal, z: 0 };
+                },
+                "rotation" : [ 0, 180, 0 ]
+            }
+            
+            const flamingo = {
+                "name" : "flamingo",
+                "material" : "lambert",
+                "color" : "pink",
+                "children" : [ 
+                    head,
+                    neck, 
+                    leg
+                ]
+                        
+            };
             
             const wall = {
                 "type" : "plane",
+                "name" : "wall",
                 "size" : [ 10000, 10000 ],
                 "material" : "phong",
                 "color" : "red",
