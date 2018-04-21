@@ -74,23 +74,78 @@ class World extends Component {
                 "name" : "bender",
                 "type" : "cylinder",
                 "size" : [ 5, 100, 0 ],
-                "position" : [ 100, 0, 0 ]
+                "position" : [ 0, 0, 0 ],
+                "relativeTo" : "knee",
+                "placement" : "top"
+                
+            }
+            const benderTwo = {
+                "name" : "bender",
+                "type" : "cylinder",
+                "size" : [ 5, 100, 0 ],
+                "position" : [ 0, -100, 0 ],
+                "relativeTo" : "knee",
+                "placement" : "top"
                 
             }
             const knee = {
                 "name" : "knee",
                 "type" : "dodecahedron",
-                "position" : [ 100, -50, 0 ],
-                "size" : 20
+                "position" : [ 0, -50, 0 ],
+                "size" : 10
+            }
+            const box = {
+                name : "box",
+                type : "box",
+                color : "green",
+                material : "standard",
+                bottom : 50,
+                position : [ 0, 0, 0 ]
+                
             }
             
-            const leg = {
-                "name" : "leg",
-                "children" : [
-                    bender, 
-                    knee
+            const bodySize = 50;
+            const body = {
+                name : "body",
+                children  : [
+                    {
+                       name : "chest",
+                       type : "dodecahedron",
+                       size : bodySize
+                    },
+                    {
+                        name : "butt",
+                        type : "cylinder",
+                        size: [ bodySize, 30, 0 ],
+                        rotation : [ 0, 0, 90 ],
+                        position: [ bodySize, 0, 0 ],
+                        bottom: 20
+                    }
                 ]
             }
+            
+            const foot = {
+                "name" : "foot",
+                position: [ 0, -150, 0 ],
+                "children" : [
+                    {
+                        "name" : "angle",
+                        "type" : "cylinder",
+                        "size" : [ 5, 18, 10 ]
+                    }
+                ]
+            }
+            const leg = {
+                "name" : "leg",
+                "position" : [ 100, 0, 0 ],
+                "children" : [
+                    bender, 
+                    knee, 
+                    benderTwo, 
+                    foot
+                ]
+            }
+            
             const head = {
                 "name" : "head",
                 "type" : "sphere",
@@ -122,11 +177,12 @@ class World extends Component {
             
             const flamingo = {
                 "name" : "flamingo",
-                "material" : "lambert",
-                "color" : "pink",
-                "children" : [ 
+                "material" : "toon",
+                "color" : "blue",
+                "children" : [
+                    body,
                     head,
-                    neck, 
+                    neck,
                     leg
                 ]
                         
@@ -141,7 +197,7 @@ class World extends Component {
                 "position" : "0 0 -10000"
             }
 
-this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, wall, flamingo ] } ) );
+this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, wall, box, flamingo ] } ) );
             
             this.world.start();
             

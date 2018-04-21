@@ -64279,20 +64279,68 @@ var World = function (_Component) {
                     "name": "bender",
                     "type": "cylinder",
                     "size": [5, 100, 0],
-                    "position": [100, 0, 0]
+                    "position": [0, 0, 0],
+                    "relativeTo": "knee",
+                    "placement": "top"
+
+                };
+                var benderTwo = {
+                    "name": "bender",
+                    "type": "cylinder",
+                    "size": [5, 100, 0],
+                    "position": [0, -100, 0],
+                    "relativeTo": "knee",
+                    "placement": "top"
 
                 };
                 var knee = {
                     "name": "knee",
                     "type": "dodecahedron",
-                    "position": [100, -50, 0],
-                    "size": 20
+                    "position": [0, -50, 0],
+                    "size": 10
+                };
+                var box = {
+                    name: "box",
+                    type: "box",
+                    color: "green",
+                    material: "standard",
+                    bottom: 50,
+                    position: [0, 0, 0]
+
                 };
 
+                var bodySize = 50;
+                var body = {
+                    name: "body",
+                    children: [{
+                        name: "chest",
+                        type: "dodecahedron",
+                        size: bodySize
+                    }, {
+                        name: "butt",
+                        type: "cylinder",
+                        size: [bodySize, 30, 0],
+                        rotation: [0, 0, 90],
+                        position: [bodySize, 0, 0],
+                        bottom: 20
+                    }]
+                };
+
+                var foot = {
+                    "name": "foot",
+                    position: [0, -150, 0],
+                    "children": [{
+                        "name": "angle",
+                        "type": "cylinder",
+                        "size": [5, 18, 10]
+                    }]
+                };
                 var leg = {
                     "name": "leg",
-                    "children": [bender, knee]
+                    "position": [100, 0, 0],
+                    "children": [bender, knee, benderTwo, foot]
                 };
+
                 var head = {
                     "name": "head",
                     "type": "sphere",
@@ -64325,9 +64373,9 @@ var World = function (_Component) {
 
                 var flamingo = {
                     "name": "flamingo",
-                    "material": "lambert",
-                    "color": "pink",
-                    "children": [head, neck, leg]
+                    "material": "toon",
+                    "color": "blue",
+                    "children": [body, head, neck, leg]
 
                 };
 
@@ -64340,7 +64388,7 @@ var World = function (_Component) {
                     "position": "0 0 -10000"
                 };
 
-                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, wall, flamingo] }));
+                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, wall, box, flamingo] }));
 
                 _this2.world.start();
 
@@ -64969,8 +65017,10 @@ var framework = {
         console.log(animation, "animation inside deciscion");
         try {
             if (mesh.id !== undefined) {
-                console.log(id, mesh.id, "id and mesh id");
-                var obj = this.objManager.all[(0, _hashID2.default)(mesh.id, id)];
+                console.log(id, mesh, "id and mesh id");
+                var hash = (0, _hashID2.default)(mesh.id, id);
+                console.log(hash);
+                var obj = this.objManager.all[hash];
                 console.log(obj, "this is the obj manager clone");
                 //takes the mesh and adds a animation timeline to the root object
                 if (animation instanceof Array) {
@@ -65341,13 +65391,16 @@ var framework = {
         return mesh;
     },
     setupMesh: function setupMesh(options, sI) {
+        var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
+
         var _this4 = this;
 
-        var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
         var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var levels = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
 
         var m = void 0,
             mesh = void 0,
+            upgradeMesh = void 0,
             multiMaterials = [];
         //@params sI - the index of the scene
         /*
@@ -65357,6 +65410,7 @@ var framework = {
         */
 
         try {
+            console.log(levels, "at the beginning");
             // @param g stands for geometry
             // @param sI is the current scene index
 
@@ -65375,7 +65429,7 @@ var framework = {
                 m = this.createMaterial(options);
             }
 
-            mesh = new THREE.Mesh(g, m);
+            mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh(g, m);
 
             if (options.hasOwnProperty("shadow") && options.shadow == true) {
 
@@ -65423,51 +65477,71 @@ var framework = {
                 mesh.add(debugVerts);
             }
 
-            mesh = this.setObjectTransforms(mesh, options);
-
-            this.setupWorldClone(sI, mesh, options);
-
-            var upgradeMesh = void 0;
-
             console.log(options, "right before setup Animation for Mesh");
             if (options.animation !== undefined || options.animationType !== undefined) {
 
-                upgradeMesh = this.setupAnimationForMesh(sI, mesh, options);
+                upgradeMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
             } else {
-                upgradeMesh = mesh;
+                upgradeMesh = this.setObjectTransforms(mesh, options);
             }
 
+            this.setupWorldClone(sI, upgradeMesh, options);
             console.log(upgradeMesh, group, "at the end of mesh manipulation ");
 
-            if (options.hasOwnProperty("children") && options.children instanceof Array) {
+            if (options.hasOwnProperty("children") && options.children instanceof Array && options.children.length > 0) {
+
+                var groupName = options.group !== undefined && !this.groupNames.has(options.group) ? options.group : options.name;
 
                 options.children.forEach(function (child, x) {
 
-                    _this4.setupMesh(Object.assign({}, child, { group: options.group !== undefined ? options.group : options.name }), sI, group, x);
+                    //keeps an array where each index reflects what level an object is within an object
+                    //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
+                    console.log(!_this4.groupNames.has(groupName), "check for group names");
+                    if (!_this4.groupNames.has(groupName) && levels[levels.length - 1] !== groupName) {
+
+                        levels.push(groupName);
+                    }
+
+                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [] }, child, { group: groupName }), sI, group, i, levels);
                 });
+
+                //recalls the group so that all the newly added meshes can undergo the parent transforms
+                var newGrp = this.scenes[sI].getObjectByName(groupName);
+                this.setObjectTransforms(newGrp, options);
 
                 return;
             }
 
             if (options.group !== undefined && typeof options.group === "string") {
-
+                var grp = void 0;
                 if (this.groupNames.has(options.group)) {
 
-                    var grp = this.scenes[sI].getObjectByName(options.group);
+                    grp = this.scenes[sI].getObjectByName(options.group);
                     grp.add(upgradeMesh);
                 } else {
 
                     this.groupNames.add(options.group);
-                    var _grp = new THREE.Group();
-                    _grp.name = options.group;
-                    _grp.add(upgradeMesh);
-                    this.scenes[sI].add(_grp);
+
+                    if (levels.length > 1) {
+
+                        var prevGrp = this.scenes[sI].getObjectByName(levels[levels.length - 2]);
+                        grp = new THREE.Group();
+                        grp.name = options.group;
+                        grp.add(upgradeMesh);
+                        prevGrp.add(grp);
+                    } else {
+
+                        grp = new THREE.Group();
+                        grp.name = options.group;
+                        grp.add(upgradeMesh);
+                        this.scenes[sI].add(grp);
+                    }
                 }
             } else if (options.count !== undefined && options.count > 1 && i < options.count) {
 
                 i++;
                 group.add(upgradeMesh);
-                this.setupMesh(options, sI, group, i);
+                this.setupMesh(options, sI, group, i, levels);
             } else {
 
                 if (group.children.length > 0) {
@@ -65731,7 +65805,7 @@ var framework = {
 
             var mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
             console.log(mat.color, "material in world clone for " + mesh.name);
-            console.log(mesh.id, id, "mesh.id and id in clone construction");
+            console.log(mesh, id, "mesh.id and id in clone construction");
             var newID = (0, _hashID2.default)(mesh.id, id);
             this.objManager.all[newID] = {
                 worldProps: {
@@ -65849,7 +65923,8 @@ var framework = {
                 var options = Object.assign({}, _this8.optionParser("fade-out 1s ease-out-quart", _this8.options, "animation"));
 
                 _this8.sceneLoaded.then(function (completed) {
-                    _this8.decideTimelineOrder(completed.id, _this8.createAnime(preloader, options), preloader, options);
+                    console.log(completed, "when scene is completed");
+                    _this8.decideTimelineOrder(_this8.scene.id, _this8.createAnime(preloader, options), preloader, options);
                     window.setTimeout(function () {
                         //need to delay based on animation settings
                         _progressEmitter2.default.emit("world-message", { message: "" });
@@ -65935,7 +66010,8 @@ var framework = {
             var name = obj.name.trim().toLowerCase();
 
             if (obj.name === "flamingo") {
-                // obj.rotation.y += 0.005;
+
+                obj.rotation.y += 0.005;
                 //obj.material.map.needsUpdate = true;
                 //obj.material.map.offset.x += 0.01;
                 // console.log( obj );
@@ -67324,12 +67400,15 @@ var _createClass = function () { function defineProperties(target, props) { for 
 exports.default = function () {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
+    var geometry = void 0;
     //goes through every geometry type plus custom ones
     var extrude = options.extrude !== undefined && options.hasOwnProperty("extrude") ? options.extrude : undefined,
         segments = options.segments !== undefined ? options.segments : _defaults2.default.segments,
         thetaStart = this.convertToRadians(options.angleStart !== undefined ? options.angleStart : 0),
         thetaLength = this.convertToRadians(options.arcAngle !== undefined ? options.arcAngle : 360),
         type = options.type !== undefined ? options.type : "default",
+        top = options.top !== undefined ? options.top : 100,
+        bottom = options.bottom !== undefined ? options.bottom : 100,
         path = options.path !== undefined && options.hasOwnProperty("path") && options.path instanceof Array ? createPath(type, options.path) : undefined,
         openEnded = options.openEnd !== undefined ? options.openEnd : false;
 
@@ -67340,7 +67419,13 @@ exports.default = function () {
     switch (type) {
         case "box":
 
-            return new THREE.BoxGeometry(size[0], size[1], size[2]);
+            geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
+
+            if (top !== 100 || bottom !== 100 || options.verticalSegments !== undefined && typeof options.verticalSegments === "function" || options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function") {
+                changeSegmentSize(geometry, options);
+            }
+
+            return geometry;
         case "circle":
 
             return new THREE.CircleGeometry(size[0] / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength);
@@ -67417,14 +67502,14 @@ exports.default = function () {
                 for (var _i2 = 0; _i2 < shapes.length; _i2++) {
                     var _shape = shapes[_i2];
                     var points = _shape.getPoints();
-                    var geometry = new THREE.BufferGeometry().setFromPoints(points);
-                    geometries.push(geometry);
+                    var _geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    geometries.push(_geometry);
                 }
 
                 return geometries;
             } else {
-                var _geometry = new THREE.BufferGeometry();
-                return _geometry.fromGeometry(shapeGeo);
+                var _geometry2 = new THREE.BufferGeometry();
+                return _geometry2.fromGeometry(shapeGeo);
             }
             break;
 
@@ -67672,6 +67757,33 @@ function createPath() {
             }) : new THREE.Vector2(path.x, path.y);
         default:
             return path;
+    }
+}
+
+function changeSegmentSize(geo, options) {
+
+    switch (geo.type) {
+
+        case "BoxGeometry":
+
+            for (var n = 0; n <= geo.vertices.length - 1; n++) {
+
+                var vert = geo.vertices[n];
+                console.log(vert);
+                if (vert.y >= geo.parameters.height / 2) {
+
+                    vert.x *= options.top / 100;
+                    vert.z *= options.top / 100;
+                }
+
+                if (vert.y <= -1 * geo.parameters.height / 2) {
+
+                    vert.x *= options.bottom / 100;
+                    vert.z *= options.bottom / 100;
+                }
+            }
+
+            return geo;
     }
 }
 

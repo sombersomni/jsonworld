@@ -180,8 +180,10 @@ const framework = {
         console.log( animation, "animation inside deciscion" );
         try {
             if ( mesh.id !== undefined ) {
-                console.log( id , mesh.id, "id and mesh id" );
-                let obj = this.objManager.all[ hashID( mesh.id,  id ) ];
+                console.log( id , mesh, "id and mesh id" );
+                const hash = hashID( mesh.id,  id );
+                console.log( hash );
+                let obj = this.objManager.all[ hash ];
                 console.log( obj, "this is the obj manager clone" );
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
@@ -535,8 +537,8 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 ) {
-        let m, mesh, multiMaterials = [];
+    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [] ) {
+        let m, mesh, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         /*
         @params m - stands for material 
@@ -545,6 +547,7 @@ const framework = {
         */
         
         try{
+                console.log( levels, "at the beginning" );
                 // @param g stands for geometry
                 // @param sI is the current scene index
             
@@ -566,7 +569,7 @@ const framework = {
                     m = this.createMaterial( options );
                 }
             
-                mesh = new THREE.Mesh( g, m );
+                mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh( g, m );
                 
                 if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
                     
@@ -619,55 +622,78 @@ const framework = {
                     
                     mesh.add( debugVerts );
                 }
-                
-                mesh = this.setObjectTransforms( mesh, options );
-                
-                this.setupWorldClone( sI, mesh, options );
-            
-                let upgradeMesh;
             
                 console.log( options, "right before setup Animation for Mesh" );
                 if ( options.animation !== undefined || options.animationType !== undefined ) {
                     
-                    upgradeMesh = this.setupAnimationForMesh( sI, mesh, options );
+                    upgradeMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
                 } else {
-                    upgradeMesh =  mesh;
+                    upgradeMesh =  this.setObjectTransforms( mesh, options );
+            
                 }
             
+                this.setupWorldClone( sI, upgradeMesh, options );
                 console.log( upgradeMesh, group, "at the end of mesh manipulation " );
                 
-                if( options.hasOwnProperty( "children" ) && options.children instanceof Array ) {
+                if( options.hasOwnProperty( "children" ) && options.children instanceof Array && options.children.length > 0 ) {
+                    
+                    const groupName = options.group !== undefined && !this.groupNames.has( options.group ) ? options.group : options.name;
                     
                     options.children.forEach( ( child, x ) => {
-                           
-                        this.setupMesh( Object.assign( {}, child, { group: options.group !== undefined ? options.group : options.name } ) , sI, group, x );
+
+                        //keeps an array where each index reflects what level an object is within an object
+                        //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
+                        console.log( !this.groupNames.has( groupName ), "check for group names" );
+                        if ( !this.groupNames.has( groupName ) && levels[ levels.length - 1 ] !== groupName ) {
+                            
+                            levels.push( groupName );
+                        }
+                        
+                        this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [] }, child, { group: groupName } ) , sI, group, i, levels );
                             
                     } );
+                    
+                    //recalls the group so that all the newly added meshes can undergo the parent transforms
+                    let newGrp = this.scenes[sI].getObjectByName( groupName );
+                    this.setObjectTransforms( newGrp, options );
                     
                     return;
                 }
             
                 if( options.group !== undefined && typeof options.group === "string" ) {
-                    
+                    let grp;
                     if ( this.groupNames.has( options.group ) ) {
                         
-                        let grp = this.scenes[sI].getObjectByName( options.group );
+                        grp = this.scenes[sI].getObjectByName( options.group );
                         grp.add( upgradeMesh );
+                        
                         
                     } else {
                         
                         this.groupNames.add( options.group );
-                        let grp = new THREE.Group();
-                        grp.name = options.group;
-                        grp.add( upgradeMesh );
-                        this.scenes[sI].add( grp );
+                        
+                        if ( levels.length > 1 ) {
+                            
+                            let prevGrp = this.scenes[sI].getObjectByName( levels[ levels.length - 2 ] );
+                            grp = new THREE.Group();
+                            grp.name = options.group;
+                            grp.add( upgradeMesh );
+                            prevGrp.add( grp );
+                            
+                        } else {
+                            
+                            grp = new THREE.Group();
+                            grp.name = options.group;
+                            grp.add( upgradeMesh );
+                            this.scenes[sI].add( grp );
+                        }
                     }
                     
                 } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
                     
                     i++;
                     group.add( upgradeMesh );
-                    this.setupMesh( options, sI, group, i );
+                    this.setupMesh( options, sI, group, i, levels );
                     
                 } else {
                     
@@ -923,7 +949,7 @@ const framework = {
             
             let mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
             console.log( mat.color, "material in world clone for " + mesh.name );
-            console.log( mesh.id, id, "mesh.id and id in clone construction" );
+            console.log( mesh, id, "mesh.id and id in clone construction" );
             const newID = hashID( mesh.id, id );
             this.objManager.all[ newID ] =  {
                 worldProps: {
@@ -1048,7 +1074,8 @@ const framework = {
                     const options = Object.assign( {}, this.optionParser( "fade-out 1s ease-out-quart", this.options, "animation" ) );
                     
                     this.sceneLoaded.then( completed => {
-                        this.decideTimelineOrder( completed.id, this.createAnime( preloader, options ), preloader, options );
+                        console.log( completed, "when scene is completed" );
+                        this.decideTimelineOrder( this.scene.id, this.createAnime( preloader, options ), preloader, options );
                         window.setTimeout( () => {
                             //need to delay based on animation settings
                             progressEmitter.emit( "world-message", { message: "" } );
@@ -1138,7 +1165,9 @@ const framework = {
             const name = obj.name.trim().toLowerCase();
      
             if ( obj.name === "flamingo" ) {
-               // obj.rotation.y += 0.005;
+                
+            
+                obj.rotation.y += 0.005;
                 //obj.material.map.needsUpdate = true;
                 //obj.material.map.offset.x += 0.01;
                // console.log( obj );

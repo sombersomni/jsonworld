@@ -125,13 +125,44 @@ function createPath ( type = "default", path ) {
     }
     
 }
+
+function changeSegmentSize ( geo, options ) {
+    
+    switch( geo.type ) {
+            
+        case "BoxGeometry" :
+            
+            for ( let n = 0; n <= geo.vertices.length - 1; n++ ) {
+                
+                let vert = geo.vertices[n];
+                console.log( vert);
+                if ( vert.y >= geo.parameters.height / 2 ) {
+                    
+                    vert.x *= options.top / 100;
+                    vert.z *= options.top / 100;
+                }
+                
+                if ( vert.y <= -1 * geo.parameters.height / 2 ) {
+                    
+                    vert.x *= options.bottom/ 100;
+                    vert.z *= options.bottom / 100;
+                }
+                
+            }
+            
+            return geo;
+    }
+}
 export default function ( options = {} ) {
+    let geometry;
     //goes through every geometry type plus custom ones
     const extrude = options.extrude !== undefined && options.hasOwnProperty( "extrude" ) ? options.extrude : undefined,
           segments = options.segments !== undefined ? options.segments : defaultOptions.segments,
           thetaStart = this.convertToRadians( options.angleStart !== undefined ? options.angleStart : 0 ),
           thetaLength = this.convertToRadians( options.arcAngle !== undefined ? options.arcAngle : 360 ),
           type = options.type !== undefined ? options.type : "default",
+          top = options.top !== undefined ? options.top : 100,
+          bottom = options.bottom !== undefined ? options.bottom : 100,
           path = options.path !== undefined && options.hasOwnProperty( "path" ) && options.path instanceof Array ? createPath( type, options.path ) : undefined,
           openEnded = options.openEnd !== undefined ? options.openEnd : false;
     
@@ -142,7 +173,13 @@ export default function ( options = {} ) {
     switch( type ) {
         case "box" :
             
-            return new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] );
+            geometry = new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] );
+            
+           if ( top !== 100 || bottom !== 100 || ( options.verticalSegments !== undefined && typeof options.verticalSegments === "function" ) || ( options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function" ) ) {
+               changeSegmentSize( geometry, options );
+           }
+        
+            return geometry;
         case "circle" :
             
             return new THREE.CircleGeometry( size[ 0 ] / 2, ( options.segments !== undefined ? options.segments : 32 ), thetaStart, thetaLength );
