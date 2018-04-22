@@ -73,17 +73,17 @@ class World extends Component {
             const bender = {
                 "name" : "bender",
                 "type" : "cylinder",
-                "size" : [ 5, 100, 0 ],
+                "size" : [ 5, 70, 0 ],
                 "position" : [ 0, 0, 0 ],
                 "relativeTo" : "knee",
                 "placement" : "top"
                 
             }
             const benderTwo = {
-                "name" : "bender",
+                "name" : "bender2",
                 "type" : "cylinder",
                 "size" : [ 5, 100, 0 ],
-                "position" : [ 0, -100, 0 ],
+                "position" : [ 0, -35 - 50, 0 ],
                 "relativeTo" : "knee",
                 "placement" : "top"
                 
@@ -91,35 +91,31 @@ class World extends Component {
             const knee = {
                 "name" : "knee",
                 "type" : "dodecahedron",
-                "position" : [ 0, -50, 0 ],
+                "position" : [ 0, -35, 0 ],
                 "size" : 10
             }
-            const box = {
-                name : "box",
-                type : "box",
-                color : "green",
-                material : "standard",
-                bottom : 50,
-                position : [ 0, 0, 0 ]
-                
-            }
             
-            const bodySize = 50;
+            const bodySize = 80;
+            const bodyWidth = 75;
+            const offset = 5;
+            
             const body = {
                 name : "body",
+                color: "pink",
+                position: [ 50, 0, 0 ],
                 children  : [
                     {
                        name : "chest",
-                       type : "dodecahedron",
+                       type : "sphere",
                        size : bodySize
                     },
                     {
                         name : "butt",
                         type : "cylinder",
-                        size: [ bodySize, 30, 0 ],
+                        size: [ bodySize - offset, bodyWidth, 0 ],
                         rotation : [ 0, 0, 90 ],
-                        position: [ bodySize, 0, 0 ],
-                        bottom: 20
+                        position: [ bodyWidth / 2, 0, 0 ],
+                        bottom: 25
                     }
                 ]
             }
@@ -129,7 +125,7 @@ class World extends Component {
                 position: [ 0, -150, 0 ],
                 "children" : [
                     {
-                        "name" : "angle",
+                        "name" : "ankle",
                         "type" : "cylinder",
                         "size" : [ 5, 18, 10 ]
                     }
@@ -146,10 +142,20 @@ class World extends Component {
                 ]
             }
             
+            const legTwo = {
+                "name" : "leg2",
+                "position" : [ 200, 0, 0 ],
+                "children" : [
+                    bender, 
+                    knee, 
+                    benderTwo, 
+                    foot
+                ]
+            }
             const head = {
                 "name" : "head",
                 "type" : "sphere",
-                "size" : 14,
+                "size" : 30,
                 "position" : [ 0, 75, 0 ],
                 "relativeTo" : "neck"
             }
@@ -158,7 +164,10 @@ class World extends Component {
                 "name" : "neck",
                 "type" : "tube",
                 "side" : "front",
+                "bottom" : 20,
+                "top" : 50,
                 "scale" : 1,
+                "segments" : 10,
                 "typeHandler" : ( t ) => {
                     //t gives a number from 0 to 1 to distribute points
                     let yVal, xVal;
@@ -179,11 +188,13 @@ class World extends Component {
                 "name" : "flamingo",
                 "material" : "toon",
                 "color" : "blue",
+                "side" : "front",
+                "openEnded" : "true",
                 "children" : [
                     body,
-                    head,
                     neck,
-                    leg
+                    leg,
+                    legTwo
                 ]
                         
             };
@@ -197,7 +208,7 @@ class World extends Component {
                 "position" : "0 0 -10000"
             }
 
-this.world = new WorldController( Object.assign( {}, { worldObjects: [ floor, wall, box, flamingo ] } ) );
+this.world = new WorldController( Object.assign( { debug : true }, { worldObjects: [ floor, flamingo ] } ) );
             
             this.world.start();
             

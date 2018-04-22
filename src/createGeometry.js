@@ -128,6 +128,7 @@ function createPath ( type = "default", path ) {
 
 function changeSegmentSize ( geo, options ) {
     
+    console.log( geo, "before switch in changeSegmentSize function" );
     switch( geo.type ) {
             
         case "BoxGeometry" :
@@ -135,7 +136,7 @@ function changeSegmentSize ( geo, options ) {
             for ( let n = 0; n <= geo.vertices.length - 1; n++ ) {
                 
                 let vert = geo.vertices[n];
-                console.log( vert);
+                console.log( vert.y, "x before change" );
                 if ( vert.y >= geo.parameters.height / 2 ) {
                     
                     vert.x *= options.top / 100;
@@ -151,6 +152,22 @@ function changeSegmentSize ( geo, options ) {
             }
             
             return geo;
+            
+        case "TubeGeometry" :
+       
+            for( let x = 0; x <= geo.vertices.length - 1; x++ ) {
+                console.log( geo, "tube vertices" );
+                if ( x <= options.segments || x >= geo.vertices.length - options.segments - 1 ) {
+                   geo.vertices[x].x *= 2;
+                   geo.vertices[x].z *= 2; 
+                }
+               
+            }
+            
+            
+            return geo;
+            
+            
     }
 }
 export default function ( options = {} ) {
@@ -176,10 +193,10 @@ export default function ( options = {} ) {
             geometry = new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] );
             
            if ( top !== 100 || bottom !== 100 || ( options.verticalSegments !== undefined && typeof options.verticalSegments === "function" ) || ( options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function" ) ) {
-               changeSegmentSize( geometry, options );
+               return changeSegmentSize( geometry, Object.assign( {}, options, { top, bottom } ) );
+           } else {
+               return geometry;
            }
-        
-            return geometry;
         case "circle" :
             
             return new THREE.CircleGeometry( size[ 0 ] / 2, ( options.segments !== undefined ? options.segments : 32 ), thetaStart, thetaLength );
@@ -192,11 +209,10 @@ export default function ( options = {} ) {
        
             if ( path !== undefined ) {
                 
-                return new THREE.TubeGeometry( path, size[ 0 ] / 2, segments / 4, segments, false );
+                geometry = new THREE.TubeGeometry( path, size[ 0 ] / 2, segments / 4, segments, openEnded );
                 
             } else if ( options.hasOwnProperty( "typeHandler" ) && options.typeHandler !== undefined ) {
-                
-                console.log( "this is working in typehandler" );
+
                 class CustomCurve extends THREE.Curve {
                     
                     constructor() {
@@ -211,17 +227,30 @@ export default function ( options = {} ) {
                 
                 const curve = new CustomCurve();
                 
-                return new THREE.TubeGeometry( curve, size[ 0 ] / 2, segments / 4, segments, false );
+                geometry = new THREE.TubeGeometry( curve, size[ 0 ] / 2, segments / 4, segments, openEnded );
                        
             } else {
                 
                 const newPath = createPath( "tube", [ { x: 0, y: size[ 1 ], z: 0 } ] );
-                return new THREE.TubeGeometry( newPath, size[ 0 ] / 2, segments / 4, segments, false );
+                geometry = new THREE.TubeGeometry( newPath, size[ 0 ] / 2, segments / 4, segments, openEnded );
             }
+            
+            if ( top !== 100 || bottom !== 100 || ( options.verticalSegments !== undefined && typeof options.verticalSegments === "function" ) || ( options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function" ) ) {
+               return changeSegmentSize( geometry, Object.assign( {}, options, { segments, top, bottom } ) );
+           } else {
+               console.log( geometry );
+               return geometry;
+           }
             
         case "cylinder" :
             
-            return new THREE.CylinderGeometry( size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength );
+            geometry = new THREE.CylinderGeometry( ( size[0] / 2 ) * ( top / 100 ), ( size[0] / 2 ) * ( bottom / 100 ), size[1], segments, segments, openEnded, thetaStart, thetaLength );
+            
+            if ( ( options.verticalSegments !== undefined && typeof options.verticalSegments === "function" ) || ( options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function" ) ) {
+               return changeSegmentSize( geometry, Object.assign( {}, options, { top, bottom } ) );
+           } else {
+               return geometry;
+           }
             
         case "dodecahedron" :
             //creates dodecahedron geometry
@@ -345,7 +374,7 @@ export default function ( options = {} ) {
             
         case "sphere":
             //creates a sphere geometry
-            return new THREE.SphereGeometry( size[0], segments, segments );
+            return new THREE.SphereGeometry( size[0] / 2, segments, segments );
             
             break;
 

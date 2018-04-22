@@ -22,7 +22,7 @@ export default function ( options = {} ) {
           overdraw = options.overdraw !== undefined ? options.overdraw : defaultOptions.overdraw,
           roughness = options.roughness !== undefined ? options.roughness : defaultOptions.roughness,
           shininess = options.roughness !== undefined ? options.overdraw : defaultOptions.shininess,
-          side = options.side !== undefined && typeof options.side === "string"  ? options.side : THREE.FrontSide,
+          side = options.side !== undefined && typeof options.side === "string"  ? options.side : "both",
           transparent = options.transparent !== undefined ? options.transparent : false,
           wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth: defaultOptions.wireframeLinewidth,
           wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : defaultOptions.wireframeLinecap,

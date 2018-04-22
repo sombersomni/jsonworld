@@ -45807,7 +45807,7 @@ module.exports = emptyObject;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ffffff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 8 */
@@ -64278,17 +64278,17 @@ var World = function (_Component) {
                 var bender = {
                     "name": "bender",
                     "type": "cylinder",
-                    "size": [5, 100, 0],
+                    "size": [5, 70, 0],
                     "position": [0, 0, 0],
                     "relativeTo": "knee",
                     "placement": "top"
 
                 };
                 var benderTwo = {
-                    "name": "bender",
+                    "name": "bender2",
                     "type": "cylinder",
                     "size": [5, 100, 0],
-                    "position": [0, -100, 0],
+                    "position": [0, -35 - 50, 0],
                     "relativeTo": "knee",
                     "placement": "top"
 
@@ -64296,33 +64296,29 @@ var World = function (_Component) {
                 var knee = {
                     "name": "knee",
                     "type": "dodecahedron",
-                    "position": [0, -50, 0],
+                    "position": [0, -35, 0],
                     "size": 10
                 };
-                var box = {
-                    name: "box",
-                    type: "box",
-                    color: "green",
-                    material: "standard",
-                    bottom: 50,
-                    position: [0, 0, 0]
 
-                };
+                var bodySize = 80;
+                var bodyWidth = 75;
+                var offset = 5;
 
-                var bodySize = 50;
                 var body = {
                     name: "body",
+                    color: "pink",
+                    position: [50, 0, 0],
                     children: [{
                         name: "chest",
-                        type: "dodecahedron",
+                        type: "sphere",
                         size: bodySize
                     }, {
                         name: "butt",
                         type: "cylinder",
-                        size: [bodySize, 30, 0],
+                        size: [bodySize - offset, bodyWidth, 0],
                         rotation: [0, 0, 90],
-                        position: [bodySize, 0, 0],
-                        bottom: 20
+                        position: [bodyWidth / 2, 0, 0],
+                        bottom: 25
                     }]
                 };
 
@@ -64330,7 +64326,7 @@ var World = function (_Component) {
                     "name": "foot",
                     position: [0, -150, 0],
                     "children": [{
-                        "name": "angle",
+                        "name": "ankle",
                         "type": "cylinder",
                         "size": [5, 18, 10]
                     }]
@@ -64341,10 +64337,15 @@ var World = function (_Component) {
                     "children": [bender, knee, benderTwo, foot]
                 };
 
+                var legTwo = {
+                    "name": "leg2",
+                    "position": [200, 0, 0],
+                    "children": [bender, knee, benderTwo, foot]
+                };
                 var head = {
                     "name": "head",
                     "type": "sphere",
-                    "size": 14,
+                    "size": 30,
                     "position": [0, 75, 0],
                     "relativeTo": "neck"
                 };
@@ -64353,7 +64354,10 @@ var World = function (_Component) {
                     "name": "neck",
                     "type": "tube",
                     "side": "front",
+                    "bottom": 20,
+                    "top": 50,
                     "scale": 1,
+                    "segments": 10,
                     "typeHandler": function typeHandler(t) {
                         //t gives a number from 0 to 1 to distribute points
                         var yVal = void 0,
@@ -64375,7 +64379,9 @@ var World = function (_Component) {
                     "name": "flamingo",
                     "material": "toon",
                     "color": "blue",
-                    "children": [body, head, neck, leg]
+                    "side": "front",
+                    "openEnded": "true",
+                    "children": [body, neck, leg, legTwo]
 
                 };
 
@@ -64388,7 +64394,7 @@ var World = function (_Component) {
                     "position": "0 0 -10000"
                 };
 
-                _this2.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, wall, box, flamingo] }));
+                _this2.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [floor, flamingo] }));
 
                 _this2.world.start();
 
@@ -64869,8 +64875,6 @@ function WorldController(options) {
     this.hashed = [];
     this.counter = 0;
     //sets
-
-    this.groupNames = new Set();
 
     this.isWorldLoaded = false;
 
@@ -65392,11 +65396,12 @@ var framework = {
     },
     setupMesh: function setupMesh(options, sI) {
         var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
+        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
 
         var _this4 = this;
 
-        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
         var levels = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
+        var groupNames = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : new Set();
 
         var m = void 0,
             mesh = void 0,
@@ -65408,101 +65413,80 @@ var framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
+        function exploreGroupTree(endIndex, arr, scene) {
+            var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+            var obj = arguments[4];
+
+            //takes the arr of children levels to dig through
+            if (i <= endIndex) {
+                if (i === 0) {
+
+                    obj = scene.getObjectByName(arr[0]);
+                    i++;
+                    return exploreGroupTree(endIndex, arr, scene, i, obj);
+                } else {
+                    console.log(obj, " within exploreGroup before getObject");
+                    var newObj = obj.getObjectByName(arr[i]);
+                    i++;
+                    console.log(newObj, "within exploreGroupTree");
+                    return exploreGroupTree(endIndex, arr, scene, i, newObj);
+                }
+            } else {
+
+                return obj;
+            }
+        }
+        function mapGroupTree(options, group) {
+
+            if (options.children !== undefined && options.children instanceof Array) {
+
+                if (group !== undefined) {
+                    var grp = new THREE.Group();
+                    grp.name = options.name;
+                    group.add(grp);
+                } else {
+                    group = new THREE.Group();
+                    group.name = options.name;
+                }
+
+                options.children.forEach(function (child) {
+
+                    return mapGroupTree(child, group);
+                });
+
+                return group;
+            }
+        }
 
         try {
-            console.log(levels, "at the beginning");
             // @param g stands for geometry
             // @param sI is the current scene index
 
-            var g = this.createGeometry(options);
+            if (options.children !== undefined && options.children instanceof Array) {
+                var grp = void 0;
 
-            if (options.texture instanceof Array) {
-                //if you get an array of textuers back, then we can pack them here
-                console.log(options, "before setupMesh begins");
-                for (var f = 0; f <= g.faces.length - 1; f++) {
-                    multiMaterials.push(this.createMaterial(Object.assign({}, options, { texture: options.texture[f % options.texture.length] })));
+                var groupName = options.group !== undefined && !groupNames.has(options.group) ? options.group : options.name;
+
+                if (i === 0 && groupNames.size === 0) {
+                    //replaces levels with a new array for each treed group created
+                    levels = [];
+                    grp = mapGroupTree(options);
+                    this.scenes[sI].add(grp);
                 }
 
-                m = multiMaterials;
-            } else {
-
-                m = this.createMaterial(options);
-            }
-
-            mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh(g, m);
-
-            if (options.hasOwnProperty("shadow") && options.shadow == true) {
-
-                mesh.receiveShadow = true;
-                mesh.castShadow = true;
-            }
-
-            //accepts a gradient that is either linear or radial
-            if (/gradient/.test(options.color)) {
-
-                if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
-                    mesh.material.needsUpdate = true;
-                    var faceIndices = ["a", "b", "c"];
-                    for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
-
-                        mesh.material.vertexColors = THREE.VertexColors;
-
-                        var _f = mesh.geometry.faces[a];
-                        for (var i = 0; i <= faceIndices.length - 1; i++) {
-                            var vertexIndex = _f[faceIndices[i]];
-                            var p = mesh.geometry.vertices[vertexIndex];
-                            console.log(vertexIndex);
-                            var color = new THREE.Color(0xffffff);
-                            console.log(p);
-                            mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
-                        }
-                    }
+                if (!groupNames.has(groupName)) {
+                    levels[i] = groupName;
+                    groupNames.add(groupName);
                 }
-            }
-
-            mesh.name = options.name !== undefined ? options.name : "";
-
-            if (this.options.debug === true) {
-                var debugVerts = new THREE.Group();
-                mesh.geometry.vertices.forEach(function (v, i) {
-
-                    var material = _this4.createMaterial({ color: new THREE.Color(i / mesh.geometry.vertices.length, 1, 1) });
-                    var geo = _this4.createGeometry({ type: "sphere", size: 0.5, segments: 8 });
-                    var debugMesh = new THREE.Mesh(geo, material);
-                    //copies the position of this vertice
-                    debugMesh.position.set(v.x, v.y, v.z);
-                    debugVerts.add(debugMesh);
-                });
-
-                mesh.add(debugVerts);
-            }
-
-            console.log(options, "right before setup Animation for Mesh");
-            if (options.animation !== undefined || options.animationType !== undefined) {
-
-                upgradeMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
-            } else {
-                upgradeMesh = this.setObjectTransforms(mesh, options);
-            }
-
-            this.setupWorldClone(sI, upgradeMesh, options);
-            console.log(upgradeMesh, group, "at the end of mesh manipulation ");
-
-            if (options.hasOwnProperty("children") && options.children instanceof Array && options.children.length > 0) {
-
-                var groupName = options.group !== undefined && !this.groupNames.has(options.group) ? options.group : options.name;
-
+                console.log(groupName, groupNames, "group names before children explored");
+                i++;
                 options.children.forEach(function (child, x) {
 
                     //keeps an array where each index reflects what level an object is within an object
                     //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
-                    console.log(!_this4.groupNames.has(groupName), "check for group names");
-                    if (!_this4.groupNames.has(groupName) && levels[levels.length - 1] !== groupName) {
 
-                        levels.push(groupName);
-                    }
 
-                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [] }, child, { group: groupName }), sI, group, i, levels);
+                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [] }, child, { group: groupName }), sI, group, i, levels, groupNames);
                 });
 
                 //recalls the group so that all the newly added meshes can undergo the parent transforms
@@ -65510,44 +65494,104 @@ var framework = {
                 this.setObjectTransforms(newGrp, options);
 
                 return;
-            }
-
-            if (options.group !== undefined && typeof options.group === "string") {
-                var grp = void 0;
-                if (this.groupNames.has(options.group)) {
-
-                    grp = this.scenes[sI].getObjectByName(options.group);
-                    grp.add(upgradeMesh);
-                } else {
-
-                    this.groupNames.add(options.group);
-
-                    if (levels.length > 1) {
-
-                        var prevGrp = this.scenes[sI].getObjectByName(levels[levels.length - 2]);
-                        grp = new THREE.Group();
-                        grp.name = options.group;
-                        grp.add(upgradeMesh);
-                        prevGrp.add(grp);
-                    } else {
-
-                        grp = new THREE.Group();
-                        grp.name = options.group;
-                        grp.add(upgradeMesh);
-                        this.scenes[sI].add(grp);
-                    }
-                }
-            } else if (options.count !== undefined && options.count > 1 && i < options.count) {
-
-                i++;
-                group.add(upgradeMesh);
-                this.setupMesh(options, sI, group, i, levels);
             } else {
 
-                if (group.children.length > 0) {
-                    this.scenes[sI].add(group);
+                var g = this.createGeometry(options);
+
+                if (options.texture instanceof Array) {
+                    //if you get an array of textuers back, then we can pack them here
+                    console.log(options, "before setupMesh begins");
+                    for (var f = 0; f <= g.faces.length - 1; f++) {
+                        multiMaterials.push(this.createMaterial(Object.assign({}, options, { texture: options.texture[f % options.texture.length] })));
+                    }
+
+                    m = multiMaterials;
                 } else {
-                    this.scenes[sI].add(upgradeMesh);
+
+                    m = this.createMaterial(options);
+                }
+
+                mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh(g, m);
+
+                if (options.hasOwnProperty("shadow") && options.shadow == true) {
+
+                    mesh.receiveShadow = true;
+                    mesh.castShadow = true;
+                }
+
+                //accepts a gradient that is either linear or radial
+                if (/gradient/.test(options.color)) {
+
+                    if (mesh.geometry !== undefined && mesh.geometry.faces !== undefined) {
+                        mesh.material.needsUpdate = true;
+                        var faceIndices = ["a", "b", "c"];
+                        for (var a = 0; a <= mesh.geometry.faces.length - 1; a++) {
+
+                            mesh.material.vertexColors = THREE.VertexColors;
+
+                            var _f = mesh.geometry.faces[a];
+                            for (var i = 0; i <= faceIndices.length - 1; i++) {
+                                var vertexIndex = _f[faceIndices[i]];
+                                var p = mesh.geometry.vertices[vertexIndex];
+                                console.log(vertexIndex);
+                                var color = new THREE.Color(0xffffff);
+                                console.log(p);
+                                mesh.geometry.faces[a].vertexColors[i] = color.setRGB(a / mesh.geometry.faces.length, 1, 1);
+                            }
+                        }
+                    }
+                }
+
+                mesh.name = options.name !== undefined ? options.name : "";
+
+                /*
+                if ( this.options.debug === true ) {
+                    const debugVerts = new THREE.Group();
+                    mesh.geometry.vertices.forEach( ( v, i ) => {
+                            const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
+                        const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
+                        let debugMesh = new THREE.Mesh( geo, material );
+                        //copies the position of this vertice
+                        debugMesh.position.set( v.x, v.y, v.z );
+                        debugVerts.add( debugMesh );
+                      } );
+                      mesh.add( debugVerts );
+                }
+                */
+
+                if (options.animation !== undefined || options.animationType !== undefined) {
+
+                    upgradeMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
+                } else {
+                    upgradeMesh = this.setObjectTransforms(mesh, options);
+                }
+
+                this.setupWorldClone(sI, upgradeMesh, options);
+
+                if (options.group !== undefined && typeof options.group === "string") {
+                    var _grp = void 0;
+
+                    console.log(levels, "levels", options.group);
+                    //dig through tree
+                    var endIndex = levels.findIndex(function (str) {
+                        return str === options.group;
+                    });
+                    var prevGrp = exploreGroupTree(endIndex, levels, this.scenes[sI]);
+
+                    console.log(prevGrp, "previous group near ending");
+                    prevGrp.add(upgradeMesh);
+                } else if (options.count !== undefined && options.count > 1 && i < options.count) {
+
+                    i++;
+                    group.add(upgradeMesh);
+                    this.setupMesh(options, sI, group, i, levels);
+                } else {
+
+                    if (group.children.length > 0) {
+                        this.scenes[sI].add(group);
+                    } else {
+                        this.scenes[sI].add(upgradeMesh);
+                    }
                 }
             }
 
@@ -67422,10 +67466,10 @@ exports.default = function () {
             geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
 
             if (top !== 100 || bottom !== 100 || options.verticalSegments !== undefined && typeof options.verticalSegments === "function" || options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function") {
-                changeSegmentSize(geometry, options);
+                return changeSegmentSize(geometry, Object.assign({}, options, { top: top, bottom: bottom }));
+            } else {
+                return geometry;
             }
-
-            return geometry;
         case "circle":
 
             return new THREE.CircleGeometry(size[0] / 2, options.segments !== undefined ? options.segments : 32, thetaStart, thetaLength);
@@ -67438,11 +67482,8 @@ exports.default = function () {
 
             if (path !== undefined) {
 
-                return new THREE.TubeGeometry(path, size[0] / 2, segments / 4, segments, false);
+                geometry = new THREE.TubeGeometry(path, size[0] / 2, segments / 4, segments, openEnded);
             } else if (options.hasOwnProperty("typeHandler") && options.typeHandler !== undefined) {
-
-                console.log("this is working in typehandler");
-
                 var CustomCurve = function (_THREE$Curve) {
                     _inherits(CustomCurve, _THREE$Curve);
 
@@ -67465,16 +67506,29 @@ exports.default = function () {
 
                 var curve = new CustomCurve();
 
-                return new THREE.TubeGeometry(curve, size[0] / 2, segments / 4, segments, false);
+                geometry = new THREE.TubeGeometry(curve, size[0] / 2, segments / 4, segments, openEnded);
             } else {
 
                 var newPath = createPath("tube", [{ x: 0, y: size[1], z: 0 }]);
-                return new THREE.TubeGeometry(newPath, size[0] / 2, segments / 4, segments, false);
+                geometry = new THREE.TubeGeometry(newPath, size[0] / 2, segments / 4, segments, openEnded);
+            }
+
+            if (top !== 100 || bottom !== 100 || options.verticalSegments !== undefined && typeof options.verticalSegments === "function" || options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function") {
+                return changeSegmentSize(geometry, Object.assign({}, options, { segments: segments, top: top, bottom: bottom }));
+            } else {
+                console.log(geometry);
+                return geometry;
             }
 
         case "cylinder":
 
-            return new THREE.CylinderGeometry(size[0] / 2, size[0] / 2, size[1], segments, segments, openEnded, thetaStart, thetaLength);
+            geometry = new THREE.CylinderGeometry(size[0] / 2 * (top / 100), size[0] / 2 * (bottom / 100), size[1], segments, segments, openEnded, thetaStart, thetaLength);
+
+            if (options.verticalSegments !== undefined && typeof options.verticalSegments === "function" || options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function") {
+                return changeSegmentSize(geometry, Object.assign({}, options, { top: top, bottom: bottom }));
+            } else {
+                return geometry;
+            }
 
         case "dodecahedron":
             //creates dodecahedron geometry
@@ -67597,7 +67651,7 @@ exports.default = function () {
 
         case "sphere":
             //creates a sphere geometry
-            return new THREE.SphereGeometry(size[0], segments, segments);
+            return new THREE.SphereGeometry(size[0] / 2, segments, segments);
 
             break;
 
@@ -67762,6 +67816,7 @@ function createPath() {
 
 function changeSegmentSize(geo, options) {
 
+    console.log(geo, "before switch in changeSegmentSize function");
     switch (geo.type) {
 
         case "BoxGeometry":
@@ -67769,7 +67824,7 @@ function changeSegmentSize(geo, options) {
             for (var n = 0; n <= geo.vertices.length - 1; n++) {
 
                 var vert = geo.vertices[n];
-                console.log(vert);
+                console.log(vert.y, "x before change");
                 if (vert.y >= geo.parameters.height / 2) {
 
                     vert.x *= options.top / 100;
@@ -67784,6 +67839,19 @@ function changeSegmentSize(geo, options) {
             }
 
             return geo;
+
+        case "TubeGeometry":
+
+            for (var x = 0; x <= geo.vertices.length - 1; x++) {
+                console.log(geo, "tube vertices");
+                if (x <= options.segments || x >= geo.vertices.length - options.segments - 1) {
+                    geo.vertices[x].x *= 2;
+                    geo.vertices[x].z *= 2;
+                }
+            }
+
+            return geo;
+
     }
 }
 
@@ -67994,7 +68062,7 @@ exports.default = function () {
         overdraw = options.overdraw !== undefined ? options.overdraw : _defaults2.default.overdraw,
         roughness = options.roughness !== undefined ? options.roughness : _defaults2.default.roughness,
         shininess = options.roughness !== undefined ? options.overdraw : _defaults2.default.shininess,
-        side = options.side !== undefined && typeof options.side === "string" ? options.side : THREE.FrontSide,
+        side = options.side !== undefined && typeof options.side === "string" ? options.side : "both",
         transparent = options.transparent !== undefined ? options.transparent : false,
         wireframeLinewidth = options.wireframeLinewidth !== undefined ? options.wireframeLinewidth : _defaults2.default.wireframeLinewidth,
         wireframeLinecap = options.wireframeLinecap !== undefined ? options.wireframeLinecap : _defaults2.default.wireframeLinecap,

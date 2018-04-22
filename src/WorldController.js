@@ -49,8 +49,6 @@ function WorldController (options) {
     this.counter = 0;
     //sets
     
-    this.groupNames = new Set();
-    
     this.isWorldLoaded = false;
 
     this.canvas = this.getCanvas();
@@ -537,7 +535,7 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [] ) {
+    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [], groupNames = new Set() ) {
         let m, mesh, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         /*
@@ -545,164 +543,201 @@ const framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
+        function exploreGroupTree( endIndex, arr, scene, i = 0, obj ) {
+            //takes the arr of children levels to dig through
+            if( i <= endIndex ) {
+                if ( i === 0 ) {
+                    
+                    obj = scene.getObjectByName( arr[ 0 ] );
+                    i++;
+                    return exploreGroupTree( endIndex, arr, scene, i, obj );
+                } else {
+                    console.log( obj, " within exploreGroup before getObject" );
+                    let newObj = obj.getObjectByName( arr[ i ] );
+                    i++;
+                    console.log( newObj, "within exploreGroupTree" );
+                    return exploreGroupTree( endIndex, arr, scene, i, newObj );
+                }
+                
+            } else { 
+                
+                return obj;
+            }
+            
+        }
+        function mapGroupTree( options, group ) {
+            
+            if ( options.children !== undefined && options.children instanceof Array ) {
+                
+                if ( group !== undefined ) { 
+                    let grp = new THREE.Group();
+                    grp.name = options.name;
+                    group.add( grp );
+                } else {
+                    group = new THREE.Group();
+                    group.name = options.name;            
+                }
+                
+                options.children.forEach( child => {
+                    
+                    return mapGroupTree( child, group );
+                } );
+                
+                return group;
+                
+            } 
+        }
         
         try{
-                console.log( levels, "at the beginning" );
                 // @param g stands for geometry
                 // @param sI is the current scene index
             
-                const g = this.createGeometry( options );
-            
-                if ( options.texture instanceof Array ) {
-                    //if you get an array of textuers back, then we can pack them here
-                    console.log( options, "before setupMesh begins" );
-                    for ( let f = 0; f <= g.faces.length - 1; f++ ) {
-                        multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : options.texture[ f % options.texture.length ] } ) ) );
-                    }
-                        
-           
-                    
-                    m = multiMaterials;
-                    
-                } else {
-                    
-                    m = this.createMaterial( options );
-                }
-            
-                mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh( g, m );
-                
-                if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
-                    
-                    mesh.receiveShadow = true;
-                    mesh.castShadow = true;
-                }
-                
-                //accepts a gradient that is either linear or radial
-                if ( /gradient/.test( options.color ) ) {
-                                
-                    if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
-                        mesh.material.needsUpdate = true;
-                        const faceIndices = [ "a", "b", "c" ];
-                        for ( let a = 0; a <= mesh.geometry.faces.length - 1; a++ ) {
-                            
-                            
-                            mesh.material.vertexColors = THREE.VertexColors;
-                            
-                            let f = mesh.geometry.faces[ a ];
-                            for ( var i = 0; i <= faceIndices.length - 1; i++ ) {
-                                let vertexIndex = f[ faceIndices[ i ] ];
-                                const p = mesh.geometry.vertices[vertexIndex];
-                                console.log( vertexIndex );
-                                let color = new THREE.Color( 0xffffff );
-                                console.log( p );
-                                mesh.geometry.faces[a].vertexColors[i] = color.setRGB( a / mesh.geometry.faces.length, 1, 1 );
-                                
-                            }
-                        }
-
-                    }
-                
-                } 
-                
-                mesh.name = options.name !== undefined ? options.name : "";
-                
-                if ( this.options.debug === true ) {
-                    const debugVerts = new THREE.Group();
-                    mesh.geometry.vertices.forEach( ( v, i ) => {
-                        
-                        
-                        const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
-                        const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
-                        let debugMesh = new THREE.Mesh( geo, material );
-                        //copies the position of this vertice
-                        debugMesh.position.set( v.x, v.y, v.z );
-                        debugVerts.add( debugMesh );
-                        
-                    } );
-                    
-                    mesh.add( debugVerts );
-                }
-            
-                console.log( options, "right before setup Animation for Mesh" );
-                if ( options.animation !== undefined || options.animationType !== undefined ) {
-                    
-                    upgradeMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
-                } else {
-                    upgradeMesh =  this.setObjectTransforms( mesh, options );
-            
-                }
-            
-                this.setupWorldClone( sI, upgradeMesh, options );
-                console.log( upgradeMesh, group, "at the end of mesh manipulation " );
-                
-                if( options.hasOwnProperty( "children" ) && options.children instanceof Array && options.children.length > 0 ) {
-                    
-                    const groupName = options.group !== undefined && !this.groupNames.has( options.group ) ? options.group : options.name;
-                    
-                    options.children.forEach( ( child, x ) => {
-
-                        //keeps an array where each index reflects what level an object is within an object
-                        //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
-                        console.log( !this.groupNames.has( groupName ), "check for group names" );
-                        if ( !this.groupNames.has( groupName ) && levels[ levels.length - 1 ] !== groupName ) {
-                            
-                            levels.push( groupName );
-                        }
-                        
-                        this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [] }, child, { group: groupName } ) , sI, group, i, levels );
-                            
-                    } );
-                    
-                    //recalls the group so that all the newly added meshes can undergo the parent transforms
-                    let newGrp = this.scenes[sI].getObjectByName( groupName );
-                    this.setObjectTransforms( newGrp, options );
-                    
-                    return;
-                }
-            
-                if( options.group !== undefined && typeof options.group === "string" ) {
+                if ( options.children !== undefined && options.children instanceof Array ) {
                     let grp;
-                    if ( this.groupNames.has( options.group ) ) {
+                    
+                    const groupName = options.group !== undefined && !groupNames.has( options.group ) ? options.group : options.name;
+
+                    if ( i === 0 && groupNames.size === 0 ) {
+                        //replaces levels with a new array for each treed group created
+                       levels = [];
+                       grp = mapGroupTree( options );
+                       this.scenes[sI].add( grp );
                         
-                        grp = this.scenes[sI].getObjectByName( options.group );
-                        grp.add( upgradeMesh );
-                        
-                        
-                    } else {
-                        
-                        this.groupNames.add( options.group );
-                        
-                        if ( levels.length > 1 ) {
-                            
-                            let prevGrp = this.scenes[sI].getObjectByName( levels[ levels.length - 2 ] );
-                            grp = new THREE.Group();
-                            grp.name = options.group;
-                            grp.add( upgradeMesh );
-                            prevGrp.add( grp );
-                            
-                        } else {
-                            
-                            grp = new THREE.Group();
-                            grp.name = options.group;
-                            grp.add( upgradeMesh );
-                            this.scenes[sI].add( grp );
-                        }
                     }
                     
-                } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
-                    
-                    i++;
-                    group.add( upgradeMesh );
-                    this.setupMesh( options, sI, group, i, levels );
-                    
+                    if ( !groupNames.has( groupName ) ) {
+                        levels[i] = groupName;
+                        groupNames.add( groupName );
+                    }
+                        console.log( groupName, groupNames, "group names before children explored" );
+                        i++;
+                        options.children.forEach( ( child, x ) => {
+
+                            //keeps an array where each index reflects what level an object is within an object
+                            //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
+
+
+                            this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [] }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
+
+                        } );
+
+                        //recalls the group so that all the newly added meshes can undergo the parent transforms
+                        let newGrp = this.scenes[sI].getObjectByName( groupName );
+                        this.setObjectTransforms( newGrp, options );
+
+                        return;
                 } else {
                     
-                    if ( group.children.length > 0 ) {
-                        this.scenes[sI].add( group );
+                    const g = this.createGeometry( options );
+            
+                    if ( options.texture instanceof Array ) {
+                        //if you get an array of textuers back, then we can pack them here
+                        console.log( options, "before setupMesh begins" );
+                        for ( let f = 0; f <= g.faces.length - 1; f++ ) {
+                            multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : options.texture[ f % options.texture.length ] } ) ) );
+                        }
+                        
+                        m = multiMaterials;
+
                     } else {
-                        this.scenes[sI].add( upgradeMesh ); 
+
+                        m = this.createMaterial( options );
                     }
+
+                    mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh( g, m );
+
+                    if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
+
+                        mesh.receiveShadow = true;
+                        mesh.castShadow = true;
+                    }
+
+                    //accepts a gradient that is either linear or radial
+                    if ( /gradient/.test( options.color ) ) {
+
+                        if ( mesh.geometry !== undefined && mesh.geometry.faces !== undefined ) {
+                            mesh.material.needsUpdate = true;
+                            const faceIndices = [ "a", "b", "c" ];
+                            for ( let a = 0; a <= mesh.geometry.faces.length - 1; a++ ) {
+
+
+                                mesh.material.vertexColors = THREE.VertexColors;
+
+                                let f = mesh.geometry.faces[ a ];
+                                for ( var i = 0; i <= faceIndices.length - 1; i++ ) {
+                                    let vertexIndex = f[ faceIndices[ i ] ];
+                                    const p = mesh.geometry.vertices[vertexIndex];
+                                    console.log( vertexIndex );
+                                    let color = new THREE.Color( 0xffffff );
+                                    console.log( p );
+                                    mesh.geometry.faces[a].vertexColors[i] = color.setRGB( a / mesh.geometry.faces.length, 1, 1 );
+
+                                }
+                            }
+
+                        }
+
+                    } 
+
+                    mesh.name = options.name !== undefined ? options.name : "";
+
+                    /*
+                    if ( this.options.debug === true ) {
+                        const debugVerts = new THREE.Group();
+                        mesh.geometry.vertices.forEach( ( v, i ) => {
+
+
+                            const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
+                            const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
+                            let debugMesh = new THREE.Mesh( geo, material );
+                            //copies the position of this vertice
+                            debugMesh.position.set( v.x, v.y, v.z );
+                            debugVerts.add( debugMesh );
+
+                        } );
+
+                        mesh.add( debugVerts );
+                    }
+                    */
+
+                    if ( options.animation !== undefined || options.animationType !== undefined ) {
+
+                        upgradeMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
+                    } else {
+                        upgradeMesh =  this.setObjectTransforms( mesh, options );
+
+                    }
+
+                    this.setupWorldClone( sI, upgradeMesh, options );
+
+                    if( options.group !== undefined && typeof options.group === "string" ) {
+                        let grp;
+                    
+                                console.log( levels, "levels", options.group );
+                               //dig through tree
+                                const endIndex = levels.findIndex( ( str ) => str === options.group );
+                                let prevGrp = exploreGroupTree( endIndex, levels, this.scenes[sI] );
+                        
+                                console.log( prevGrp, "previous group near ending" );
+                                prevGrp.add( upgradeMesh );
+
+                    } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
+
+                        i++;
+                        group.add( upgradeMesh );
+                        this.setupMesh( options, sI, group, i, levels );
+
+                    } else {
+
+                        if ( group.children.length > 0 ) {
+                            this.scenes[sI].add( group );
+                        } else {
+                            this.scenes[sI].add( upgradeMesh ); 
+                        }
+                    }
+                
                 }
+            
                 
                 /*
                 if ( options.hasOwnProperty( "transition" ) && options.transition !== undefined && typeof options.transition === "string" ) {
