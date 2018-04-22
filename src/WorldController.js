@@ -580,7 +580,7 @@ const framework = {
                 
                 options.children.forEach( child => {
                     
-                    return mapGroupTree( child, group );
+                    return mapGroupTree( child, group.children.length > 0 ? group.getObjectByName( options.name ) : group );
                 } );
                 
                 return group;
@@ -601,6 +601,7 @@ const framework = {
                         //replaces levels with a new array for each treed group created
                        levels = [];
                        grp = mapGroupTree( options );
+                        console.log( grp, "mapped tree" );
                        this.scenes[sI].add( grp );
                         
                     }

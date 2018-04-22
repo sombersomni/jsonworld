@@ -64304,24 +64304,6 @@ var World = function (_Component) {
                 var bodyWidth = 75;
                 var offset = 5;
 
-                var body = {
-                    name: "body",
-                    color: "pink",
-                    position: [50, 0, 0],
-                    children: [{
-                        name: "chest",
-                        type: "sphere",
-                        size: bodySize
-                    }, {
-                        name: "butt",
-                        type: "cylinder",
-                        size: [bodySize - offset, bodyWidth, 0],
-                        rotation: [0, 0, 90],
-                        position: [bodyWidth / 2, 0, 0],
-                        bottom: 25
-                    }]
-                };
-
                 var foot = {
                     "name": "foot",
                     position: [0, -150, 0],
@@ -64342,18 +64324,12 @@ var World = function (_Component) {
                     "position": [200, 0, 0],
                     "children": [bender, knee, benderTwo, foot]
                 };
-                var head = {
-                    "name": "head",
-                    "type": "sphere",
-                    "size": 30,
-                    "position": [0, 75, 0],
-                    "relativeTo": "neck"
-                };
 
                 var neck = {
                     "name": "neck",
                     "type": "tube",
                     "side": "front",
+                    "size": 40,
                     "bottom": 20,
                     "top": 50,
                     "scale": 1,
@@ -64375,13 +64351,39 @@ var World = function (_Component) {
                     "rotation": [0, 180, 0]
                 };
 
+                var head = {
+                    "name": "head",
+                    "type": "sphere",
+                    "size": 30,
+                    "position": [0, 75, 0],
+                    "relativeTo": "neck",
+                    "children": [neck]
+                };
+
+                var body = {
+                    name: "body",
+                    color: "pink",
+                    position: [50, 0, 0],
+                    children: [{
+                        name: "chest",
+                        type: "sphere",
+                        size: bodySize
+                    }, {
+                        name: "butt",
+                        type: "cylinder",
+                        size: [bodySize - offset, bodyWidth, 0],
+                        rotation: [0, 0, 90],
+                        position: [bodyWidth / 2, 0, 0],
+                        bottom: 25
+                    }, leg, legTwo]
+                };
                 var flamingo = {
                     "name": "flamingo",
                     "material": "toon",
                     "color": "blue",
                     "side": "front",
                     "openEnded": "true",
-                    "children": [body, neck, leg, legTwo]
+                    "children": [body, head]
 
                 };
 
@@ -65451,7 +65453,7 @@ var framework = {
 
                 options.children.forEach(function (child) {
 
-                    return mapGroupTree(child, group);
+                    return mapGroupTree(child, group.children.length > 0 ? group.getObjectByName(options.name) : group);
                 });
 
                 return group;
@@ -65471,6 +65473,7 @@ var framework = {
                     //replaces levels with a new array for each treed group created
                     levels = [];
                     grp = mapGroupTree(options);
+                    console.log(grp, "mapped tree");
                     this.scenes[sI].add(grp);
                 }
 

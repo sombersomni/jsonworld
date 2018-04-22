@@ -99,26 +99,7 @@ class World extends Component {
             const bodyWidth = 75;
             const offset = 5;
             
-            const body = {
-                name : "body",
-                color: "pink",
-                position: [ 50, 0, 0 ],
-                children  : [
-                    {
-                       name : "chest",
-                       type : "sphere",
-                       size : bodySize
-                    },
-                    {
-                        name : "butt",
-                        type : "cylinder",
-                        size: [ bodySize - offset, bodyWidth, 0 ],
-                        rotation : [ 0, 0, 90 ],
-                        position: [ bodyWidth / 2, 0, 0 ],
-                        bottom: 25
-                    }
-                ]
-            }
+        
             
             const foot = {
                 "name" : "foot",
@@ -152,18 +133,12 @@ class World extends Component {
                     foot
                 ]
             }
-            const head = {
-                "name" : "head",
-                "type" : "sphere",
-                "size" : 30,
-                "position" : [ 0, 75, 0 ],
-                "relativeTo" : "neck"
-            }
             
             const neck = {
                 "name" : "neck",
                 "type" : "tube",
                 "side" : "front",
+                "size" : 40,
                 "bottom" : 20,
                 "top" : 50,
                 "scale" : 1,
@@ -171,7 +146,7 @@ class World extends Component {
                 "typeHandler" : ( t ) => {
                     //t gives a number from 0 to 1 to distribute points
                     let yVal, xVal;
-                    const radius = 15
+                    const radius = 15;
                     if ( t < 0.25 ) {
                         yVal = - 10 * Math.sin( t * 4 * Math.PI );
                         xVal = ( Math.sin( t * Math.PI * 2 ) * ( radius * 2 ) ) - radius;
@@ -184,6 +159,37 @@ class World extends Component {
                 "rotation" : [ 0, 180, 0 ]
             }
             
+            const head = {
+                "name" : "head",
+                "type" : "sphere",
+                "size" : 30,
+                "position" : [ 0, 75, 0 ],
+                "relativeTo" : "neck",
+                "children" : [ neck ]
+            }
+            
+             const body = {
+                name : "body",
+                color: "pink",
+                position: [ 50, 0, 0 ],
+                children  : [
+                    {
+                       name : "chest",
+                       type : "sphere",
+                       size : bodySize
+                    },
+                    {
+                        name : "butt",
+                        type : "cylinder",
+                        size: [ bodySize - offset, bodyWidth, 0 ],
+                        rotation : [ 0, 0, 90 ],
+                        position: [ bodyWidth / 2, 0, 0 ],
+                        bottom: 25
+                    },
+                    leg,
+                    legTwo
+                ]
+            }
             const flamingo = {
                 "name" : "flamingo",
                 "material" : "toon",
@@ -192,9 +198,7 @@ class World extends Component {
                 "openEnded" : "true",
                 "children" : [
                     body,
-                    neck,
-                    leg,
-                    legTwo
+                    head,
                 ]
                         
             };
