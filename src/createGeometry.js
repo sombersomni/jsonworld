@@ -8,6 +8,55 @@ import parametricHandlers from "./utils/parametricHandlers.js";
 import proceduralTree from "./utils/proceduralTree.js";
 import rotatePoint from "./utils/rotatePoint.js";
 
+function determineShape( path, i = 0, arr = [], shape = new THREE.Shape(), prev = new THREE.Vector2( 0, 0 ) ) {
+    if( i <= path.length - 1 ) {
+        let point = path[i];
+    
+        const cpOne = point.cp !== undefined && point.cp instanceof Array && point.cp.length === 1 ? point.cp[0] : prev,
+              cpTwo = point.cp !== undefined && point.cp instanceof Array && point.cp.length === 2 ? point.cp[1] : point;
+
+        if ( i !== 0 ) {
+            switch( point.type ) {
+
+            case "bezier" :
+                shape.bezierCurveTo( cpOne.x, cpOne.y, cpTwo.x, cpTwo.y, point.x, point.y );
+                i++;
+                return determineShape( path, i, arr, shape, point );
+                break;
+            case "quad" :
+                shape.quadraticCurveTo( cpOne.x, cpOne.y, point.x, point.y );
+                i++;
+                return determineShape( path, i, arr, shape, point );
+            case "spline" :
+                arr.push( new THREE.Vector2( point.x, point.y ) );
+                if ( path[ i + 1 ] !== undefined && path[ i + 1 ].type !== undefined && path[ i + 1 ].type === "spline" ) {
+                    i++;
+                    return determineShape( path, i, arr, shape, prev );
+                } else { 
+                    shape.splineThru( arr );
+                    i++;
+                    return determineShape( path, i, [], shape, prev );
+                }
+
+
+            default:
+                shape.lineTo( point.x, point.y );
+                i++;
+                return determineShape( path, i, arr, shape, point );
+           }
+        } else {
+            
+            shape.moveTo( point.x, point.y );
+            i++;
+            return determineShape( path, i, arr, shape, point );
+        }
+        
+    } else {
+        
+        console.log( shape, "before function returns" );
+        return shape;
+    }
+}
 function chooseCurve( path, i = 0, arr = [], curvePath = new THREE.CurvePath() ) {
     
     let curve, cp, cpTwo;
@@ -67,7 +116,7 @@ function chooseCurve( path, i = 0, arr = [], curvePath = new THREE.CurvePath() )
                 }
                 break;
                 
-            case "cubic" :
+            case "bezier" :
                 
                 if ( current.cp instanceof Array ) {
                     const cpOne = current.cp[0],
@@ -156,7 +205,7 @@ function changeSegmentSize ( geo, options ) {
         case "TubeGeometry" :
        
             for( let x = 0; x <= geo.vertices.length - 1; x++ ) {
-                console.log( geo, "tube vertices" );
+
                 if ( x <= options.segments || x >= geo.vertices.length - options.segments - 1 ) {
                    geo.vertices[x].x *= 2;
                    geo.vertices[x].z *= 2; 
@@ -251,6 +300,12 @@ export default function ( options = {} ) {
            } else {
                return geometry;
            }
+            
+        case "circle" :
+            
+            geometry = new THREE.CircleGeometry( size[ 0 ] / 2, segments, thetaStart, thetaLength );
+            
+            return geometry;
             
         case "dodecahedron" :
             //creates dodecahedron geometry
@@ -370,13 +425,20 @@ export default function ( options = {} ) {
          
         case "shape" :
             
-
+            let customShape = determineShape( path );
+            console.log( customShape, "shape created" );
+            if ( extrude !== undefined ) {
+                
+                return new THREE.ExtrudeGeometry( customShape, extrude );
+            } else {
+                
+                return new THREE.ShapeGeometry( customShape );
+            }
+            break;
             
         case "sphere":
             //creates a sphere geometry
             return new THREE.SphereGeometry( size[0] / 2, segments, segments );
-            
-            break;
 
         default:
             return new THREE.BoxGeometry( size, size, size );

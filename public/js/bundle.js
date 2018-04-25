@@ -64241,170 +64241,250 @@ var World = function (_Component) {
                 _this2.setState({ message: e.message });
             });
 
-            axios.get("./albums").then(function (response) {
-                /*
-                let albums = [];
-                for ( let i = 0; i <= 5; i++ ) {
-                    const eachAlbum = response.data.items[ i ];
-                    const album = {
-                        "name" : eachAlbum.name,
-                        "type" : "box",
-                        "size" : [ eachAlbum.images[ 1 ].width , eachAlbum.images[ 1 ].height, 10 ],
-                        "position": [ eachAlbum.images[ 1 ].width * i * 2 * ( i % 2 == 0 ? -1 : 1 ), 0, -1000 ],
-                        "color" : "white",
-                        "material" : "lambert",
-                        "group" : "albums",
-                        "shadow" : true,
-                        "animation" : "rotation 2s",
-                        "animationKeyframes" : {
-                            "rotation" : [ { rotateY: 100 } ]
-                        },
-                        "texture" : [ eachAlbum.images[ 1 ].url ]
-                    };
-                      albums.push( album );
-                }
-                */
-
-                var floor = {
-                    "type": "plane",
-                    "name": "floor",
-                    "size": [10000, 10000],
-                    "material": "phong",
-                    "color": "yellow",
-                    "position": "0 -500 1000",
-                    "rotation": [90, 0, 0]
-                };
-
-                var bender = {
-                    "name": "bender",
-                    "type": "cylinder",
-                    "size": [5, 70, 0],
-                    "position": [0, 0, 0],
-                    "relativeTo": "knee",
-                    "placement": "top"
-
-                };
-                var benderTwo = {
-                    "name": "bender2",
-                    "type": "cylinder",
-                    "size": [5, 100, 0],
-                    "position": [0, -35 - 50, 0],
-                    "relativeTo": "knee",
-                    "placement": "top"
-
-                };
-                var knee = {
-                    "name": "knee",
-                    "type": "dodecahedron",
-                    "position": [0, -35, 0],
-                    "size": 10
-                };
-
-                var bodySize = 80;
-                var bodyWidth = 75;
-                var offset = 5;
-
-                var foot = {
-                    "name": "foot",
-                    position: [0, -150, 0],
-                    "children": [{
-                        "name": "ankle",
-                        "type": "cylinder",
-                        "size": [5, 18, 10]
-                    }]
-                };
-                var leg = {
-                    "name": "leg",
-                    "position": [100, 0, 0],
-                    "children": [bender, knee, benderTwo, foot]
-                };
-
-                var legTwo = {
-                    "name": "leg2",
-                    "position": [200, 0, 0],
-                    "children": [bender, knee, benderTwo, foot]
-                };
-
-                var neck = {
-                    "name": "neck",
-                    "type": "tube",
-                    "side": "front",
-                    "size": 40,
-                    "bottom": 20,
-                    "top": 50,
-                    "scale": 1,
-                    "segments": 10,
-                    "typeHandler": function typeHandler(t) {
-                        //t gives a number from 0 to 1 to distribute points
-                        var yVal = void 0,
-                            xVal = void 0;
-                        var radius = 15;
-                        if (t < 0.25) {
-                            yVal = -10 * Math.sin(t * 4 * Math.PI);
-                            xVal = Math.sin(t * Math.PI * 2) * (radius * 2) - radius;
-                        } else {
-                            yVal = 100 * (t - 0.25);
-                            xVal = Math.sin(t * Math.PI * 2) * radius;
-                        }
-                        return { x: xVal, y: yVal, z: 0 };
+            //axios.get( "./albums" ). then( response => {
+            /*
+            let albums = [];
+            for ( let i = 0; i <= 5; i++ ) {
+                const eachAlbum = response.data.items[ i ];
+                const album = {
+                    "name" : eachAlbum.name,
+                    "type" : "box",
+                    "size" : [ eachAlbum.images[ 1 ].width , eachAlbum.images[ 1 ].height, 10 ],
+                    "position": [ eachAlbum.images[ 1 ].width * i * 2 * ( i % 2 == 0 ? -1 : 1 ), 0, -1000 ],
+                    "color" : "white",
+                    "material" : "lambert",
+                    "group" : "albums",
+                    "shadow" : true,
+                    "animation" : "rotation 2s",
+                    "animationKeyframes" : {
+                        "rotation" : [ { rotateY: 100 } ]
                     },
-                    "rotation": [0, 180, 0]
+                    "texture" : [ eachAlbum.images[ 1 ].url ]
                 };
+                  albums.push( album );
+            }
+            */
 
-                var head = {
-                    "name": "head",
-                    "type": "sphere",
-                    "size": 30,
-                    "position": [0, 75, 0],
-                    "relativeTo": "neck",
-                    "children": [neck]
+            var square = {
+                "type": "circle",
+                "name": "circle",
+                "color": "blue",
+                "size": 200,
+                "fold": [40, 20, 0],
+                "foldRadius": [50, 100, 0],
+                "position": [0, 0, 200]
+            };
+
+            var squareTwo = {
+                "type": "plane",
+                "name": "square",
+                "color": "pink",
+                "size": 100,
+                "position": [0, 200, 200]
+            };
+
+            var floor = {
+                "type": "plane",
+                "name": "floor",
+                "size": [10000, 10000],
+                "material": "phong",
+                "color": "yellow",
+                "position": "0 -500 1000",
+                "rotation": [90, 0, 0]
+            };
+
+            var bender = {
+                "name": "bender",
+                "type": "cylinder",
+                "size": [5, 70, 0],
+                "position": [0, 0, 0],
+                "relativeTo": "knee",
+                "placement": "top"
+
+            };
+            var benderTwo = {
+                "name": "bender2",
+                "type": "cylinder",
+                "size": [5, 100, 0],
+                "position": [0, -35 - 50, 0],
+                "relativeTo": "knee",
+                "placement": "top"
+
+            };
+            var knee = {
+                "name": "knee",
+                "type": "dodecahedron",
+                "position": [0, -35, 0],
+                "size": 10
+            };
+
+            var bodySize = 80;
+            var bodyWidth = 75;
+            var offset = 5;
+
+            //build feathers using for loops
+            var feathers = {
+                name: "feathers",
+                color: "red",
+                position: "0 0 450",
+                children: []
+            };
+            var featherWidth = 10;
+            var featherAngle = 10;
+            var max = 100;
+            var sum = 0;
+            for (var n = 0; n < 1; n++) {
+
+                var powered = (Math.floor(n / 2) + 1) * 10;
+                var featherLength = featherWidth + powered >= max ? max : powered;
+                if (n % 2 === 0) {
+                    sum += featherLength / 2;
+                }
+                var angle = Math.PI * (n / 10);
+                var feather = {
+                    name: "feather",
+                    type: "shape",
+                    fold: [180, 0, 0],
+                    material: "lambert",
+                    position: [n % 2 * (featherWidth / 2 - featherWidth / 2) - featherWidth / 4, Math.sin(angle) * sum, -20 * Math.floor(n / 2) / 5],
+                    layout: "basic",
+                    layoutLimit: [5, 100, 1],
+                    margin: [0, 0, 0],
+                    path: function () {
+                        var arr = [],
+                            flippedArr = [];
+                        for (var x = 0; x <= 20; x++) {
+                            if (x <= 10) {
+                                arr.push({ type: "quad", x: x, y: Math.sin(Math.PI / 2 * (x / 9) + Math.PI / 2) * -3, z: 0 });
+                            } else if (x > 10 && x <= 19) {
+                                arr.push({ x: 10 - (x - 10), y: (x - 10) * 2, z: 0 });
+                            } else {
+                                arr.push({ x: 0, y: 30, z: 0 });
+                            }
+                        }
+
+                        for (var r = arr.length - 2; r >= 0; r--) {
+
+                            flippedArr.push({ type: arr[r].type, x: arr[r].x * -1, y: arr[r].y, z: 0 });
+                        }
+
+                        return arr.concat(flippedArr);
+                    }(),
+                    rotation: [-1 * angle * 180 / Math.PI, n % 2 === 0 ? featherAngle : -featherAngle, n % 2 === 0 ? featherAngle : -featherAngle]
                 };
+                console.log(angle, "here is the angle");
+                feathers.children.push(feather);
+            }
 
-                var body = {
-                    name: "body",
-                    color: "pink",
-                    position: [50, 0, 0],
-                    children: [{
-                        name: "chest",
-                        type: "sphere",
-                        size: bodySize
-                    }, {
-                        name: "butt",
-                        type: "cylinder",
-                        size: [bodySize - offset, bodyWidth, 0],
-                        rotation: [0, 0, 90],
-                        position: [bodyWidth / 2, 0, 0],
-                        bottom: 25
-                    }, leg, legTwo]
-                };
-                var flamingo = {
-                    "name": "flamingo",
-                    "material": "toon",
-                    "color": "blue",
-                    "side": "front",
-                    "openEnded": "true",
-                    "children": [body, head]
+            var foot = {
+                "name": "foot",
+                position: [0, -150, 0],
+                "children": [{
+                    "name": "ankle",
+                    "type": "cylinder",
+                    "size": [5, 18, 10]
+                }]
+            };
+            var legOffset = 10;
+            var legSpace = bodySize / 2.5;
+            var leg = {
+                "name": "leg",
+                "position": [legOffset, legSpace, legSpace],
+                "children": [bender, knee, benderTwo, foot]
+            };
 
-                };
+            var legTwo = {
+                "name": "leg2",
+                "position": [legOffset, 0, -1 * legSpace],
+                "children": [bender, knee, benderTwo, foot]
+            };
 
-                var wall = {
-                    "type": "plane",
-                    "name": "wall",
-                    "size": [10000, 10000],
-                    "material": "phong",
-                    "color": "red",
-                    "position": "0 0 -10000"
-                };
+            var neck = {
+                "name": "neck",
+                "type": "tube",
+                "side": "front",
+                "size": 40,
+                "bottom": 20,
+                "top": 50,
+                "scale": 1,
+                "position": "0 0 0",
+                "segments": 10,
+                "typeHandler": function typeHandler(t) {
+                    //t gives a number from 0 to 1 to distribute points
+                    var yVal = void 0,
+                        xVal = void 0;
+                    var radius = 15;
+                    if (t < 0.25) {
+                        yVal = -10 * Math.sin(t * 4 * Math.PI);
+                        xVal = Math.sin(t * Math.PI * 2) * (radius * 2) - radius;
+                    } else {
+                        yVal = 100 * (t - 0.25);
+                        xVal = Math.sin(t * Math.PI * 2) * radius;
+                    }
+                    return { x: xVal, y: yVal, z: 0 };
+                },
+                "rotation": [0, 180, 0]
+            };
 
-                _this2.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [floor, flamingo] }));
+            var head = {
+                "name": "head",
+                "type": "sphere",
+                "size": 20,
+                "position": [0, 75, 0],
+                "relativeTo": "neck"
 
-                _this2.world.start();
+            };
 
-                window.setTimeout(function () {
+            var noggin = {
+                "name": "noggin",
+                "children": [head, neck]
+            };
 
-                    console.log(_this2.world);
-                }, 10000);
-            });
+            var body = {
+                name: "body",
+                color: "pink",
+                position: [50, 0, 0],
+                children: [{
+                    name: "chest",
+                    type: "sphere",
+                    size: bodySize
+                }, {
+                    name: "butt",
+                    type: "cylinder",
+                    size: [bodySize - offset, bodyWidth, 0],
+                    rotation: [0, 0, 90],
+                    position: [bodyWidth / 2, 0, 0],
+                    bottom: 25
+                }, leg, legTwo]
+            };
+            var flamingo = {
+                "name": "flamingo",
+                "material": "toon",
+                "color": "blue",
+                "side": "front",
+                "openEnded": "true",
+                "children": [body, noggin]
+
+            };
+
+            var wall = {
+                "type": "plane",
+                "name": "wall",
+                "size": [10000, 10000],
+                "material": "phong",
+                "color": "red",
+                "position": "0 0 -10000"
+            };
+
+            this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, flamingo, square, squareTwo] }));
+
+            this.world.start();
+
+            window.setTimeout(function () {
+
+                console.log(_this2.world);
+            }, 10000);
+            // } );
         }
     }, {
         key: "componentWillReceiveProps",
@@ -64916,19 +64996,19 @@ var framework = {
         this.camera.rotation.y = speedX * -1;
         this.camera.rotation.x = speedY * -1;
     },
-    computeObjectRadius: function computeObjectRadius(mesh) {
+    computeObjectRadius: function computeObjectRadius(geometry) {
         //gets the radius from the bounding sphere to reflect the objects collision area
         var center = new THREE.Vector3(0, 0, 0);
-        mesh.geometry.computeBoundingSphere();
+        geometry.computeBoundingSphere();
 
-        if (mesh.geometry.boundingSphere !== undefined) {
-            return mesh.geometry.boundingSphere;
-        } else if (mesh.geometry.parameters.radius !== undefined) {
-            return { radius: mesh.geometry.parameters.radius, center: center };
-        } else if (mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom) {
-            return { radius: Math.max(mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom), center: center };
-        } else if (mesh.geometry.parameters.width) {
-            return { radius: mesh.geometry.parameters.width / 2, center: center };
+        if (geometry.boundingSphere !== undefined) {
+            return geometry.boundingSphere;
+        } else if (geometry.parameters.radius !== undefined) {
+            return { radius: geometry.parameters.radius, center: center };
+        } else if (geometry.parameters.radiusTop && geometry.parameters.radiusBottom) {
+            return { radius: Math.max(geometry.parameters.radiusTop, geometry.parameters.radiusBottom), center: center };
+        } else if (geometry.parameters.width) {
+            return { radius: geometry.parameters.width / 2, center: center };
         } else {
             console.warn("can't compute radius for object");
 
@@ -65086,9 +65166,11 @@ var framework = {
                 newY = 0,
                 newZ = 0;
 
-            var _computeObjectRadius = this.computeObjectRadius(mesh),
+            var _computeObjectRadius = this.computeObjectRadius(mesh.geometry),
                 center = _computeObjectRadius.center,
                 radius = _computeObjectRadius.radius;
+
+            console.log(center, radius, "computed radius");
 
             switch (type) {
 
@@ -65120,9 +65202,43 @@ var framework = {
 
         return mesh;
     },
+    foldGeometry: function foldGeometry(g, opts) {
+        //@params g for geometry
+        //@params opts for options
+        var _computeObjectRadius2 = this.computeObjectRadius(g),
+            center = _computeObjectRadius2.center,
+            radius = _computeObjectRadius2.radius;
+
+        console.log(radius, center, g, "fold Geometry");
+
+        var xAngle = opts.fold[0] * (Math.PI * 2 / 180),
+            yAngle = opts.fold[1] * (Math.PI * 2 / 180),
+            zAngle = opts.fold[2] * (Math.PI * 2 / 180),
+            topScaleLimit = 16,
+            foldPower = opts.foldPower !== undefined && opts.foldPower instanceof Array ? opts.foldPower : [1, 1, 1],
+            foldRadius = opts.foldRadius !== undefined && opts.foldRadius instanceof Array ? opts.foldRadius : [radius / 4, radius / 4, radius / 4];
+
+        for (var n = 0; n < g.vertices.length; n++) {
+
+            g.vertices[n].z += center.z + foldRadius[0] * Math.sin(xAngle * ((g.vertices[n].y + radius) / radius * (foldPower[0] === 0 ? 1 : Math.pow(2, foldPower[0]))));
+
+            g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow(2, Math.floor(foldRadius[0] / 100));
+
+            if (g.vertices[n].y > 0) {
+                g.vertices[n].y *= Math.pow(2, g.vertices[n].y) > topScaleLimit ? topScaleLimit : Math.pow(2, g.vertices[n].y);
+                g.vertices[n].z *= Math.sin(yAngle * (g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius));
+            }
+
+            g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow(2, Math.floor(foldRadius[1] / 100));
+        }
+
+        return g;
+    },
     fitOnScreen: function fitOnScreen(mesh, w, h) {
         var n = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
 
+        //@params w for width
+        //@params h for height
         var data = (0, _cameraView2.default)(mesh.position.z, this.camera);
 
         if (mesh.geometry.parameters.hasOwnProperty("width") && mesh.geometry.parameters.hasOwnProperty("height")) {
@@ -65473,7 +65589,6 @@ var framework = {
                     //replaces levels with a new array for each treed group created
                     levels = [];
                     grp = mapGroupTree(options);
-                    console.log(grp, "mapped tree");
                     this.scenes[sI].add(grp);
                 }
 
@@ -65481,7 +65596,7 @@ var framework = {
                     levels[i] = groupName;
                     groupNames.add(groupName);
                 }
-                console.log(groupName, groupNames, "group names before children explored");
+
                 i++;
                 options.children.forEach(function (child, x) {
 
@@ -65489,7 +65604,7 @@ var framework = {
                     //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
 
-                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [] }, child, { group: groupName }), sI, group, i, levels, groupNames);
+                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: 0 }, child, { group: groupName }), sI, group, i, levels, groupNames);
                 });
 
                 //recalls the group so that all the newly added meshes can undergo the parent transforms
@@ -65498,8 +65613,14 @@ var framework = {
 
                 return;
             } else {
+                var g = void 0;
 
-                var g = this.createGeometry(options);
+                if (options.fold !== undefined) {
+
+                    g = this.foldGeometry(this.createGeometry(options), options);
+                } else {
+                    g = this.createGeometry(options);
+                }
 
                 if (options.texture instanceof Array) {
                     //if you get an array of textuers back, then we can pack them here
@@ -65571,6 +65692,19 @@ var framework = {
 
                 this.setupWorldClone(sI, upgradeMesh, options);
 
+                if (options.count !== undefined && options.count > 1 && i < options.count) {
+
+                    if (group.name.length === 0) {
+                        group.name = options.name + "s"; //turns it to a pluralname 
+                    }
+
+                    upgradeMesh.name = options.name + i.toString();
+                    group.add(this.gridMeshPosition(upgradeMesh, options, i));
+                    i++;
+                    console.log(group);
+                    this.setupMesh(options, sI, group, i, levels);
+                }
+
                 if (options.group !== undefined && typeof options.group === "string") {
                     var _grp = void 0;
 
@@ -65583,14 +65717,10 @@ var framework = {
 
                     console.log(prevGrp, "previous group near ending");
                     prevGrp.add(upgradeMesh);
-                } else if (options.count !== undefined && options.count > 1 && i < options.count) {
-
-                    i++;
-                    group.add(upgradeMesh);
-                    this.setupMesh(options, sI, group, i, levels);
                 } else {
 
                     if (group.children.length > 0) {
+
                         this.scenes[sI].add(group);
                     } else {
                         this.scenes[sI].add(upgradeMesh);
@@ -66056,9 +66186,9 @@ var framework = {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
-            if (obj.name === "flamingo") {
+            if (obj.name === "circle") {
 
-                obj.rotation.y += 0.005;
+                obj.rotation.y += 0.025;
                 //obj.material.map.needsUpdate = true;
                 //obj.material.map.offset.x += 0.01;
                 // console.log( obj );
@@ -67533,6 +67663,12 @@ exports.default = function () {
                 return geometry;
             }
 
+        case "circle":
+
+            geometry = new THREE.CircleGeometry(size[0] / 2, segments, thetaStart, thetaLength);
+
+            return geometry;
+
         case "dodecahedron":
             //creates dodecahedron geometry
             return new THREE.DodecahedronGeometry(size[0] / 2);
@@ -67652,11 +67788,20 @@ exports.default = function () {
 
         case "shape":
 
+            var customShape = determineShape(path);
+            console.log(customShape, "shape created");
+            if (extrude !== undefined) {
+
+                return new THREE.ExtrudeGeometry(customShape, extrude);
+            } else {
+
+                return new THREE.ShapeGeometry(customShape);
+            }
+            break;
+
         case "sphere":
             //creates a sphere geometry
             return new THREE.SphereGeometry(size[0] / 2, segments, segments);
-
-            break;
 
         default:
             return new THREE.BoxGeometry(size, size, size);
@@ -67695,6 +67840,58 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 //UTILS
 
+function determineShape(path) {
+    var i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    var arr = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+    var shape = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : new THREE.Shape();
+    var prev = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : new THREE.Vector2(0, 0);
+
+    if (i <= path.length - 1) {
+        var point = path[i];
+
+        var cpOne = point.cp !== undefined && point.cp instanceof Array && point.cp.length === 1 ? point.cp[0] : prev,
+            cpTwo = point.cp !== undefined && point.cp instanceof Array && point.cp.length === 2 ? point.cp[1] : point;
+
+        if (i !== 0) {
+            switch (point.type) {
+
+                case "bezier":
+                    shape.bezierCurveTo(cpOne.x, cpOne.y, cpTwo.x, cpTwo.y, point.x, point.y);
+                    i++;
+                    return determineShape(path, i, arr, shape, point);
+                    break;
+                case "quad":
+                    shape.quadraticCurveTo(cpOne.x, cpOne.y, point.x, point.y);
+                    i++;
+                    return determineShape(path, i, arr, shape, point);
+                case "spline":
+                    arr.push(new THREE.Vector2(point.x, point.y));
+                    if (path[i + 1] !== undefined && path[i + 1].type !== undefined && path[i + 1].type === "spline") {
+                        i++;
+                        return determineShape(path, i, arr, shape, prev);
+                    } else {
+                        shape.splineThru(arr);
+                        i++;
+                        return determineShape(path, i, [], shape, prev);
+                    }
+
+                default:
+                    shape.lineTo(point.x, point.y);
+                    i++;
+                    return determineShape(path, i, arr, shape, point);
+            }
+        } else {
+
+            shape.moveTo(point.x, point.y);
+            i++;
+            return determineShape(path, i, arr, shape, point);
+        }
+    } else {
+
+        console.log(shape, "before function returns");
+        return shape;
+    }
+}
 function chooseCurve(path) {
     var i = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     var arr = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
@@ -67758,7 +67955,7 @@ function chooseCurve(path) {
                 }
                 break;
 
-            case "cubic":
+            case "bezier":
 
                 if (current.cp instanceof Array) {
                     var cpOne = current.cp[0],
@@ -67846,7 +68043,7 @@ function changeSegmentSize(geo, options) {
         case "TubeGeometry":
 
             for (var x = 0; x <= geo.vertices.length - 1; x++) {
-                console.log(geo, "tube vertices");
+
                 if (x <= options.segments || x >= geo.vertices.length - options.segments - 1) {
                     geo.vertices[x].x *= 2;
                     geo.vertices[x].z *= 2;

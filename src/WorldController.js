@@ -85,19 +85,19 @@ const framework = {
       this.camera.rotation.y = speedX * -1;
       this.camera.rotation.x = speedY * -1;
     },
-    computeObjectRadius : function ( mesh ) {
+    computeObjectRadius : function ( geometry ) {
         //gets the radius from the bounding sphere to reflect the objects collision area
         const center = new THREE.Vector3( 0, 0, 0 );
-        mesh.geometry.computeBoundingSphere();
+        geometry.computeBoundingSphere();
         
-            if ( mesh.geometry.boundingSphere !== undefined ) {
-                return mesh.geometry.boundingSphere;
-            } else if ( mesh.geometry.parameters.radius !== undefined ) {
-                return { radius : mesh.geometry.parameters.radius, center };
-            } else if ( mesh.geometry.parameters.radiusTop && mesh.geometry.parameters.radiusBottom ) {
-                return { radius : Math.max( mesh.geometry.parameters.radiusTop, mesh.geometry.parameters.radiusBottom ), center };
-            } else if ( mesh.geometry.parameters.width ) {
-                return { radius : mesh.geometry.parameters.width / 2 , center };
+            if ( geometry.boundingSphere !== undefined ) {
+                return geometry.boundingSphere;
+            } else if ( geometry.parameters.radius !== undefined ) {
+                return { radius : geometry.parameters.radius, center };
+            } else if ( geometry.parameters.radiusTop && geometry.parameters.radiusBottom ) {
+                return { radius : Math.max( geometry.parameters.radiusTop, geometry.parameters.radiusBottom ), center };
+            } else if ( geometry.parameters.width ) {
+                return { radius : geometry.parameters.width / 2 , center };
             } else {
                 console.warn( "can't compute radius for object" );
                 
@@ -243,7 +243,8 @@ const framework = {
 
                     let newX = 0, newY = 0, newZ = 0;
                     
-                    const { center, radius } = this.computeObjectRadius( mesh );
+                    const { center, radius } = this.computeObjectRadius( mesh.geometry );
+                    console.log( center, radius, "computed radius" );
                 
                     switch( type ) {
 
@@ -276,7 +277,41 @@ const framework = {
         
         return mesh;
     },
+    foldGeometry: function ( g, opts ) {
+        //@params g for geometry
+        //@params opts for options
+        const { center, radius } = this.computeObjectRadius( g );
+        console.log( radius, center, g, "fold Geometry" );
+        
+        const xAngle = opts.fold[ 0 ] * ( Math.PI * 2 / 180 ),
+              yAngle = opts.fold[ 1 ] * ( Math.PI * 2 / 180 ),
+              zAngle = opts.fold[ 2 ] * ( Math.PI  * 2 / 180 ),
+              topScaleLimit = 16,
+              foldPower = opts.foldPower !== undefined && opts.foldPower instanceof Array ? opts.foldPower : [ 1, 1, 1 ],
+              foldRadius = opts.foldRadius !== undefined && opts.foldRadius instanceof Array ? opts.foldRadius : [ radius / 4, radius / 4, radius / 4 ];
+        
+        for ( var n = 0; n < g.vertices.length; n++ ) {
+                
+                g.vertices[n].z += center.z + ( ( foldRadius[0] ) * Math.sin( ( xAngle ) * ( ( ( g.vertices[n].y + radius ) / radius * ( foldPower[0] === 0 ? 1 : Math.pow( 2, foldPower[0]  ) ) ) ) ) );
+            
+                g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
+            
+                if ( g.vertices[n].y > 0 ) {
+                    g.vertices[n].y *= Math.pow( 2, g.vertices[n].y ) > topScaleLimit ? topScaleLimit : Math.pow( 2, g.vertices[n].y );
+                    g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
+                }
+            
+                g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
+                
+            
+        }
+        
+        return g;
+        
+    },
     fitOnScreen: function ( mesh, w, h, n = 2 ) {
+        //@params w for width
+        //@params h for height
         const data = calculateCameraView( mesh.position.z, this.camera );
 
         if ( mesh.geometry.parameters.hasOwnProperty( "width" ) && mesh.geometry.parameters.hasOwnProperty( "height" ) ) {
@@ -601,7 +636,6 @@ const framework = {
                         //replaces levels with a new array for each treed group created
                        levels = [];
                        grp = mapGroupTree( options );
-                        console.log( grp, "mapped tree" );
                        this.scenes[sI].add( grp );
                         
                     }
@@ -610,7 +644,7 @@ const framework = {
                         levels[i] = groupName;
                         groupNames.add( groupName );
                     }
-                        console.log( groupName, groupNames, "group names before children explored" );
+                    
                         i++;
                         options.children.forEach( ( child, x ) => {
 
@@ -618,7 +652,7 @@ const framework = {
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
 
-                            this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [] }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
+                            this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
 
                         } );
 
@@ -628,8 +662,14 @@ const framework = {
 
                         return;
                 } else {
+                    let g;
                     
-                    const g = this.createGeometry( options );
+                    if ( options.fold !== undefined ) {
+                        
+                        g = this.foldGeometry( this.createGeometry( options ), options );
+                    } else {
+                        g = this.createGeometry( options );
+                    }
             
                     if ( options.texture instanceof Array ) {
                         //if you get an array of textuers back, then we can pack them here
@@ -711,6 +751,20 @@ const framework = {
 
                     this.setupWorldClone( sI, upgradeMesh, options );
 
+                    if ( options.count !== undefined && options.count > 1 && i < options.count ) {
+
+                        if ( group.name.length === 0 ) {
+                            group.name = options.name + "s"; //turns it to a pluralname 
+                        }
+                        
+                        upgradeMesh.name = options.name + i.toString();
+                        group.add( this.gridMeshPosition( upgradeMesh, options, i ) );
+                        i++;
+                        console.log( group );
+                        this.setupMesh( options, sI, group, i, levels );
+
+                    }
+                    
                     if( options.group !== undefined && typeof options.group === "string" ) {
                         let grp;
                     
@@ -722,15 +776,10 @@ const framework = {
                                 console.log( prevGrp, "previous group near ending" );
                                 prevGrp.add( upgradeMesh );
 
-                    } else if ( options.count !== undefined && options.count > 1 && i < options.count ) {
-
-                        i++;
-                        group.add( upgradeMesh );
-                        this.setupMesh( options, sI, group, i, levels );
-
                     } else {
 
                         if ( group.children.length > 0 ) {
+                            
                             this.scenes[sI].add( group );
                         } else {
                             this.scenes[sI].add( upgradeMesh ); 
@@ -1200,10 +1249,9 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
      
-            if ( obj.name === "flamingo" ) {
+            if ( obj.name === "circle" ) {
                 
-            
-                obj.rotation.y += 0.005;
+                obj.rotation.y += 0.025;
                 //obj.material.map.needsUpdate = true;
                 //obj.material.map.offset.x += 0.01;
                // console.log( obj );
