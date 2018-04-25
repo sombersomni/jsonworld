@@ -59,15 +59,7 @@ class World extends Component {
             }
             */
            
-            const square = {
-                "type": "circle",
-                "name" : "circle",
-                "color" : "blue",
-                "size" : 200,
-                "fold" : [ 40, 20, 0 ],
-                "foldRadius" : [ 50, 100, 0 ],
-                "position" : [ 0, 0, 200 ]
-            }
+            
             
             const squareTwo = {
                 "type": "plane",
@@ -120,56 +112,23 @@ class World extends Component {
             //build feathers using for loops
             let feathers = {
                 name : "feathers",
-                color : "red",
-                position: "0 0 450",
+                position: "0 0 150",
                 children : [],
             }
-            const featherWidth = 10;
-            const featherAngle = 10;
-            const max = 100;
-            let sum = 0;
-            for ( var n = 0; n < 1; n++ ) {
-                           
-                
-                const powered = ( Math.floor( n / 2 ) + 1 ) * 10;
-                const featherLength = featherWidth + powered >= max ? max : powered;
-                if ( n % 2 === 0 ) {
-                    sum += featherLength / 2;
+            
+                const feather = {
+                    "type": "circle",
+                    "name" : "feather",
+                    "color" : "blue",
+                    "count" : 10,
+                    "layout": "radial",
+                    "layoutLimit" : [ 10, 2, 10 ],
+                    "margin" : [ -80, 0, 0 ],
+                    "size" : 100,
+                    "fold" : [ 45, 20, 0 ],
+                    "foldRadius" : [ 30, 0, 0 ],
+                    "foldPower" : [ 1, 1, 1 ]
                 }
-                const angle =  Math.PI * ( n / 10 );
-              const feather = {
-                    name: "feather",
-                    type: "shape",
-                    fold: [ 180, 0, 0 ],
-                    material : "lambert",
-                    position: [ ( n % 2 ) * ( ( featherWidth / 2 ) - featherWidth / 2 ) - featherWidth / 4, Math.sin( angle ) * sum, -20 * Math.floor( n / 2 ) / 5 ],
-                    layout: "basic",
-                    layoutLimit: [ 5, 100, 1 ],
-                    margin: [ 0, 0, 0 ],
-                    path : function () {
-                        let arr = [], flippedArr = [];
-                        for ( let x = 0; x <= 20; x++ ) {
-                            if ( x <= 10 ) {
-                               arr.push( { type: "quad", x: x, y: Math.sin( ( ( Math.PI / 2 ) * ( x / 9 ) ) + Math.PI / 2 ) * -3, z : 0 } );  
-                            } else if ( x > 10 && x <= 19 ) {
-                                arr.push( { x: 10 - ( ( x - 10 ) ), y : ( x - 10 ) * 2, z : 0  } );
-                            } else {
-                                arr.push( { x: 0 , y: 30, z: 0 } );
-                            }
-                        }
-                        
-                        for ( let r = arr.length - 2; r >= 0; r-- ) {
-                            
-                            flippedArr.push( { type: arr[ r ].type, x: arr[ r ].x * -1, y: arr[ r ].y, z: 0 } );
-                        }
-                        
-                        return arr.concat( flippedArr );
-                    }(),
-                  rotation: [ -1 * angle * 180 /  Math.PI, n % 2 === 0 ? featherAngle : -featherAngle, n % 2 === 0 ? featherAngle : -featherAngle ]
-                }  
-                console.log( angle, "here is the angle" );
-                feathers.children.push( feather );
-            }
             
             const foot = {
                 "name" : "foot",
@@ -182,6 +141,7 @@ class World extends Component {
                     }
                 ]
             }
+            
             const legOffset = 10;
             const legSpace = bodySize / 2.5;
             const leg = {
@@ -293,7 +253,7 @@ class World extends Component {
                 "position" : "0 0 -10000"
             }
 
-this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, flamingo, square, squareTwo ] } ) );
+this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, flamingo, feather ] } ) );
             
             this.world.start();
             

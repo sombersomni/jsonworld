@@ -231,7 +231,7 @@ const framework = {
         const marginModifier = 0;
         
         //CONSTANTS
-        const type = options.layoutType !== undefined && typeof options.layoutType === "string" ? options.layoutType : defaultOptions.layoutType;
+        const type = options.layout !== undefined && typeof options.layout === "string" ? options.layout : defaultOptions.layoutType;
          
         
         //VARIABLES
@@ -241,37 +241,40 @@ const framework = {
     
             if ( mesh.type === "Mesh" ) {
 
-                    let newX = 0, newY = 0, newZ = 0;
+                    let newX = 0, newY = 0, newZ = 0, xIndex;
                     
                     const { center, radius } = this.computeObjectRadius( mesh.geometry );
-                    console.log( center, radius, "computed radius" );
                 
                     switch( type ) {
 
                             case "basic":
+                                    xIndex = index % layoutLimit[0];
+                                    //calculate grid for multiple instances of an object
+                                    //griding is based mainly on bouding sphere radius
 
-                                    const leftRight = index % 2 === 0 ? -1 : 1;
-                                    
-                                    const newIndex = Math.floor( ( index + 1 ) / 2 );
-                                    //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
-                                        const calculatedMargin = ( leftRight * margin[ 0 ] * ( newIndex % ( ( layoutLimit[ 0 ] / 2 ) + marginModifier ) ) ); // calculates the margin spacing for each object in the group
-                                        
-                                        //the calculations below create a layout based on your presets in the Layout Limit. 
-                                        //If your count is over the limit, your count will override it.
-                                        
-                                        newX = leftRight * ( newIndex % ( layoutLimit[ 0 ] / 2 ) ) *  ( radius + padding[ 0 ] ) + calculatedMargin + center.x;
-
-                                        newY = Math.floor( index / ( layoutLimit[ 2 ] * layoutLimit[ 0 ] ) ) * ( radius + padding[ 1 ]) + center.y;
-                                        
-                                        newZ =( ( Math.floor( index / layoutLimit[ 0 ] ) % layoutLimit[ 0 ] * ( radius + padding[ 2 ] ) ) * -1 ) + center.z;
-
-                                    mesh.position.set( newX , newY, newZ );
+                                    newX = xIndex === 0 ? 0 : ( ( xIndex + 1 ) % 2 === 0 ? -1 : 1 ) * ( Math.floor( ( xIndex +  1 ) / 2 ) * radius + ( margin[0] * Math.floor( ( xIndex +  1 ) / 2 ) ) );
+                                          
+                                    newY = ( Math.floor( index % ( layoutLimit[0] * layoutLimit[1] ) / layoutLimit[0] ) * radius + ( margin[1] * Math.floor( ( xIndex +  1 ) / 2 ) ) );
                             
-                                return mesh;
-
+                                    newZ = ( -1 * ( Math.floor( index / ( layoutLimit[0] * layoutLimit[1] ) ) * radius ) + ( margin[2] * Math.floor( ( xIndex +  1 ) / 2 ) ) );
+                                        
+                                    break;
+                            
+                            case "radial":
+                            
+                                    newX = radius * Math.cos( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
+                                    newZ = radius *  Math.sin( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
+                            
+                                    break;
+                            
                             default:
                                 return mesh;
+                            
+                            
                     }
+                
+                    mesh.position.set( newX , newY, newZ );
+                   
             }
         
         
@@ -291,18 +294,15 @@ const framework = {
               foldRadius = opts.foldRadius !== undefined && opts.foldRadius instanceof Array ? opts.foldRadius : [ radius / 4, radius / 4, radius / 4 ];
         
         for ( var n = 0; n < g.vertices.length; n++ ) {
-                
-                g.vertices[n].z += center.z + ( ( foldRadius[0] ) * Math.sin( ( xAngle ) * ( ( ( g.vertices[n].y + radius ) / radius * ( foldPower[0] === 0 ? 1 : Math.pow( 2, foldPower[0]  ) ) ) ) ) );
             
-                g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
-            
-                if ( g.vertices[n].y > 0 ) {
-                    g.vertices[n].y *= Math.pow( 2, g.vertices[n].y ) > topScaleLimit ? topScaleLimit : Math.pow( 2, g.vertices[n].y );
-                    g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
+                g.vertices[n].z += center.z + ( foldRadius[0] * Math.sin( xAngle * ( g.vertices[n].y  / radius ) ) );
+                if ( g.vertices[n].y > center.y ) {
+                   g.vertices[n].y *= Math.pow( g.vertices[n].y / radius * 2, 3 ) > topScaleLimit ? topScaleLimit : Math.pow( g.vertices[n].y / radius * 2, 3 ); 
                 }
-            
-                g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
-                
+                //g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
+                //g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
+                //g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
+        
             
         }
         

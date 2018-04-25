@@ -64265,16 +64265,6 @@ var World = function (_Component) {
             }
             */
 
-            var square = {
-                "type": "circle",
-                "name": "circle",
-                "color": "blue",
-                "size": 200,
-                "fold": [40, 20, 0],
-                "foldRadius": [50, 100, 0],
-                "position": [0, 0, 200]
-            };
-
             var squareTwo = {
                 "type": "plane",
                 "name": "square",
@@ -64325,56 +64315,23 @@ var World = function (_Component) {
             //build feathers using for loops
             var feathers = {
                 name: "feathers",
-                color: "red",
-                position: "0 0 450",
+                position: "0 0 150",
                 children: []
             };
-            var featherWidth = 10;
-            var featherAngle = 10;
-            var max = 100;
-            var sum = 0;
-            for (var n = 0; n < 1; n++) {
 
-                var powered = (Math.floor(n / 2) + 1) * 10;
-                var featherLength = featherWidth + powered >= max ? max : powered;
-                if (n % 2 === 0) {
-                    sum += featherLength / 2;
-                }
-                var angle = Math.PI * (n / 10);
-                var feather = {
-                    name: "feather",
-                    type: "shape",
-                    fold: [180, 0, 0],
-                    material: "lambert",
-                    position: [n % 2 * (featherWidth / 2 - featherWidth / 2) - featherWidth / 4, Math.sin(angle) * sum, -20 * Math.floor(n / 2) / 5],
-                    layout: "basic",
-                    layoutLimit: [5, 100, 1],
-                    margin: [0, 0, 0],
-                    path: function () {
-                        var arr = [],
-                            flippedArr = [];
-                        for (var x = 0; x <= 20; x++) {
-                            if (x <= 10) {
-                                arr.push({ type: "quad", x: x, y: Math.sin(Math.PI / 2 * (x / 9) + Math.PI / 2) * -3, z: 0 });
-                            } else if (x > 10 && x <= 19) {
-                                arr.push({ x: 10 - (x - 10), y: (x - 10) * 2, z: 0 });
-                            } else {
-                                arr.push({ x: 0, y: 30, z: 0 });
-                            }
-                        }
-
-                        for (var r = arr.length - 2; r >= 0; r--) {
-
-                            flippedArr.push({ type: arr[r].type, x: arr[r].x * -1, y: arr[r].y, z: 0 });
-                        }
-
-                        return arr.concat(flippedArr);
-                    }(),
-                    rotation: [-1 * angle * 180 / Math.PI, n % 2 === 0 ? featherAngle : -featherAngle, n % 2 === 0 ? featherAngle : -featherAngle]
-                };
-                console.log(angle, "here is the angle");
-                feathers.children.push(feather);
-            }
+            var feather = {
+                "type": "circle",
+                "name": "feather",
+                "color": "blue",
+                "count": 10,
+                "layout": "radial",
+                "layoutLimit": [10, 2, 10],
+                "margin": [-80, 0, 0],
+                "size": 100,
+                "fold": [45, 20, 0],
+                "foldRadius": [30, 0, 0],
+                "foldPower": [1, 1, 1]
+            };
 
             var foot = {
                 "name": "foot",
@@ -64385,6 +64342,7 @@ var World = function (_Component) {
                     "size": [5, 18, 10]
                 }]
             };
+
             var legOffset = 10;
             var legSpace = bodySize / 2.5;
             var leg = {
@@ -64476,7 +64434,7 @@ var World = function (_Component) {
                 "position": "0 0 -10000"
             };
 
-            this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, flamingo, square, squareTwo] }));
+            this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, flamingo, feather] }));
 
             this.world.start();
 
@@ -65153,7 +65111,7 @@ var framework = {
         var marginModifier = 0;
 
         //CONSTANTS
-        var type = options.layoutType !== undefined && typeof options.layoutType === "string" ? options.layoutType : _defaults2.default.layoutType;
+        var type = options.layout !== undefined && typeof options.layout === "string" ? options.layout : _defaults2.default.layoutType;
 
         //VARIABLES
         var layoutLimit = this.typeChecker(options, "layoutLimit", _defaults2.default),
@@ -65164,40 +65122,41 @@ var framework = {
 
             var newX = 0,
                 newY = 0,
-                newZ = 0;
+                newZ = 0,
+                xIndex = void 0;
 
             var _computeObjectRadius = this.computeObjectRadius(mesh.geometry),
                 center = _computeObjectRadius.center,
                 radius = _computeObjectRadius.radius;
 
-            console.log(center, radius, "computed radius");
-
             switch (type) {
 
                 case "basic":
+                    xIndex = index % layoutLimit[0];
+                    //calculate grid for multiple instances of an object
+                    //griding is based mainly on bouding sphere radius
 
-                    var leftRight = index % 2 === 0 ? -1 : 1;
+                    newX = xIndex === 0 ? 0 : ((xIndex + 1) % 2 === 0 ? -1 : 1) * (Math.floor((xIndex + 1) / 2) * radius + margin[0] * Math.floor((xIndex + 1) / 2));
 
-                    var newIndex = Math.floor((index + 1) / 2);
-                    //for margin and layoutLimit array, index 0 represents x, 1 represents y and 2 represents z
-                    var calculatedMargin = leftRight * margin[0] * (newIndex % (layoutLimit[0] / 2 + marginModifier)); // calculates the margin spacing for each object in the group
+                    newY = Math.floor(index % (layoutLimit[0] * layoutLimit[1]) / layoutLimit[0]) * radius + margin[1] * Math.floor((xIndex + 1) / 2);
 
-                    //the calculations below create a layout based on your presets in the Layout Limit. 
-                    //If your count is over the limit, your count will override it.
+                    newZ = -1 * (Math.floor(index / (layoutLimit[0] * layoutLimit[1])) * radius) + margin[2] * Math.floor((xIndex + 1) / 2);
 
-                    newX = leftRight * (newIndex % (layoutLimit[0] / 2)) * (radius + padding[0]) + calculatedMargin + center.x;
+                    break;
 
-                    newY = Math.floor(index / (layoutLimit[2] * layoutLimit[0])) * (radius + padding[1]) + center.y;
+                case "radial":
 
-                    newZ = Math.floor(index / layoutLimit[0]) % layoutLimit[0] * (radius + padding[2]) * -1 + center.z;
+                    newX = radius * Math.cos(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
+                    newZ = radius * Math.sin(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
 
-                    mesh.position.set(newX, newY, newZ);
-
-                    return mesh;
+                    break;
 
                 default:
                     return mesh;
+
             }
+
+            mesh.position.set(newX, newY, newZ);
         }
 
         return mesh;
@@ -65220,16 +65179,14 @@ var framework = {
 
         for (var n = 0; n < g.vertices.length; n++) {
 
-            g.vertices[n].z += center.z + foldRadius[0] * Math.sin(xAngle * ((g.vertices[n].y + radius) / radius * (foldPower[0] === 0 ? 1 : Math.pow(2, foldPower[0]))));
-
-            g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow(2, Math.floor(foldRadius[0] / 100));
-
-            if (g.vertices[n].y > 0) {
-                g.vertices[n].y *= Math.pow(2, g.vertices[n].y) > topScaleLimit ? topScaleLimit : Math.pow(2, g.vertices[n].y);
-                g.vertices[n].z *= Math.sin(yAngle * (g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius));
+            g.vertices[n].z += center.z + foldRadius[0] * Math.sin(xAngle * (g.vertices[n].y / radius));
+            if (g.vertices[n].y > center.y) {
+                g.vertices[n].y *= Math.pow(g.vertices[n].y / radius * 2, 3) > topScaleLimit ? topScaleLimit : Math.pow(g.vertices[n].y / radius * 2, 3);
             }
+            //g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
+            //g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
+            //g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
 
-            g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow(2, Math.floor(foldRadius[1] / 100));
         }
 
         return g;
