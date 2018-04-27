@@ -239,7 +239,7 @@ export default function ( options = {} ) {
     switch( type ) {
         case "box" :
             
-            geometry = new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ] );
+            geometry = new THREE.BoxGeometry( size[ 0 ], size[ 1 ], size[ 2 ], segments, segments, segments );
             
            if ( top !== 100 || bottom !== 100 || ( options.verticalSegments !== undefined && typeof options.verticalSegments === "function" ) || ( options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function" ) ) {
                return changeSegmentSize( geometry, Object.assign( {}, options, { top, bottom } ) );

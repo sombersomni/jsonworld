@@ -45807,7 +45807,7 @@ module.exports = emptyObject;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 8 */
@@ -64312,6 +64312,18 @@ var World = function (_Component) {
             var bodyWidth = 75;
             var offset = 5;
 
+            var board = {
+                type: "box",
+                name: "board",
+                color: "green",
+                size: "20 100 5",
+                position: [0, 0, 200],
+                foldType: "angular",
+                foldAt: "center",
+                fold: [90, 40, 0],
+                segments: 8
+            };
+
             //build feathers using for loops
             var feathers = {
                 name: "feathers",
@@ -64323,16 +64335,17 @@ var World = function (_Component) {
                 "type": "circle",
                 "name": "feather",
                 "color": "blue",
-                "count": 10,
-                "layout": "radial",
-                "layoutLimit": [10, 2, 10],
-                "margin": [-80, 0, 0],
+                "count": 15,
+                "layout": "curve",
+                "layoutLimit": [5, 10, 300],
+                "margin": [-160, 0, 300],
                 "size": 100,
                 "fold": [45, 20, 0],
                 "foldRadius": [30, 0, 0],
                 "foldPower": [1, 1, 1]
             };
 
+            feathers.children.push(feather);
             var foot = {
                 "name": "foot",
                 position: [0, -150, 0],
@@ -64434,7 +64447,7 @@ var World = function (_Component) {
                 "position": "0 0 -10000"
             };
 
-            this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, flamingo, feather] }));
+            this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, board] }));
 
             this.world.start();
 
@@ -64851,6 +64864,14 @@ var _hashID = __webpack_require__(47);
 
 var _hashID2 = _interopRequireDefault(_hashID);
 
+var _rotatePoint = __webpack_require__(52);
+
+var _rotatePoint2 = _interopRequireDefault(_rotatePoint);
+
+var _calculatefoldVector = __webpack_require__(79);
+
+var _calculatefoldVector2 = _interopRequireDefault(_calculatefoldVector);
+
 var _createAnime = __webpack_require__(48);
 
 var _createAnime2 = _interopRequireDefault(_createAnime);
@@ -65120,7 +65141,8 @@ var framework = {
 
         if (mesh.type === "Mesh") {
 
-            var newX = 0,
+            var angle = void 0,
+                newX = 0,
                 newY = 0,
                 newZ = 0,
                 xIndex = void 0;
@@ -65146,11 +65168,25 @@ var framework = {
 
                 case "radial":
 
-                    newX = radius * Math.cos(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
-                    newZ = radius * Math.sin(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
+                    newX = radius * Math.floor(index / layoutLimit[0]) * Math.cos(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
+                    newZ = radius * Math.floor(index / layoutLimit[0]) * Math.sin(Math.PI * 2 * (index % layoutLimit[0] / layoutLimit[0]));
 
                     break;
 
+                case "curve":
+
+                    xIndex = index % layoutLimit[0];
+
+                    newX = xIndex === 0 ? 0 : ((xIndex + 1) % 2 === 0 ? -1 : 1) * (Math.floor((xIndex + 1) / 2) * radius + margin[0] * Math.floor((xIndex + 1) / 2));
+
+                    angle = Math.PI / 2 * (xIndex / layoutLimit[0]);
+
+                    newZ = -1 * layoutLimit[2] * Math.sin(angle) + margin[2] * (xIndex / layoutLimit[0]) + Math.floor(index / layoutLimit[0]);
+
+                    newY = Math.floor(index / layoutLimit[0]) * radius;
+
+                    mesh.rotation.y += angle;
+                    break;
                 default:
                     return mesh;
 
@@ -65161,7 +65197,7 @@ var framework = {
 
         return mesh;
     },
-    foldGeometry: function foldGeometry(g, opts) {
+    foldGeometry: function foldGeometry(g, options) {
         //@params g for geometry
         //@params opts for options
         var _computeObjectRadius2 = this.computeObjectRadius(g),
@@ -65170,25 +65206,59 @@ var framework = {
 
         console.log(radius, center, g, "fold Geometry");
 
-        var xAngle = opts.fold[0] * (Math.PI * 2 / 180),
-            yAngle = opts.fold[1] * (Math.PI * 2 / 180),
-            zAngle = opts.fold[2] * (Math.PI * 2 / 180),
+        var fold = this.typeChecker(options, "fold", _defaults2.default),
+            xAngle = fold[0] * (Math.PI / 180),
+            yAngle = fold[1] * (Math.PI / 180),
+            zAngle = fold[2] * (Math.PI / 180),
             topScaleLimit = 16,
-            foldPower = opts.foldPower !== undefined && opts.foldPower instanceof Array ? opts.foldPower : [1, 1, 1],
-            foldRadius = opts.foldRadius !== undefined && opts.foldRadius instanceof Array ? opts.foldRadius : [radius / 4, radius / 4, radius / 4];
+            foldPoint = options.foldAt !== undefined && typeof options.foldAt === "string" ? (0, _calculatefoldVector2.default)(options.foldAt, radius, center) : "center",
+            foldType = options.foldType !== undefined && typeof options.foldType === "string" ? options.foldType : "basic",
+            foldRadius = this.typeChecker(options, "foldRadius", { foldRadius: [radius / 4, radius / 4, radius / 4] });;
+
+        //takes the z angle for rotation of z and y points. Computed point is normalized
 
         for (var n = 0; n < g.vertices.length; n++) {
 
-            g.vertices[n].z += center.z + foldRadius[0] * Math.sin(xAngle * (g.vertices[n].y / radius));
-            if (g.vertices[n].y > center.y) {
-                g.vertices[n].y *= Math.pow(g.vertices[n].y / radius * 2, 3) > topScaleLimit ? topScaleLimit : Math.pow(g.vertices[n].y / radius * 2, 3);
-            }
-            //g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
-            //g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
-            //g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
+            var heightRatio = g.vertices[n].y / radius;
+            var widthRatio = g.vertices[n].x / radius;
 
+            switch (foldType) {
+
+                case "angular":
+
+                    if (g.vertices[n].y >= foldPoint.y) {
+                        var rotatedPointZY = (0, _rotatePoint2.default)(g.vertices[n].z, g.vertices[n].y, xAngle);
+                        g.vertices[n].z = rotatedPointZY.x;
+                        g.vertices[n].y = rotatedPointZY.y;
+                    }
+
+                    break;
+                case "basic":
+
+                    g.vertices[n].z += (/\-(?=reverse){1}/.test(foldType) ? -1 : 1) * (center.z + foldRadius[0] * heightRatio * (xAngle * Math.sin(xAngle * heightRatio)));
+
+                    break;
+                case "inverse":
+
+                    g.vertices[n].y *= Math.cos(yAngle * heightRatio);
+                    break;
+                default:
+
+            }
+
+            /*
+            g.vertices[n].z *= foldRadius[1] * Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * widthRatio : widthRatio ) );
+            g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
+                      */
+            //scales top
+            /*
+            if ( g.vertices[n].y > center.y ) {
+               g.vertices[n].y *= Math.pow( g.vertices[n].y / radius * 2, 3 ) > topScaleLimit ? topScaleLimit : Math.pow( g.vertices[n].y / radius * 2, 3 ); 
+            }
+            */
         }
 
+        console.log(g, "geometry after fold is done");
         return g;
     },
     fitOnScreen: function fitOnScreen(mesh, w, h) {
@@ -65196,7 +65266,7 @@ var framework = {
 
         //@params w for width
         //@params h for height
-        var data = (0, _cameraView2.default)(mesh.position.z, this.camera);
+        var data = (0, _cameraView2.default)(mesh.positon.z, this.camera);
 
         if (mesh.geometry.parameters.hasOwnProperty("width") && mesh.geometry.parameters.hasOwnProperty("height")) {
             var width = w || mesh.geometry.parameters.width;
@@ -66143,7 +66213,7 @@ var framework = {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
 
-            if (obj.name === "circle") {
+            if (obj.name === "board") {
 
                 obj.rotation.y += 0.025;
                 //obj.material.map.needsUpdate = true;
@@ -67553,7 +67623,7 @@ exports.default = function () {
     switch (type) {
         case "box":
 
-            geometry = new THREE.BoxGeometry(size[0], size[1], size[2]);
+            geometry = new THREE.BoxGeometry(size[0], size[1], size[2], segments, segments, segments);
 
             if (top !== 100 || bottom !== 100 || options.verticalSegments !== undefined && typeof options.verticalSegments === "function" || options.horizontalSegments !== undefined && typeof options.horizontalSegments === "function") {
                 return changeSegmentSize(geometry, Object.assign({}, options, { top: top, bottom: bottom }));
@@ -68192,10 +68262,10 @@ Object.defineProperty(exports, "__esModule", {
 
 exports.default = function (x, y, angle) {
 
-    var rotatedPoint = {};
-    rotatedPoint.x = x * Math.cos(angle) - y * Math.sin(angle);
-    rotatedPoint.y = x * Math.sin(angle) + y * Math.cos(angle);
-    return rotatedPoint;
+    return {
+        x: x * Math.cos(angle) - y * Math.sin(angle),
+        y: x * Math.sin(angle) + y * Math.cos(angle)
+    };
 };
 
 /***/ }),
@@ -114994,6 +115064,25 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 /* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 78 */,
+/* 79 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+exports.default = function (type, radius, center) {
+
+    console.log(type, radius, center, "inside calculate fold point");
+
+    return { x: 0, y: 0 };
+};
 
 /***/ })
 /******/ ]);

@@ -12,6 +12,8 @@ import defaultOptions from "./json/defaults.json"
 import colorInterpreter from "./utils/colorInterpreter.js";
 import calculateCameraView from "./utils/cameraView.js";
 import hashID from "./utils/hashID.js";
+import rotatePoint from "./utils/rotatePoint.js";
+import calculateFoldVector from "./utils/calculatefoldVector.js";
 
 import createAnime from "./createAnime.js";
 import createGeometry from "./createGeometry.js";
@@ -241,7 +243,7 @@ const framework = {
     
             if ( mesh.type === "Mesh" ) {
 
-                    let newX = 0, newY = 0, newZ = 0, xIndex;
+                    let angle, newX = 0, newY = 0, newZ = 0, xIndex;
                     
                     const { center, radius } = this.computeObjectRadius( mesh.geometry );
                 
@@ -262,11 +264,25 @@ const framework = {
                             
                             case "radial":
                             
-                                    newX = radius * Math.cos( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
-                                    newZ = radius *  Math.sin( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
+                                    newX = radius * Math.floor( index / layoutLimit[0] ) * Math.cos( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
+                                    newZ = radius * Math.floor( index / layoutLimit[0] ) * Math.sin( Math.PI * 2 * ( ( index % layoutLimit[0] ) / layoutLimit[0] ) );
                             
                                     break;
                             
+                            case "curve":
+                            
+                                    xIndex = index % layoutLimit[0];
+                            
+                                    newX = xIndex === 0 ? 0 : ( ( xIndex + 1 ) % 2 === 0 ? -1 : 1 ) * ( Math.floor( ( xIndex +  1 ) / 2 ) * radius + ( margin[0] * Math.floor( ( xIndex +  1 ) / 2 ) ) );
+                            
+                                    angle = ( Math.PI / 2 ) * ( xIndex / layoutLimit[0] );
+                            
+                                    newZ = -1 * layoutLimit[2] * Math.sin( angle ) + ( margin[2] * ( xIndex / layoutLimit[0] ) ) + ( Math.floor( index / layoutLimit[0] ) );
+                            
+                                    newY = Math.floor( index / layoutLimit[0] ) * radius;
+                                    
+                                    mesh.rotation.y += angle;
+                                    break;
                             default:
                                 return mesh;
                             
@@ -280,39 +296,73 @@ const framework = {
         
         return mesh;
     },
-    foldGeometry: function ( g, opts ) {
+    foldGeometry: function ( g, options ) {
         //@params g for geometry
         //@params opts for options
         const { center, radius } = this.computeObjectRadius( g );
         console.log( radius, center, g, "fold Geometry" );
         
-        const xAngle = opts.fold[ 0 ] * ( Math.PI * 2 / 180 ),
-              yAngle = opts.fold[ 1 ] * ( Math.PI * 2 / 180 ),
-              zAngle = opts.fold[ 2 ] * ( Math.PI  * 2 / 180 ),
+        const fold = this.typeChecker( options, "fold", defaultOptions ),
+              xAngle = fold[ 0 ] * ( Math.PI / 180 ),
+              yAngle = fold[ 1 ] * ( Math.PI / 180 ),
+              zAngle = fold[ 2 ] * ( Math.PI / 180 ),
               topScaleLimit = 16,
-              foldPower = opts.foldPower !== undefined && opts.foldPower instanceof Array ? opts.foldPower : [ 1, 1, 1 ],
-              foldRadius = opts.foldRadius !== undefined && opts.foldRadius instanceof Array ? opts.foldRadius : [ radius / 4, radius / 4, radius / 4 ];
+              foldPoint = options.foldAt !== undefined && typeof options.foldAt === "string" ? calculateFoldVector( options.foldAt, radius, center ) : "center",
+              foldType = options.foldType !== undefined && typeof options.foldType === "string" ? options.foldType : "basic",
+              foldRadius = this.typeChecker( options, "foldRadius", { foldRadius : [ radius / 4, radius / 4, radius / 4 ] } );;
+        
+        //takes the z angle for rotation of z and y points. Computed point is normalized
         
         for ( var n = 0; n < g.vertices.length; n++ ) {
+                
+                const heightRatio = g.vertices[n].y  / radius;
+                const widthRatio = g.vertices[n].x / radius;
+                
+                switch( foldType ) {
+                        
+                    case "angular" : 
+                        
+                        if ( g.vertices[n].y >= foldPoint.y ) {
+                            const rotatedPointZY = rotatePoint( g.vertices[n].z, g.vertices[n].y, xAngle );
+                            g.vertices[n].z = rotatedPointZY.x;
+                            g.vertices[n].y = rotatedPointZY.y;
+                        }
+                        
+                        break;
+                    case "basic" :
+                    
+                        g.vertices[n].z += ( /\-(?=reverse){1}/.test( foldType  ) ? -1 : 1 ) * ( center.z + ( foldRadius[0] * heightRatio ) * ( xAngle * Math.sin( xAngle * heightRatio ) ) );
+                        
+                        break;
+                    case "inverse" :
+                        
+                        g.vertices[n].y *= Math.cos( yAngle * ( heightRatio ) );
+                        break;
+                    default:
+                        
+                }
             
-                g.vertices[n].z += center.z + ( foldRadius[0] * Math.sin( xAngle * ( g.vertices[n].y  / radius ) ) );
+                /*
+                g.vertices[n].z *= foldRadius[1] * Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * widthRatio : widthRatio ) );
+                g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
+        
+                */
+                //scales top
+                /*
                 if ( g.vertices[n].y > center.y ) {
                    g.vertices[n].y *= Math.pow( g.vertices[n].y / radius * 2, 3 ) > topScaleLimit ? topScaleLimit : Math.pow( g.vertices[n].y / radius * 2, 3 ); 
                 }
-                //g.vertices[n].y /= foldRadius[0] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[0] / 100 ) );
-                //g.vertices[n].z *= Math.sin( yAngle * ( g.vertices[n].x < 0 ? -1 * g.vertices[n].x / radius : g.vertices[n].x / radius ) );
-                //g.vertices[n].x /= foldRadius[1] < 1 ? 1 : Math.pow( 2, Math.floor( foldRadius[1] / 100 ) );
-        
-            
+                */
         }
         
+        console.log( g, "geometry after fold is done" );
         return g;
         
     },
     fitOnScreen: function ( mesh, w, h, n = 2 ) {
         //@params w for width
         //@params h for height
-        const data = calculateCameraView( mesh.position.z, this.camera );
+        const data = calculateCameraView( mesh.positon.z, this.camera );
 
         if ( mesh.geometry.parameters.hasOwnProperty( "width" ) && mesh.geometry.parameters.hasOwnProperty( "height" ) ) {
             const width = w ||  mesh.geometry.parameters.width;
@@ -1249,7 +1299,7 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
      
-            if ( obj.name === "circle" ) {
+            if ( obj.name === "board" ) {
                 
                 obj.rotation.y += 0.025;
                 //obj.material.map.needsUpdate = true;

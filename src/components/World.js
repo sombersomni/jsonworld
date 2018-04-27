@@ -108,6 +108,17 @@ class World extends Component {
             const bodyWidth = 75;
             const offset = 5;
             
+            const board = {
+               type: "box",
+                name: "board",
+                color: "green",
+                size: "20 100 5",
+                position: [ 0, 0, 200 ],
+                foldType: "angular",
+                foldAt: "center",
+                fold: [ 90 , 40, 0 ],
+                segments: 8
+            };
             
             //build feathers using for loops
             let feathers = {
@@ -120,16 +131,17 @@ class World extends Component {
                     "type": "circle",
                     "name" : "feather",
                     "color" : "blue",
-                    "count" : 10,
-                    "layout": "radial",
-                    "layoutLimit" : [ 10, 2, 10 ],
-                    "margin" : [ -80, 0, 0 ],
+                    "count" : 15,
+                    "layout": "curve",
+                    "layoutLimit" : [ 5, 10, 300 ],
+                    "margin" : [ -160, 0, 300],
                     "size" : 100,
                     "fold" : [ 45, 20, 0 ],
                     "foldRadius" : [ 30, 0, 0 ],
                     "foldPower" : [ 1, 1, 1 ]
                 }
             
+            feathers.children.push( feather );
             const foot = {
                 "name" : "foot",
                 position: [ 0, -150, 0 ],
@@ -253,7 +265,7 @@ class World extends Component {
                 "position" : "0 0 -10000"
             }
 
-this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, flamingo, feather ] } ) );
+this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, board ] } ) );
             
             this.world.start();
             
