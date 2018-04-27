@@ -112,158 +112,25 @@ class World extends Component {
                type: "box",
                 name: "board",
                 color: "green",
-                size: "20 100 5",
+                size: "50 200 5",
+                scale: [ 1, 1, 1 ],
                 position: [ 0, 0, 200 ],
-                foldType: "angular",
-                foldAt: "center",
-                fold: [ 90 , 40, 0 ],
-                segments: 8
-            };
-            
-            //build feathers using for loops
-            let feathers = {
-                name : "feathers",
-                position: "0 0 150",
-                children : [],
-            }
-            
-                const feather = {
-                    "type": "circle",
-                    "name" : "feather",
-                    "color" : "blue",
-                    "count" : 15,
-                    "layout": "curve",
-                    "layoutLimit" : [ 5, 10, 300 ],
-                    "margin" : [ -160, 0, 300],
-                    "size" : 100,
-                    "fold" : [ 45, 20, 0 ],
-                    "foldRadius" : [ 30, 0, 0 ],
-                    "foldPower" : [ 1, 1, 1 ]
-                }
-            
-            feathers.children.push( feather );
-            const foot = {
-                "name" : "foot",
-                position: [ 0, -150, 0 ],
-                "children" : [
+                modifiers: [
                     {
-                        "name" : "ankle",
-                        "type" : "cylinder",
-                        "size" : [ 5, 18, 10 ]
-                    }
-                ]
-            }
-            
-            const legOffset = 10;
-            const legSpace = bodySize / 2.5;
-            const leg = {
-                "name" : "leg",
-                "position" : [ legOffset, legSpace, legSpace ],
-                "children" : [
-                    bender, 
-                    knee, 
-                    benderTwo, 
-                    foot
-                ]
-            }
-            
-            const legTwo = {
-                "name" : "leg2",
-                "position" : [ legOffset, 0, -1 * legSpace ],
-                "children" : [
-                    bender, 
-                    knee, 
-                    benderTwo, 
-                    foot
-                ]
-            }
-            
-            const neck = {
-                "name" : "neck",
-                "type" : "tube",
-                "side" : "front",
-                "size" : 40,
-                "bottom" : 20,
-                "top" : 50,
-                "scale" : 1,
-                "position" : "0 0 0",
-                "segments" : 10,
-                "typeHandler" : ( t ) => {
-                    //t gives a number from 0 to 1 to distribute points
-                    let yVal, xVal;
-                    const radius = 15;
-                    if ( t < 0.25 ) {
-                        yVal = - 10 * Math.sin( t * 4 * Math.PI );
-                        xVal = ( Math.sin( t * Math.PI * 2 ) * ( radius * 2 ) ) - radius;
-                    }  else {
-                        yVal = 100 * ( t - 0.25 );
-                        xVal = Math.sin( t * Math.PI * 2 ) * radius;
-                    }
-                    return { x: xVal, y :  yVal, z: 0 };
-                },
-                "rotation" : [ 0, 180, 0 ]
-            }
-            
-            const head = {
-                "name" : "head",
-                "type" : "sphere",
-                "size" : 20,
-                "position" : [ 0, 75, 0 ],
-                "relativeTo" : "neck",
-                
-            }
-            
-            const noggin = {
-                "name" : "noggin",
-                "children" : [
-                    head,
-                    neck
-                ]
-            }
-            
-             const body = {
-                name : "body",
-                color: "pink",
-                position: [ 50, 0, 0 ],
-                children  : [
-                    {
-                       name : "chest",
-                       type : "sphere",
-                       size : bodySize
+                        type : "geometry",
+                        mod: "squeeze",
+                        modType: "pinch-down",
+                        modAngles : "90 0 0"   
                     },
                     {
-                        name : "butt",
-                        type : "cylinder",
-                        size: [ bodySize - offset, bodyWidth, 0 ],
-                        rotation : [ 0, 0, 90 ],
-                        position: [ bodyWidth / 2, 0, 0 ],
-                        bottom: 25
-                    },
-                    leg,
-                    legTwo
-                ]
-            }
-            const flamingo = {
-                "name" : "flamingo",
-                "material" : "toon",
-                "color" : "blue",
-                "side" : "front",
-                "openEnded" : "true",
-                "children" : [
-                    body,
-                    noggin,
-                ]
-                        
+                        type : "geometry",
+                        mod: "squeeze",
+                        modType: "pinch-down",
+                        modAngles : "90 0 0"   
+                    }
+                ],
+                segments: 16
             };
-            
-            const wall = {
-                "type" : "plane",
-                "name" : "wall",
-                "size" : [ 10000, 10000 ],
-                "material" : "phong",
-                "color" : "red",
-                "position" : "0 0 -10000"
-            }
 
 this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, board ] } ) );
             

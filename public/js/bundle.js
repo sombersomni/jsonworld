@@ -64316,135 +64316,21 @@ var World = function (_Component) {
                 type: "box",
                 name: "board",
                 color: "green",
-                size: "20 100 5",
+                size: "50 200 5",
+                scale: [1, 1, 1],
                 position: [0, 0, 200],
-                foldType: "angular",
-                foldAt: "center",
-                fold: [90, 40, 0],
-                segments: 8
-            };
-
-            //build feathers using for loops
-            var feathers = {
-                name: "feathers",
-                position: "0 0 150",
-                children: []
-            };
-
-            var feather = {
-                "type": "circle",
-                "name": "feather",
-                "color": "blue",
-                "count": 15,
-                "layout": "curve",
-                "layoutLimit": [5, 10, 300],
-                "margin": [-160, 0, 300],
-                "size": 100,
-                "fold": [45, 20, 0],
-                "foldRadius": [30, 0, 0],
-                "foldPower": [1, 1, 1]
-            };
-
-            feathers.children.push(feather);
-            var foot = {
-                "name": "foot",
-                position: [0, -150, 0],
-                "children": [{
-                    "name": "ankle",
-                    "type": "cylinder",
-                    "size": [5, 18, 10]
-                }]
-            };
-
-            var legOffset = 10;
-            var legSpace = bodySize / 2.5;
-            var leg = {
-                "name": "leg",
-                "position": [legOffset, legSpace, legSpace],
-                "children": [bender, knee, benderTwo, foot]
-            };
-
-            var legTwo = {
-                "name": "leg2",
-                "position": [legOffset, 0, -1 * legSpace],
-                "children": [bender, knee, benderTwo, foot]
-            };
-
-            var neck = {
-                "name": "neck",
-                "type": "tube",
-                "side": "front",
-                "size": 40,
-                "bottom": 20,
-                "top": 50,
-                "scale": 1,
-                "position": "0 0 0",
-                "segments": 10,
-                "typeHandler": function typeHandler(t) {
-                    //t gives a number from 0 to 1 to distribute points
-                    var yVal = void 0,
-                        xVal = void 0;
-                    var radius = 15;
-                    if (t < 0.25) {
-                        yVal = -10 * Math.sin(t * 4 * Math.PI);
-                        xVal = Math.sin(t * Math.PI * 2) * (radius * 2) - radius;
-                    } else {
-                        yVal = 100 * (t - 0.25);
-                        xVal = Math.sin(t * Math.PI * 2) * radius;
-                    }
-                    return { x: xVal, y: yVal, z: 0 };
-                },
-                "rotation": [0, 180, 0]
-            };
-
-            var head = {
-                "name": "head",
-                "type": "sphere",
-                "size": 20,
-                "position": [0, 75, 0],
-                "relativeTo": "neck"
-
-            };
-
-            var noggin = {
-                "name": "noggin",
-                "children": [head, neck]
-            };
-
-            var body = {
-                name: "body",
-                color: "pink",
-                position: [50, 0, 0],
-                children: [{
-                    name: "chest",
-                    type: "sphere",
-                    size: bodySize
+                modifiers: [{
+                    type: "geometry",
+                    mod: "squeeze",
+                    modType: "pinch-down",
+                    modAngles: "90 0 0"
                 }, {
-                    name: "butt",
-                    type: "cylinder",
-                    size: [bodySize - offset, bodyWidth, 0],
-                    rotation: [0, 0, 90],
-                    position: [bodyWidth / 2, 0, 0],
-                    bottom: 25
-                }, leg, legTwo]
-            };
-            var flamingo = {
-                "name": "flamingo",
-                "material": "toon",
-                "color": "blue",
-                "side": "front",
-                "openEnded": "true",
-                "children": [body, noggin]
-
-            };
-
-            var wall = {
-                "type": "plane",
-                "name": "wall",
-                "size": [10000, 10000],
-                "material": "phong",
-                "color": "red",
-                "position": "0 0 -10000"
+                    type: "geometry",
+                    mod: "squeeze",
+                    modType: "pinch-down",
+                    modAngles: "90 0 0"
+                }],
+                segments: 16
             };
 
             this.world = new _WorldController2.default(Object.assign({}, { debug: true }, { worldObjects: [floor, board] }));
@@ -65197,45 +65083,67 @@ var framework = {
 
         return mesh;
     },
-    foldGeometry: function foldGeometry(g, options) {
-        //@params g for geometry
-        //@params opts for options
-        var _computeObjectRadius2 = this.computeObjectRadius(g),
-            center = _computeObjectRadius2.center,
-            radius = _computeObjectRadius2.radius;
+    exploreGroupTree: function exploreGroupTree(endIndex, arr, scene) {
+        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var obj = arguments[4];
 
-        console.log(radius, center, g, "fold Geometry");
+        //takes the arr of children levels to dig through
+        if (i <= endIndex) {
+            if (i === 0) {
+                obj = scene.getObjectByName(arr[0]);
+                i++;
+                return this.exploreGroupTree(endIndex, arr, scene, i, obj);
+            } else {
+                var newObj = obj.getObjectByName(arr[i]);
+                i++;
+                return this.exploreGroupTree(endIndex, arr, scene, i, newObj);
+            }
+        } else {
 
-        var fold = this.typeChecker(options, "fold", _defaults2.default),
+            return obj;
+        }
+    },
+    handleMultiGeometries: function handleMultiGeometries(g, m, isLine) {
+        var mesh = void 0;
+        if (isLine) {
+            mesh = new THREE.Line(g, m);
+        } else {
+            mesh = new THREE.Mesh(g, m);
+        }
+        return mesh;
+    },
+    foldGeometry: function foldGeometry(g, modifier, calc, options) {
+        var i = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+
+
+        var radius = calc.radius,
+            center = calc.center;
+
+        var fold = this.typeChecker(modifier[i], "modAngles", { modAngles: [0, 0, 0] }),
             xAngle = fold[0] * (Math.PI / 180),
             yAngle = fold[1] * (Math.PI / 180),
             zAngle = fold[2] * (Math.PI / 180),
             topScaleLimit = 16,
-            foldPoint = options.foldAt !== undefined && typeof options.foldAt === "string" ? (0, _calculatefoldVector2.default)(options.foldAt, radius, center) : "center",
-            foldType = options.foldType !== undefined && typeof options.foldType === "string" ? options.foldType : "basic",
-            foldRadius = this.typeChecker(options, "foldRadius", { foldRadius: [radius / 4, radius / 4, radius / 4] });;
+            foldPoint = modifier[i].modAt !== undefined && typeof modifier[i].modAt === "string" ? (0, _calculatefoldVector2.default)(modifier[i].modAt, radius, center) : "center",
+            type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default";
+        // foldRadius = this.typeChecker( options, "foldRadius", { foldRadius : [ radius / 4, radius / 4, radius / 4 ] } );;
 
         //takes the z angle for rotation of z and y points. Computed point is normalized
 
-        for (var n = 0; n < g.vertices.length; n++) {
+        for (var n = 0; n <= g.vertices.length - 1; n++) {
 
-            var heightRatio = g.vertices[n].y / radius;
-            var widthRatio = g.vertices[n].x / radius;
+            var heightRatio = g.vertices[n].y / radius,
+                widthRatio = g.vertices[n].x / radius;
 
-            switch (foldType) {
+            switch (type) {
 
                 case "angular":
 
-                    if (g.vertices[n].y >= foldPoint.y) {
+                    if (g.vertices[n].y > foldPoint.y) {
                         var rotatedPointZY = (0, _rotatePoint2.default)(g.vertices[n].z, g.vertices[n].y, xAngle);
                         g.vertices[n].z = rotatedPointZY.x;
                         g.vertices[n].y = rotatedPointZY.y;
                     }
-
-                    break;
-                case "basic":
-
-                    g.vertices[n].z += (/\-(?=reverse){1}/.test(foldType) ? -1 : 1) * (center.z + foldRadius[0] * heightRatio * (xAngle * Math.sin(xAngle * heightRatio)));
 
                     break;
                 case "inverse":
@@ -65258,8 +65166,10 @@ var framework = {
             */
         }
 
-        console.log(g, "geometry after fold is done");
-        return g;
+        if (i <= modifier.length - 1) {
+            i++;
+            return this.foldGeometry(g, modifier, calc, options, i);
+        } else return g;
     },
     fitOnScreen: function fitOnScreen(mesh, w, h) {
         var n = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 2;
@@ -65284,6 +65194,75 @@ var framework = {
         }
 
         return;
+    },
+    mapGroupTree: function mapGroupTree(options, group) {
+        var _this3 = this;
+
+        if (options.children !== undefined && options.children instanceof Array) {
+
+            if (group !== undefined) {
+                var grp = new THREE.Group();
+                grp.name = options.name;
+                group.add(grp);
+            } else {
+                group = new THREE.Group();
+                group.name = options.name;
+            }
+
+            options.children.forEach(function (child) {
+                // run a recursive back track until we reach the last child with children attribute
+                return _this3.mapGroupTree(child, group.children.length > 0 ? group.getObjectByName(options.name) : group);
+            });
+
+            return group;
+        }
+    },
+    moldGeometry: function moldGeometry(g) {
+        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+        var state = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : { calc: {}, calculated: false, folded: false, squeezed: false };
+
+        console.log(options, "mold geometry has started");
+        // the order of geometry manipulation is extremely important, if you move out of sequence it could mess up the resulting shape's appearance
+        //@params g for geometry
+        //@params opts for options
+        if (!state.calculated) {
+
+            state.calculated = true;
+            var radiusComputed = this.computeObjectRadius(g);
+            if (/^(Box|Plane|Cylinder){1}/.test(g.type)) {
+
+                state.calc.radius = g.parameters.height / 2;
+            } else if (/^(Circle|Sphere){1}/.test(g.type)) {
+
+                state.calc.radius = g.parameters.radius;
+            } else {
+
+                state.calc.radius = radiusComputed.radius;
+            }
+
+            state.calc.center = radiusComputed.center;
+        }
+
+        //filter them for each filter type and then run recursion for each array within their respective functions
+        var foldMod = options.modifiers.filter(function (mod) {
+            return mod.mod === "fold";
+        }),
+            squeezeMod = options.modifiers.filter(function (mod) {
+            return mod.mod === "squeeze";
+        });
+
+        if (squeezeMod.length > 0 && !state.squeezed) {
+            state.squeezed = true;
+            console.log(foldMod, squeezeMod, "before squeezeGeometry runs");
+            return this.moldGeometry(this.squeezeGeometry(g, squeezeMod, state.calc, options), options, Object.assign({}, state, { squeezed: true }));
+        }
+
+        if (foldMod.length > 0 && !state.folded) {
+            state.folded = true;
+            return this.moldGeometry(this.foldGeometry(g, foldMod, state.calc, options), options, Object.assign({}, state, { folded: true }));
+        }
+
+        return g;
     },
     setupCamera: function setupCamera() {
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -65324,14 +65303,45 @@ var framework = {
 
         return camera;
     },
-    handleMultiGeometries: function handleMultiGeometries(g, m, isLine) {
-        var mesh = void 0;
-        if (isLine) {
-            mesh = new THREE.Line(g, m);
-        } else {
-            mesh = new THREE.Mesh(g, m);
+    squeezeGeometry: function squeezeGeometry(g, modifier, calc, options) {
+        var i = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+
+        // treeats the geometry almost like its super elastic
+
+        console.log(options, "inside squeeze Geometry");
+        var radius = calc.radius,
+            center = calc.center;
+
+        var squeeze = modifier[i].modAngles,
+            type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default";
+
+        for (var n = 0; n <= g.vertices.length - 1; n++) {
+
+            var angle = 10 * Math.PI / 180,
+                heightRatio = g.vertices[n].y / radius,
+                widthRatio = g.vertices[n].x / radius;
+
+            switch (type) {
+
+                case "indent":
+
+                    g.vertices[n].z *= Math.cos(angle * heightRatio);
+                    break;
+                default:
+                    var newRadiusZ = radius / 2 * Math.sin(angle);
+                    g.vertices[n].z *= newRadiusZ * Math.cos(Math.PI / 2 * heightRatio);
+                    if (g.vertices[n].y) {
+                        g.vertices[n].y *= Math.cos(angle * heightRatio);
+                    }
+
+            }
         }
-        return mesh;
+
+        if (i < modifier.length - 1) {
+
+            i++;
+            return this.squeezeGeometry(g, modifier, calc, options, i);
+        } else return g;
     },
     optionParser: function optionParser(target, options) {
         var type = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : "default";
@@ -65398,7 +65408,7 @@ var framework = {
         }
     },
     packAnimations: function packAnimations(mesh, options) {
-        var _this3 = this;
+        var _this4 = this;
 
         var animTarget = options.animTarget,
             asymmetry = options.asymmetry,
@@ -65445,7 +65455,7 @@ var framework = {
 
                         if (animation[each.animProp] === undefined) {
                             animation[each.animProp] = [];
-                            modifier = _this3.setupModifier(mesh, each.animProp, animTarget, modifierOptions);
+                            modifier = _this4.setupModifier(mesh, each.animProp, animTarget, modifierOptions);
                         }
 
                         animation[each.animProp].push({ value: modifier(each.value) });
@@ -65453,7 +65463,7 @@ var framework = {
                 } else {
 
                     animation[f.animProp] = [];
-                    modifier = _this3.setupModifier(mesh, f.animProp, animTarget, modifierOptions);
+                    modifier = _this4.setupModifier(mesh, f.animProp, animTarget, modifierOptions);
                     animation[f.animProp].push({ value: modifier(f.value) });
                 }
             });
@@ -65543,13 +65553,14 @@ var framework = {
         var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
         var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
 
-        var _this4 = this;
+        var _this5 = this;
 
         var levels = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
         var groupNames = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : new Set();
 
         var m = void 0,
             mesh = void 0,
+            geoModifiers = void 0,
             upgradeMesh = void 0,
             multiMaterials = [];
         //@params sI - the index of the scene
@@ -65558,54 +65569,19 @@ var framework = {
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-        function exploreGroupTree(endIndex, arr, scene) {
-            var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-            var obj = arguments[4];
-
-            //takes the arr of children levels to dig through
-            if (i <= endIndex) {
-                if (i === 0) {
-
-                    obj = scene.getObjectByName(arr[0]);
-                    i++;
-                    return exploreGroupTree(endIndex, arr, scene, i, obj);
-                } else {
-                    console.log(obj, " within exploreGroup before getObject");
-                    var newObj = obj.getObjectByName(arr[i]);
-                    i++;
-                    console.log(newObj, "within exploreGroupTree");
-                    return exploreGroupTree(endIndex, arr, scene, i, newObj);
-                }
-            } else {
-
-                return obj;
-            }
-        }
-        function mapGroupTree(options, group) {
-
-            if (options.children !== undefined && options.children instanceof Array) {
-
-                if (group !== undefined) {
-                    var grp = new THREE.Group();
-                    grp.name = options.name;
-                    group.add(grp);
-                } else {
-                    group = new THREE.Group();
-                    group.name = options.name;
-                }
-
-                options.children.forEach(function (child) {
-
-                    return mapGroupTree(child, group.children.length > 0 ? group.getObjectByName(options.name) : group);
-                });
-
-                return group;
-            }
-        }
 
         try {
             // @param g stands for geometry
             // @param sI is the current scene index
+
+            //sorts modifiers before distributing them for use
+            if (options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0) {
+
+                geoModifiers = options.modifiers.filter(function (mod) {
+                    return mod.type === "geometry";
+                });
+                console.log(geoModifiers, "you have generated a modifier");
+            }
 
             if (options.children !== undefined && options.children instanceof Array) {
                 var grp = void 0;
@@ -65615,7 +65591,7 @@ var framework = {
                 if (i === 0 && groupNames.size === 0) {
                     //replaces levels with a new array for each treed group created
                     levels = [];
-                    grp = mapGroupTree(options);
+                    grp = this.mapGroupTree(options);
                     this.scenes[sI].add(grp);
                 }
 
@@ -65631,7 +65607,7 @@ var framework = {
                     //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
 
-                    _this4.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: 0 }, child, { group: groupName }), sI, group, i, levels, groupNames);
+                    _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: 0 }, child, { group: groupName }), sI, group, i, levels, groupNames);
                 });
 
                 //recalls the group so that all the newly added meshes can undergo the parent transforms
@@ -65642,12 +65618,13 @@ var framework = {
             } else {
                 var g = void 0;
 
-                if (options.fold !== undefined) {
+                /* creates the geometry with its vertices and settings and then modifies it if 
+                */
+                var geometry = this.createGeometry(options);
 
-                    g = this.foldGeometry(this.createGeometry(options), options);
-                } else {
-                    g = this.createGeometry(options);
-                }
+                if (geoModifiers !== undefined) {
+                    g = this.moldGeometry(geometry, Object.assign({}, options, { modifiers: geoModifiers }));
+                } else g = geometry;
 
                 if (options.texture instanceof Array) {
                     //if you get an array of textuers back, then we can pack them here
@@ -65740,7 +65717,7 @@ var framework = {
                     var endIndex = levels.findIndex(function (str) {
                         return str === options.group;
                     });
-                    var prevGrp = exploreGroupTree(endIndex, levels, this.scenes[sI]);
+                    var prevGrp = this.exploreGroupTree(endIndex, levels, this.scenes[sI]);
 
                     console.log(prevGrp, "previous group near ending");
                     prevGrp.add(upgradeMesh);
@@ -65785,22 +65762,22 @@ var framework = {
         }
     },
     setObjectTransforms: function setObjectTransforms(mesh) {
-        var _this5 = this;
+        var _this6 = this;
 
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
 
         ["position", "rotation", "scale"].forEach(function (type) {
 
-            var transform = _this5.typeChecker(options, type, _defaults2.default);
-            console.log(transform);
-            mesh[type]["set"](type === "rotation" ? _this5.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this5.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this5.convertToRadians(transform[2]) : transform[2]);
+            var transform = _this6.typeChecker(options, type, _defaults2.default);
+            console.log(mesh, transform, "you have performed a " + type + " transform");
+            mesh[type]["set"](type === "rotation" ? _this6.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this6.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this6.convertToRadians(transform[2]) : transform[2]);
         });
 
         return mesh;
     },
     setupModifier: function setupModifier(mesh, animProp, target, options) {
-        var _this6 = this;
+        var _this7 = this;
 
         switch (target) {
             case "position":
@@ -65812,7 +65789,7 @@ var framework = {
                     };
                 } else {
                     return function (value) {
-                        return value + _this6.scene.position[animProp];
+                        return value + _this7.scene.position[animProp];
                     };
                 }
             default:
@@ -65822,7 +65799,7 @@ var framework = {
         }
     },
     setupScene: function setupScene() {
-        var _this7 = this;
+        var _this8 = this;
 
         var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
         var audioControllers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -65833,26 +65810,26 @@ var framework = {
         var intensity = _defaults2.default.sunIntensity,
             sunColor = _defaults2.default.sunColor;
         return new Promise(function (res, rej) {
-            _this7.scenes[scene.id].name = _this7.scenes.length === 1 ? "preloader" : "main";
-            _this7.scenes[scene.id].fog = _this7.fog;
+            _this8.scenes[scene.id].name = _this8.scenes.length === 1 ? "preloader" : "main";
+            _this8.scenes[scene.id].fog = _this8.fog;
             //adds arrowhelper and other debugs
-            if (_this7.options.hasOwnProperty("debug") && _this7.options.debug) {
+            if (_this8.options.hasOwnProperty("debug") && _this8.options.debug) {
                 var origin = new THREE.Vector3(1, 0, 0);
                 var length = 200;
                 var xAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0).normalize(), origin, length, 0xff0000);
                 var yAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0).normalize(), origin, length, 0x00ff00);
                 var zAxisHelper = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1).normalize(), origin, length, 0x0000ff);
 
-                _this7.scenes[scene.id].add(xAxisHelper);
-                _this7.scenes[scene.id].add(yAxisHelper);
-                _this7.scenes[scene.id].add(zAxisHelper);
+                _this8.scenes[scene.id].add(xAxisHelper);
+                _this8.scenes[scene.id].add(yAxisHelper);
+                _this8.scenes[scene.id].add(zAxisHelper);
             }
             //creates the sun light for the whole world
             var sunlight = new THREE.DirectionalLight(sunColor, intensity);
             sunlight.name = "sunlight";
             sunlight.position.set(0, 100000, 100000);
 
-            if (_this7.options.hasOwnProperty("enableShadows") && _this7.options.enableShadows) {
+            if (_this8.options.hasOwnProperty("enableShadows") && _this8.options.enableShadows) {
                 sunlight.castShadow = true;
                 sunlight.shadow.mapSize.width = 512;
                 sunlight.shadow.mapSize.height = 512;
@@ -65860,11 +65837,11 @@ var framework = {
                 sunlight.shadow.camera.near = _defaults2.default.cameraNear;
                 //debug shadow camera
                 var shadowCamera = new THREE.CameraHelper(sunlight.shadow.camera);
-                _this7.scenes[scene.id].add(shadowCamera);
+                _this8.scenes[scene.id].add(shadowCamera);
             }
 
             sunlight.lookAt(new THREE.Vector3());
-            _this7.scenes[scene.id].add(sunlight);
+            _this8.scenes[scene.id].add(sunlight);
 
             if (options instanceof Array) {
                 options.forEach(function (o) {
@@ -65875,7 +65852,7 @@ var framework = {
 
                                 o = Object.assign({}, o, { size: o.size !== undefined ? o.size : [texture.image.naturalWidth / 2, texture.image.naturalHeight / 2, 0],
                                     texture: texture });
-                                _this7.setupMesh(o, scene.id);
+                                _this8.setupMesh(o, scene.id);
                             });
                         } else if (o.hasOwnProperty("texture") && o.texture instanceof Array) {
                             var promisePack = [];
@@ -65897,11 +65874,11 @@ var framework = {
                             Promise.all(promisePack).then(function (textures) {
 
                                 console.log(textures, "after promise");
-                                _this7.setupMesh(Object.assign({}, o, { texture: textures }), scene.id);
+                                _this8.setupMesh(Object.assign({}, o, { texture: textures }), scene.id);
                             });
                         } else {
 
-                            _this7.setupMesh(o, scene.id);
+                            _this8.setupMesh(o, scene.id);
                         }
                     }
                 });
@@ -65936,10 +65913,10 @@ var framework = {
                     Promise.all(promisePack).then(function (textures) {
 
                         console.log(textures, "after promise all is complete");
-                        _this7.setupMesh(Object.assign({}, options, { texture: textures }), scene.id);
+                        _this8.setupMesh(Object.assign({}, options, { texture: textures }), scene.id);
                     });
                 } else {
-                    _this7.setupMesh(options, scene.id);
+                    _this8.setupMesh(options, scene.id);
                 }
                 res({ id: scene.id, animation: _defaults2.default.sceneTransition });
             } else {
@@ -66074,7 +66051,7 @@ var framework = {
         }
     },
     initWorld: function initWorld(id) {
-        var _this8 = this;
+        var _this9 = this;
 
         //initializes world after clicking and removes event listener to prevent memory leaks
         var title = void 0;
@@ -66103,58 +66080,58 @@ var framework = {
             preloaderPromise.then(function (message) {
                 _progressEmitter2.default.emit("world-message", { message: message });
                 audioPromise.then(function (controllers) {
-                    _this8.audioControllers = controllers;
-                    _this8.sceneLoaded = _this8.setupScene(_this8.worldObjects, controllers);
-                    _this8.sceneLoaded.then(function (completed) {
+                    _this9.audioControllers = controllers;
+                    _this9.sceneLoaded = _this9.setupScene(_this9.worldObjects, controllers);
+                    _this9.sceneLoaded.then(function (completed) {
 
                         window.setTimeout(function () {
                             _progressEmitter2.default.emit("world-message", { message: "" });
-                            _this8.scene = _this8.scenes[completed.id];
+                            _this9.scene = _this9.scenes[completed.id];
                         }, delay);
                     });
                 });
             });
         } else {
             preloaderPromise.then(function (message) {
-                _this8.sceneLoaded = _this8.setupScene(_this8.worldObjects);
+                _this9.sceneLoaded = _this9.setupScene(_this9.worldObjects);
                 _progressEmitter2.default.emit("world-message", { message: message });
                 /* 
                     if the scene can't be made then the promise is never fulfilled and
                 the preloader will never stop 
                 
                 */
-                var preloader = _this8.scene.getObjectByName("preloader");
-                var options = Object.assign({}, _this8.optionParser("fade-out 1s ease-out-quart", _this8.options, "animation"));
+                var preloader = _this9.scene.getObjectByName("preloader");
+                var options = Object.assign({}, _this9.optionParser("fade-out 1s ease-out-quart", _this9.options, "animation"));
 
-                _this8.sceneLoaded.then(function (completed) {
+                _this9.sceneLoaded.then(function (completed) {
                     console.log(completed, "when scene is completed");
-                    _this8.decideTimelineOrder(_this8.scene.id, _this8.createAnime(preloader, options), preloader, options);
+                    _this9.decideTimelineOrder(_this9.scene.id, _this9.createAnime(preloader, options), preloader, options);
                     window.setTimeout(function () {
                         //need to delay based on animation settings
                         _progressEmitter2.default.emit("world-message", { message: "" });
-                        _this8.scene = _this8.scenes[completed.id];
+                        _this9.scene = _this9.scenes[completed.id];
                     }, options.animationDuration !== undefined ? options.animationDuration : delay);
                 });
             });
         }
     },
     start: function start() {
-        var _this9 = this;
+        var _this10 = this;
 
         this.setupScene({ worldObjects: {} }).then(function (completed) {
             //makes sure the scene is fully loaded
-            _this9.scene = _this9.scenes[completed.id];
+            _this10.scene = _this10.scenes[completed.id];
             //start event listeners
-            _this9.canvas.addEventListener("mousemove", _this9.doMouseMove, false);
-            _this9.canvas.addEventListener("mousemove", _this9.doMouseMove, false);
+            _this10.canvas.addEventListener("mousemove", _this10.doMouseMove, false);
+            _this10.canvas.addEventListener("mousemove", _this10.doMouseMove, false);
             window.addEventListener("resize", function (e) {
-                _this9.onWindowResize();
+                _this10.onWindowResize();
             }, false);
             //run animation cycle for all scenes
-            window.requestAnimationFrame(_this9.runScene);
-            if (_this9.options.hasOwnProperty("menu") && _this9.options.menu !== undefined) {
-                _this9.canvas.addEventListener("click", _this9.initWorld);
-                var menu = _this9.options.menu;
+            window.requestAnimationFrame(_this10.runScene);
+            if (_this10.options.hasOwnProperty("menu") && _this10.options.menu !== undefined) {
+                _this10.canvas.addEventListener("click", _this10.initWorld);
+                var menu = _this10.options.menu;
                 var checkFormat = /\w+(?!\/){1}(?=\.jpg|\.png|\.gif){1}/;
                 var isImgLink = checkFormat.test(menu.title);
 
@@ -66178,10 +66155,10 @@ var framework = {
                                 texture: tex
                             };
 
-                            _this9.setupMesh(options, completed.id);
+                            _this10.setupMesh(options, completed.id);
                             //calculate title mesh so if img is too large it will fit inside the camera viewW
-                            var title = _this9.scenes[completed.id].getObjectByName("title");
-                            _this9.fitOnScreen(title);
+                            var title = _this10.scenes[completed.id].getObjectByName("title");
+                            _this10.fitOnScreen(title);
                         }, undefined, function (err) {
                             throw new Error("Couldn't load texture, check your img path");
                         });
@@ -66191,10 +66168,10 @@ var framework = {
                 } else {
                     console.log("turn into a 3D font");
                     //will create a font in 3D space based on font family
-                    _this9.createFont(_this9.scene.id, _this9.mainFont, menu.title);
+                    _this10.createFont(_this10.scene.id, _this10.mainFont, menu.title);
                 }
             } else {
-                _this9.initWorld(_this9.scene.id);
+                _this10.initWorld(_this10.scene.id);
             }
         });
     },
@@ -66208,7 +66185,7 @@ var framework = {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     },
     runAnimations: function runAnimations(time) {
-        var _this10 = this;
+        var _this11 = this;
 
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
@@ -66223,7 +66200,7 @@ var framework = {
 
             if (/Light/.test(obj.type)) {
                 //checks for light objects
-                obj.target.position.clone(_this10.scene.position);
+                obj.target.position.clone(_this11.scene.position);
             }
         });
     },
@@ -66236,15 +66213,15 @@ var framework = {
         this.renderer.render(this.scene, this.camera);
     },
     find: function find(query) {
-        var _this11 = this;
+        var _this12 = this;
 
         //sceneLoaded his a promise that keeps recycling itself after each initiation
         //this makes sure everything is loaded before we mess with the object
         return this.sceneLoaded.then(function (completed) {
             //read only
 
-            var mesh = _this11.scenes[completed.id].getObjectByName(query);
-            var clone = _this11.objManager.all[(0, _hashID2.default)(mesh.id, completed.id)];
+            var mesh = _this12.scenes[completed.id].getObjectByName(query);
+            var clone = _this12.objManager.all[(0, _hashID2.default)(mesh.id, completed.id)];
 
             return {
                 mesh: mesh,
@@ -66255,7 +66232,7 @@ var framework = {
                 z: clone.z,
                 worldProps: clone.worldProps,
                 update: function update(config) {
-                    return _this11.update.call(_this11, mesh, config);
+                    return _this12.update.call(_this12, mesh, config);
                 }
 
                 //this.objManager.all[ mesh.id * completed.id ] = item;

@@ -296,47 +296,69 @@ const framework = {
         
         return mesh;
     },
-    foldGeometry: function ( g, options ) {
-        //@params g for geometry
-        //@params opts for options
-        const { center, radius } = this.computeObjectRadius( g );
-        console.log( radius, center, g, "fold Geometry" );
+    exploreGroupTree : function ( endIndex, arr, scene, i = 0, obj ) {
+        //takes the arr of children levels to dig through
+        if( i <= endIndex ) {
+            if ( i === 0 ) {
+                obj = scene.getObjectByName( arr[ 0 ] );
+                i++;
+                return this.exploreGroupTree( endIndex, arr, scene, i, obj );
+            } else {
+                let newObj = obj.getObjectByName( arr[ i ] );
+                i++;
+                return this.exploreGroupTree( endIndex, arr, scene, i, newObj );
+            }
+                
+        } else { 
+                
+            return obj;
+        }
+            
+    },
+    handleMultiGeometries: function ( g, m, isLine ) {
+        let mesh;
+        if ( isLine ) {
+            mesh = new THREE.Line( g, m );
+        } else {
+            mesh = new THREE.Mesh( g, m );
+        }
+        return mesh;
+    },
+    foldGeometry: function ( g, modifier, calc, options, i = 0 ) { 
         
-        const fold = this.typeChecker( options, "fold", defaultOptions ),
+        const radius = calc.radius,
+              center = calc.center;
+        
+        const fold = this.typeChecker( modifier[i], "modAngles", { modAngles: [ 0, 0, 0 ] } ),
               xAngle = fold[ 0 ] * ( Math.PI / 180 ),
               yAngle = fold[ 1 ] * ( Math.PI / 180 ),
               zAngle = fold[ 2 ] * ( Math.PI / 180 ),
               topScaleLimit = 16,
-              foldPoint = options.foldAt !== undefined && typeof options.foldAt === "string" ? calculateFoldVector( options.foldAt, radius, center ) : "center",
-              foldType = options.foldType !== undefined && typeof options.foldType === "string" ? options.foldType : "basic",
-              foldRadius = this.typeChecker( options, "foldRadius", { foldRadius : [ radius / 4, radius / 4, radius / 4 ] } );;
+              foldPoint = modifier[i].modAt !== undefined && typeof modifier[i].modAt === "string" ? calculateFoldVector( modifier[i].modAt, radius, center ) : "center",
+              type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default";
+             // foldRadius = this.typeChecker( options, "foldRadius", { foldRadius : [ radius / 4, radius / 4, radius / 4 ] } );;
         
         //takes the z angle for rotation of z and y points. Computed point is normalized
         
-        for ( var n = 0; n < g.vertices.length; n++ ) {
+        for ( let n = 0; n <= g.vertices.length - 1; n++ ) {
                 
-                const heightRatio = g.vertices[n].y  / radius;
-                const widthRatio = g.vertices[n].x / radius;
-                
-                switch( foldType ) {
+              const heightRatio = g.vertices[n].y / radius,
+                    widthRatio = g.vertices[n].x / radius;
+            
+                switch( type ) {
                         
                     case "angular" : 
                         
-                        if ( g.vertices[n].y >= foldPoint.y ) {
+                        if ( g.vertices[n].y > foldPoint.y ) {
                             const rotatedPointZY = rotatePoint( g.vertices[n].z, g.vertices[n].y, xAngle );
                             g.vertices[n].z = rotatedPointZY.x;
                             g.vertices[n].y = rotatedPointZY.y;
                         }
                         
                         break;
-                    case "basic" :
-                    
-                        g.vertices[n].z += ( /\-(?=reverse){1}/.test( foldType  ) ? -1 : 1 ) * ( center.z + ( foldRadius[0] * heightRatio ) * ( xAngle * Math.sin( xAngle * heightRatio ) ) );
-                        
-                        break;
                     case "inverse" :
                         
-                        g.vertices[n].y *= Math.cos( yAngle * ( heightRatio ) );
+                        g.vertices[n].y *= Math.cos( yAngle * heightRatio );
                         break;
                     default:
                         
@@ -355,8 +377,10 @@ const framework = {
                 */
         }
         
-        console.log( g, "geometry after fold is done" );
-        return g;
+        if ( i <= modifier.length -1 ) {
+            i++;
+            return this.foldGeometry( g, modifier, calc, options, i );
+        } else return g;
         
     },
     fitOnScreen: function ( mesh, w, h, n = 2 ) {
@@ -381,6 +405,69 @@ const framework = {
         }
 
         return;
+    },
+    mapGroupTree : function ( options, group ) {
+            
+        if ( options.children !== undefined && options.children instanceof Array ) {
+                
+            if ( group !== undefined ) { 
+                let grp = new THREE.Group();
+                grp.name = options.name;
+                group.add( grp );
+            } else {
+                group = new THREE.Group();
+                group.name = options.name;            
+            }
+                
+            options.children.forEach( child => {
+                // run a recursive back track until we reach the last child with children attribute
+                return this.mapGroupTree( child, group.children.length > 0 ? group.getObjectByName( options.name ) : group );
+            } );
+                
+            return group;
+                
+        } 
+    },
+    moldGeometry: function ( g, options = {}, state = { calc: { } , calculated: false, folded : false, squeezed : false } ) {
+        console.log( options, "mold geometry has started" );
+        // the order of geometry manipulation is extremely important, if you move out of sequence it could mess up the resulting shape's appearance
+        //@params g for geometry
+        //@params opts for options
+        if ( !state.calculated ) {
+            
+            state.calculated = true;
+            const radiusComputed = this.computeObjectRadius( g );
+            if ( /^(Box|Plane|Cylinder){1}/.test( g.type ) ) {
+
+                state.calc.radius = g.parameters.height / 2;
+
+            } else if ( /^(Circle|Sphere){1}/.test( g.type ) ) { 
+
+                state.calc.radius = g.parameters.radius;
+            } else {
+
+                state.calc.radius = radiusComputed.radius;
+            }
+
+            state.calc.center = radiusComputed.center;
+        }
+        
+        //filter them for each filter type and then run recursion for each array within their respective functions
+        const foldMod = options.modifiers.filter( mod => mod.mod === "fold" ),
+              squeezeMod = options.modifiers.filter( mod => mod.mod === "squeeze" );
+        
+        if ( squeezeMod.length > 0 && !state.squeezed ) {
+            state.squeezed = true;
+            console.log( foldMod, squeezeMod, "before squeezeGeometry runs" );
+            return this.moldGeometry( this.squeezeGeometry( g, squeezeMod, state.calc, options ), options, Object.assign( {}, state, { squeezed : true } ) );
+        }
+        
+        if ( foldMod.length > 0 && !state.folded ) {
+            state.folded = true;
+            return this.moldGeometry( this.foldGeometry( g, foldMod, state.calc, options ), options, Object.assign( {}, state, { folded: true } ) );
+        }
+    
+        return g;
     },
     setupCamera: function ( options = {} ) {
         //camera setup * need to add cinematic option later
@@ -419,14 +506,43 @@ const framework = {
 
         return camera;
     },
-    handleMultiGeometries: function ( g, m, isLine ) {
-        let mesh;
-        if ( isLine ) {
-            mesh = new THREE.Line( g, m );
-        } else {
-            mesh = new THREE.Mesh( g, m );
+    squeezeGeometry: function ( g, modifier, calc, options, i = 0 ) {
+        // treeats the geometry almost like its super elastic
+        
+        console.log( options, "inside squeeze Geometry" );
+        const radius = calc.radius,
+              center = calc.center;
+        
+        const squeeze = modifier[i].modAngles,
+              type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default" ;
+        
+        for ( let n = 0; n <= g.vertices.length - 1 ; n++ ) {
+            
+            const angle = 10 * Math.PI / 180,
+                  heightRatio = g.vertices[n].y / radius,
+                  widthRatio = g.vertices[n].x / radius;
+            
+            switch( type ) {
+                    
+                case "indent" :
+                    
+                    g.vertices[n].z *= Math.cos( ( angle ) * heightRatio );
+                    break;
+                default:
+                    const newRadiusZ = ( ( radius / 2 ) * Math.sin( angle ) );
+                    g.vertices[n].z *= newRadiusZ * Math.cos( Math.PI / 2 * heightRatio );
+                    if( g.vertices[n].y ) {
+                        g.vertices[n].y *= Math.cos( ( angle ) * heightRatio );
+                    }
+                    
+            }
         }
-        return mesh;
+        
+        if ( i < modifier.length - 1 ) {
+            
+            i++;
+            return this.squeezeGeometry( g, modifier, calc, options, i );
+        } else return g;
     },
     optionParser: function ( target, options, type = "default" ) {
         //parsers option string into viable data type for running code
@@ -621,61 +737,27 @@ const framework = {
                 return mesh;
     },
     setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [], groupNames = new Set() ) {
-        let m, mesh, upgradeMesh, multiMaterials = [];
+        let m, mesh, geoModifiers, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         /*
         @params m - stands for material 
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
-        function exploreGroupTree( endIndex, arr, scene, i = 0, obj ) {
-            //takes the arr of children levels to dig through
-            if( i <= endIndex ) {
-                if ( i === 0 ) {
-                    
-                    obj = scene.getObjectByName( arr[ 0 ] );
-                    i++;
-                    return exploreGroupTree( endIndex, arr, scene, i, obj );
-                } else {
-                    console.log( obj, " within exploreGroup before getObject" );
-                    let newObj = obj.getObjectByName( arr[ i ] );
-                    i++;
-                    console.log( newObj, "within exploreGroupTree" );
-                    return exploreGroupTree( endIndex, arr, scene, i, newObj );
-                }
-                
-            } else { 
-                
-                return obj;
-            }
-            
-        }
-        function mapGroupTree( options, group ) {
-            
-            if ( options.children !== undefined && options.children instanceof Array ) {
-                
-                if ( group !== undefined ) { 
-                    let grp = new THREE.Group();
-                    grp.name = options.name;
-                    group.add( grp );
-                } else {
-                    group = new THREE.Group();
-                    group.name = options.name;            
-                }
-                
-                options.children.forEach( child => {
-                    
-                    return mapGroupTree( child, group.children.length > 0 ? group.getObjectByName( options.name ) : group );
-                } );
-                
-                return group;
-                
-            } 
-        }
+        
+        
         
         try{
                 // @param g stands for geometry
                 // @param sI is the current scene index
+            
+                //sorts modifiers before distributing them for use
+                if ( options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0 ) {
+                    
+                    geoModifiers = options.modifiers.filter( mod => mod.type === "geometry" );
+                    console.log( geoModifiers, "you have generated a modifier" );
+                    
+                }
             
                 if ( options.children !== undefined && options.children instanceof Array ) {
                     let grp;
@@ -685,7 +767,7 @@ const framework = {
                     if ( i === 0 && groupNames.size === 0 ) {
                         //replaces levels with a new array for each treed group created
                        levels = [];
-                       grp = mapGroupTree( options );
+                       grp = this.mapGroupTree( options );
                        this.scenes[sI].add( grp );
                         
                     }
@@ -713,13 +795,17 @@ const framework = {
                         return;
                 } else {
                     let g;
+                   
+                    /* creates the geometry with its vertices and settings and then modifies it if 
+                    */
+                    const geometry = this.createGeometry( options );
                     
-                    if ( options.fold !== undefined ) {
-                        
-                        g = this.foldGeometry( this.createGeometry( options ), options );
-                    } else {
-                        g = this.createGeometry( options );
-                    }
+                    if ( geoModifiers !== undefined ) {
+                        g = this.moldGeometry( geometry, Object.assign( {}, options, { modifiers: geoModifiers } ) );
+                    } else g = geometry;
+                    
+         
+                   
             
                     if ( options.texture instanceof Array ) {
                         //if you get an array of textuers back, then we can pack them here
@@ -821,7 +907,7 @@ const framework = {
                                 console.log( levels, "levels", options.group );
                                //dig through tree
                                 const endIndex = levels.findIndex( ( str ) => str === options.group );
-                                let prevGrp = exploreGroupTree( endIndex, levels, this.scenes[sI] );
+                                let prevGrp = this.exploreGroupTree( endIndex, levels, this.scenes[sI] );
                         
                                 console.log( prevGrp, "previous group near ending" );
                                 prevGrp.add( upgradeMesh );
@@ -876,7 +962,7 @@ const framework = {
             [ "position", "rotation", "scale" ].forEach( type  => {
                 
                 const transform = this.typeChecker( options, type, defaultOptions );
-                console.log( transform );
+                console.log( mesh, transform, `you have performed a ${ type } transform` );
                 mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
                 
             } );
