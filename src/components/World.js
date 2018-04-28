@@ -79,44 +79,7 @@ class World extends Component {
                 "rotation" : [ 90, 0, 0 ]
             }
             
-            const bender = {
-                "name" : "bender",
-                "type" : "cylinder",
-                "size" : [ 5, 70, 0 ],
-                "position" : [ 0, 0, 0 ],
-                "relativeTo" : "knee",
-                "placement" : "top"
-                
-            }
-            const benderTwo = {
-                "name" : "bender2",
-                "type" : "cylinder",
-                "size" : [ 5, 100, 0 ],
-                "position" : [ 0, -35 - 50, 0 ],
-                "relativeTo" : "knee",
-                "placement" : "top"
-                
-            }
-            const knee = {
-                "name" : "knee",
-                "type" : "dodecahedron",
-                "position" : [ 0, -35, 0 ],
-                "size" : 10
-            }
-            
-            const bodySize = 80;
-            const bodyWidth = 75;
-            const offset = 5;
-  
-            const board = {
-               type: "box",
-                name: "board",
-                color: "green",
-                size: "50 200 5",
-                scale: [ 1, 1, 1 ],
-                position: [ 0, 0, 200 ],
-                subtract: [ { type : "sphere", name: "ball", size: 10 } ],
-                modifiers: [
+            const mods = [
                     {
                         type : "geometry",
                         mod: "squeeze",
@@ -136,11 +99,35 @@ class World extends Component {
                         modType: "angular",
                         modAngles : [ 90, 0, 0 ]  
                     }
-                ],
+            ];
+            
+            const bodySize = 80;
+            const bodyWidth = 75;
+            const offset = 5;
+  
+            const board = {
+               type: "box",
+                name: "board",
+                color: "#ffffff",
+                size: "100 100 10",
+                scale: [ 1, 1, 1 ],
+                position: [ 0, 0, 400 ],
+                texture: "imgs/crate.jpg",
+                material: "standard",
+                children : [ { type: "sphere", size: 50, name: "ball", subtract: true } ],
+                
                 segments: 16
             };
+            
+            const line = {
+                type: "line",
+                name: "connector",
+                color: "#000000",
+                position: [ 0, 0, 300 ],
+                path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
+            }
 
-this.world = new WorldController( Object.assign( {}, { debug : true }, { worldObjects: [ floor, board ] } ) );
+this.world = new WorldController( Object.assign( { }, { worldObjects: [ floor, board ] } ) );
             
             this.world.start();
             

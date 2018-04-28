@@ -5,6 +5,30 @@
                 position: "0 0 150",
                 children : [],
             }
+    const bender = {
+                "name" : "bender",
+                "type" : "cylinder",
+                "size" : [ 5, 70, 0 ],
+                "position" : [ 0, 0, 0 ],
+                "relativeTo" : "knee",
+                "placement" : "top"
+                
+            }
+            const benderTwo = {
+                "name" : "bender2",
+                "type" : "cylinder",
+                "size" : [ 5, 100, 0 ],
+                "position" : [ 0, -35 - 50, 0 ],
+                "relativeTo" : "knee",
+                "placement" : "top"
+                
+            }
+            const knee = {
+                "name" : "knee",
+                "type" : "dodecahedron",
+                "position" : [ 0, -35, 0 ],
+                "size" : 10
+            }
             
                 const feather = {
                     "type": "circle",

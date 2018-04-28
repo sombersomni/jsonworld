@@ -161,7 +161,11 @@ function chooseCurve( path, i = 0, arr = [], curvePath = new THREE.CurvePath() )
 function createPath ( type = "default", path ) {
     
     switch( type ) {
-        
+        case "line" :
+            
+            //returns a new array of THREE Vectors
+            return path instanceof Array ? path.map( vector => new THREE.Vector3( vector.x, vector.y, vector.z ) ) : new THREE.Vector3( path.x, path.y, path.x );
+            
         case "tube" : 
                 
             const curve = chooseCurve( path );
@@ -403,6 +407,12 @@ export default function ( options = {} ) {
                 return new THREE.LatheGeometry( points );
                 
             } 
+        case "line" :
+            
+            let g = new THREE.Geometry();
+            g.vertices = path;
+            console.log( g, path , "line was created" );
+            return g;
             
         case "parametric" :
             let parametric;

@@ -1,11 +1,12 @@
 import * as THREE from "three";
-import ThreeBSP from "./csg/threeCSG.js";
+let ThreeBSP = require("three-js-csg")(THREE);
 let OBJLoader = require('three-obj-loader');
 OBJLoader(THREE);
 import anime from "animejs";
 let MTLLoader = require('three-mtl-loader');
 let SimplexNoise = require('simplex-noise');
 
+console.log( ThreeBSP, "three bsp is working" );
 // JSON
 import defaultOptions from "./json/defaults.json"
 
@@ -176,16 +177,43 @@ const framework = {
                 return;
         }
     },
-    decideTimelineOrder : function (id, animation, mesh, options = {} ) {
+    applyCSG : function ( mesh, options, i = 0 ) {
+        //@params root is for the original mesh being manipulated
+        //@params temp is for the mesh that will effect the root
+        let alteredMesh, newOptions, rootBSP, tempBSP;
+        const meshes = options.meshWith.slice();
+        console.log( meshes, "shallow copy of meshWith" );
+        const temp = meshes[i];
+        //transform root and temp object for bsp transition
+        rootBSP = i === 0  ? new ThreeBSP( mesh ) : mesh ;
+        tempBSP = new ThreeBSP( this.setupMesh( Object.assign( {}, temp, { forget: true } ), 0 ) );
         
-        console.log( animation, "animation inside deciscion" );
+        if ( temp.subtract !== undefined && temp.subtract ) {
+            //subtract one geometry from another to create a new form
+            alteredMesh = rootBSP.subtract( tempBSP );
+            
+        } else if ( temp.union !== undefined && temp.union ) {  
+            //merges two geometries together
+            alteredMesh = rootBSP.union( tempBSP );  
+
+        } else if ( temp.intersect !== undefined && temp.intersect ) {
+            //uses the collision points to make a new mesh
+            alteredMesh = rootBSP.intersect( tempBSP );
+        }
+        
+        if ( i < meshes.length - 1 ) {
+            i++;
+            this.applyCSG( alteredMesh, options, i );
+        } else return alteredMesh.toMesh();
+    },
+    decideTimelineOrder : function (id, animation, mesh, options = {} ) {
+        //decides how the animation is saved and distributed amongst objects
         try {
             if ( mesh.id !== undefined ) {
-                console.log( id , mesh, "id and mesh id" );
                 const hash = hashID( mesh.id,  id );
-                console.log( hash );
                 let obj = this.objManager.all[ hash ];
                 console.log( obj, "this is the obj manager clone" );
+                console.log( hash, "hash value for clone" );
                 //takes the mesh and adds a animation timeline to the root object
                 if ( animation instanceof Array ) {
                     for ( var i = 0; i <= animation.length - 1; i++ ) {
@@ -200,12 +228,11 @@ const framework = {
                 } else {
         
                        this.objManager.all[ hashID( mesh.id, id ) ].animeTimeline.add( animation );
-                    console.log( obj, "after attachment" );
                      
                 }
                 
                 if ( obj.animeTimeline.children !== undefined ) {
-                    console.log( "has children" );
+                    console.log( "anime timeline has children" );
                     obj.animeTimeline.children[ 0 ].play();
                 }
                 
@@ -772,12 +799,14 @@ const framework = {
     setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [], groupNames = new Set() ) {
         let m, mesh, geoModifiers, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
-        /*
-        @params m - stands for material 
-        @param levels keeps track of the group names current tree route
-        const isTypeLoader = options.type.search(/[\.obj]{1}/);
-        const isMaterialURL = options.material.search(/(\.mtl){1}/);
-        */
+        //@params m - stands for material 
+        //@param levels keeps track of the group names current tree route
+        //const isTypeLoader = options.type.search(/[\.obj]{1}/);
+        //const isMaterialURL = options.material.search(/(\.mtl){1}/);
+        const type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
+        let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract || !child.intersect || !child.union ) : undefined;
+        
+        const csgMeshes = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
         
         
         
@@ -793,15 +822,22 @@ const framework = {
                     
                 }
             
-                if ( options.children !== undefined && options.children instanceof Array ) {
-                    let grp;
+                if ( children !== undefined && children instanceof Array && children.length >= 1 ) {
+                    let grp, mainMesh;
                     
                     const groupName = options.group !== undefined && !groupNames.has( options.group ) ? options.group : options.name;
 
                     if ( i === 0 && groupNames.size === 0 ) {
                         //replaces levels with a new array for each treed group created
-                       levels = [];
+                        levels = [];
+                       if ( type !== undefined ) {
+                           //injects csgMeshes array into options children so it won't run an infinite loop
+                           mainMesh = this.setupMesh( Object.assign( {}, options, { children: csgMeshes, forget: true } ), sI );
+                           console.log( "mainMesh from grouping children together" );
+                       }
+                        
                        grp = this.mapGroupTree( options );
+                        grp.add( mainMesh );
                        this.scenes[sI].add( grp );
                         
                     }
@@ -812,11 +848,10 @@ const framework = {
                     }
                     
                         i++;
-                        options.children.forEach( ( child, x ) => {
+                        children.forEach( ( child, x ) => {
 
                             //keeps an array where each index reflects what level an object is within an object
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
-
 
                             this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
 
@@ -830,8 +865,7 @@ const framework = {
                 } else {
                     let g;
                    
-                    /* creates the geometry with its vertices and settings and then modifies it if 
-                    */
+                    // creates the geometry with its vertices and settings and then modifies it if 
                     const geometry = this.createGeometry( options );
                     
                     if ( geoModifiers !== undefined ) {
@@ -839,12 +873,10 @@ const framework = {
                     } else g = geometry;
                     
          
-                   
-            
                     if ( options.texture instanceof Array ) {
                         //if you get an array of textuers back, then we can pack them here
-                        console.log( options, "before setupMesh begins" );
                         for ( let f = 0; f <= g.faces.length - 1; f++ ) {
+                            //loops through array of materials to assign each face its own material
                             multiMaterials.push( this.createMaterial( Object.assign( {}, options, { texture : options.texture[ f % options.texture.length ] } ) ) );
                         }
                         
@@ -852,15 +884,18 @@ const framework = {
 
                     } else {
 
-                        m = this.createMaterial( options );
+                        m = this.createMaterial( options.type !== "line" ? options : Object.assign( {}, options, { material : "line" } ) );
                     }
 
-                    mesh = options.children !== undefined && options.children instanceof Array ? group : new THREE.Mesh( g, m );
-
-                    if ( options.hasOwnProperty( "shadow" ) && options.shadow == true ) {
-
-                        mesh.receiveShadow = true;
-                        mesh.castShadow = true;
+                    if ( options.children !== undefined && options.children instanceof Array ) {
+                          
+                        mesh = group;
+                    } else if ( options.type === "line" ) { 
+                        
+                        mesh = new THREE.Line( g, m );
+                        
+                    } else {
+                         mesh = new THREE.Mesh( g, m );
                     }
 
                     //accepts a gradient that is either linear or radial
@@ -889,8 +924,14 @@ const framework = {
                         }
 
                     } 
+                    
+                    if ( options.hasOwnProperty( "shadow" ) && options.shadow == true && options.type !== "line" ) {
 
-                    mesh.name = options.name !== undefined ? options.name : "";
+                        mesh.receiveShadow = true;
+                        mesh.castShadow = true;
+                    }
+                    
+                    mesh.name = options.name !== undefined ? options.name : "generic"+mesh.id;
                     
                     if ( options.forget !== undefined && options.forget ) {
                         //create this mesh but don't add it to the main scene.
@@ -899,32 +940,6 @@ const framework = {
                         return mesh;
                     }
                     
-                    /*
-                    if( options.subtract !== undefined ) {
-                        
-                        let rootMesh = new ThreeBSP( mesh );
-                        console.log( rootMesh, "subtraction is in process" );
-                        if ( options.subtract instanceof Array ) {
-                            
-                            for ( let x = 0; x <= options.subtract.length - 1; x++ ) {
-                                
-                                let tempMesh = this.setupMesh( Object.assign( {}, options.subtract[x], { forget : true } ), sI, group, i, levels );
-                                
-                                
-                                const changedMesh = rootMesh.subtract( new ThreeBSP( tempMesh )ub );
-                                console.log( changedMesh , "bsp subtract operation" );
-                               
-                            }
-                            
-                        } else if ( options.subtract instanceof Object ) {
-                            
-                            const subMesh = this.setupMesh( Object.assign( {}, options.subtract, { forget : true } ), sI, group, i, levels );
-                            
-                        }else {
-                            throw new Error( "when using subtract property you need to use an array of objects or just one object" );
-                        }
-                        
-                    } */
                     
                     if ( options.animation !== undefined || options.animationType !== undefined ) {
 
@@ -945,7 +960,6 @@ const framework = {
                         upgradeMesh.name = options.name + i.toString();
                         group.add( this.gridMeshPosition( upgradeMesh, options, i ) );
                         i++;
-                        console.log( group );
                         this.setupMesh( options, sI, group, i, levels );
 
                     }
@@ -1433,18 +1447,10 @@ const framework = {
     runAnimations: function ( time ) {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
-     
-            if ( obj.name === "board" ) {
-                
-                obj.rotation.y += 0.025;
-                //obj.material.map.needsUpdate = true;
-                //obj.material.map.offset.x += 0.01;
-               // console.log( obj );
-            }
             
-            if ( /Light/.test( obj.type ) ) {
-                //checks for light objects
-                obj.target.position.clone( this.scene.position );
+            if ( name !== "floor" ) {
+                
+                obj.rotation.y += 0.010;
             }
         } );
     },
@@ -1504,8 +1510,7 @@ const framework = {
                         if ( typeof options.material !== "string" ) throw new TypeError ( "material needs to be a string" );
                     
                             m.material.needsUpdate = true;
-
-                            console.log( m );
+                    
                             let newMaterial = this.createMaterial( Object.assign( {}, { color: m.material[0].color.clone(), texture: m.material[0].map.clone(), material : options.material } ) );
 
 
