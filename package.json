@@ -44,6 +44,7 @@
     "redux": "^3.7.2",
     "request": "^2.85.0",
     "request-promise": "^4.2.2",
+    "simplex-noise": "^2.4.0",
     "svg-mesh-3d": "^1.1.0",
     "three": "^0.88.0",
     "three-mtl-loader": "^1.0.2",

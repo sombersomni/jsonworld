@@ -107,7 +107,7 @@ class World extends Component {
             const bodySize = 80;
             const bodyWidth = 75;
             const offset = 5;
-            
+  
             const board = {
                type: "box",
                 name: "board",
@@ -115,18 +115,26 @@ class World extends Component {
                 size: "50 200 5",
                 scale: [ 1, 1, 1 ],
                 position: [ 0, 0, 200 ],
+                subtract: [ { type : "sphere", name: "ball", size: 10 } ],
                 modifiers: [
                     {
                         type : "geometry",
                         mod: "squeeze",
                         modType: "pinch-down",
-                        modAngles : "90 0 0"   
+                        modAngles : [ 10, 0, 0 ]   
                     },
                     {
+                        type: "geometry",
+                        mod: "noise",
+                        modType: "spikey",
+                        modAngles : [ 0, 0, 0 ],
+                        amplify: 2
+                    } ,
+                    {
                         type : "geometry",
-                        mod: "squeeze",
-                        modType: "pinch-down",
-                        modAngles : "90 0 0"   
+                        mod: "fold",
+                        modType: "angular",
+                        modAngles : [ 90, 0, 0 ]  
                     }
                 ],
                 segments: 16

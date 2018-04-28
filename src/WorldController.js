@@ -3,7 +3,8 @@ import ThreeBSP from "./csg/threeCSG.js";
 let OBJLoader = require('three-obj-loader');
 OBJLoader(THREE);
 import anime from "animejs";
-var MTLLoader = require('three-mtl-loader');
+let MTLLoader = require('three-mtl-loader');
+let SimplexNoise = require('simplex-noise');
 
 // JSON
 import defaultOptions from "./json/defaults.json"
@@ -325,18 +326,15 @@ const framework = {
         return mesh;
     },
     foldGeometry: function ( g, modifier, calc, options, i = 0 ) { 
-        
+        console.log( modifier, "modifier in fold Geometry" );
         const radius = calc.radius,
               center = calc.center;
         
-        const fold = this.typeChecker( modifier[i], "modAngles", { modAngles: [ 0, 0, 0 ] } ),
-              xAngle = fold[ 0 ] * ( Math.PI / 180 ),
-              yAngle = fold[ 1 ] * ( Math.PI / 180 ),
-              zAngle = fold[ 2 ] * ( Math.PI / 180 ),
-              topScaleLimit = 16,
-              foldPoint = modifier[i].modAt !== undefined && typeof modifier[i].modAt === "string" ? calculateFoldVector( modifier[i].modAt, radius, center ) : "center",
+        const xAngle = modifier[i].modAngles[ 0 ] * ( Math.PI / 180 ),
+              yAngle = modifier[i].modAngles[ 1 ] * ( Math.PI / 180 ),
+              zAngle = modifier[i].modAngles[ 2 ] * ( Math.PI / 180 ),
+              foldPoint = modifier[i].modAt !== undefined && typeof modifier[i].modAt === "string" ? calculateFoldVector( modifier[i].modAt, radius, center ) : new THREE.Vector3(),
               type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default";
-             // foldRadius = this.typeChecker( options, "foldRadius", { foldRadius : [ radius / 4, radius / 4, radius / 4 ] } );;
         
         //takes the z angle for rotation of z and y points. Computed point is normalized
         
@@ -377,7 +375,7 @@ const framework = {
                 */
         }
         
-        if ( i <= modifier.length -1 ) {
+        if ( i < modifier.length -1 ) {
             i++;
             return this.foldGeometry( g, modifier, calc, options, i );
         } else return g;
@@ -428,7 +426,7 @@ const framework = {
                 
         } 
     },
-    moldGeometry: function ( g, options = {}, state = { calc: { } , calculated: false, folded : false, squeezed : false } ) {
+    moldGeometry: function ( g, options = {}, state = { "calc": { } , "calculated": false,  "folded" : false, "squeezed" : false, "didNoise" : false } ) {
         console.log( options, "mold geometry has started" );
         // the order of geometry manipulation is extremely important, if you move out of sequence it could mess up the resulting shape's appearance
         //@params g for geometry
@@ -454,11 +452,16 @@ const framework = {
         
         //filter them for each filter type and then run recursion for each array within their respective functions
         const foldMod = options.modifiers.filter( mod => mod.mod === "fold" ),
+              noiseMod = options.modifiers.filter( mod => mod.mod === "noise" ),
               squeezeMod = options.modifiers.filter( mod => mod.mod === "squeeze" );
+        
+        if ( noiseMod.length > 0 && !state.didNoise ) {
+            state.didNoise = true;
+            return this.moldGeometry( this.noiseyGeometry( g, noiseMod, state.calc, options ), options, Object.assign( {}, state, { didNoise: true } ) );
+        }
         
         if ( squeezeMod.length > 0 && !state.squeezed ) {
             state.squeezed = true;
-            console.log( foldMod, squeezeMod, "before squeezeGeometry runs" );
             return this.moldGeometry( this.squeezeGeometry( g, squeezeMod, state.calc, options ), options, Object.assign( {}, state, { squeezed : true } ) );
         }
         
@@ -513,26 +516,27 @@ const framework = {
         const radius = calc.radius,
               center = calc.center;
         
-        const squeeze = modifier[i].modAngles,
+        const xAngle = modifier[i].modAngles[ 0 ] * ( Math.PI / 180 ),
+              yAngle = modifier[i].modAngles[ 1 ] * ( Math.PI / 180 ),
+              zAngle = modifier[i].modAngles[ 2 ] * ( Math.PI / 180 ),
               type = modifier[i].modType !== undefined && typeof modifier[i].modType === "string" ? modifier[i].modType : "default" ;
         
         for ( let n = 0; n <= g.vertices.length - 1 ; n++ ) {
             
-            const angle = 10 * Math.PI / 180,
-                  heightRatio = g.vertices[n].y / radius,
+            const heightRatio = g.vertices[n].y / radius,
                   widthRatio = g.vertices[n].x / radius;
             
             switch( type ) {
                     
                 case "indent" :
                     
-                    g.vertices[n].z *= Math.cos( ( angle ) * heightRatio );
+                    g.vertices[n].z *= Math.cos( xAngle * heightRatio );
                     break;
                 default:
-                    const newRadiusZ = ( ( radius / 2 ) * Math.sin( angle ) );
+                    const newRadiusZ = ( ( radius / 2 ) * Math.sin( xAngle ) );
                     g.vertices[n].z *= newRadiusZ * Math.cos( Math.PI / 2 * heightRatio );
                     if( g.vertices[n].y ) {
-                        g.vertices[n].y *= Math.cos( ( angle ) * heightRatio );
+                        g.vertices[n].y *= Math.cos( ( xAngle ) * heightRatio );
                     }
                     
             }
@@ -543,6 +547,35 @@ const framework = {
             i++;
             return this.squeezeGeometry( g, modifier, calc, options, i );
         } else return g;
+    },
+    noiseyGeometry: function ( g, modifier, calc, options, i = 0 ) {
+        
+        console.log( "running noisey geometry program" );
+        const mod = modifier[i];
+        const amplify = mod.amplify !== undefined && !Number.isNaN( mod.amplify ) ? mod.amplify : 1,
+              type = mod.modType !== undefined && typeof mod.modType === "string" ? mod.modType : "default",
+              xAngle = mod.modAngles[ 0 ] * ( Math.PI / 180 ),
+              yAngle = mod.modAngles[ 1 ] * ( Math.PI / 180 ),
+              zAngle = mod.modAngles[ 2 ] * ( Math.PI / 180 );
+        
+        let simplex = new SimplexNoise("bumpy");
+        g.vertices.forEach( vert => {
+            
+            const noise = simplex.noise3D( vert.x, vert.y, vert.z );
+            
+            switch( type ) {
+                case "spikey" :
+                    vert.x += noise * amplify;
+                    vert.y += noise * amplify;
+                    vert.z += noise * amplify;
+                    break;
+                default:
+                    
+            }
+        } );
+       
+              
+        return g;
     },
     optionParser: function ( target, options, type = "default" ) {
         //parsers option string into viable data type for running code
@@ -857,26 +890,41 @@ const framework = {
                     } 
 
                     mesh.name = options.name !== undefined ? options.name : "";
-
-                    /*
-                    if ( this.options.debug === true ) {
-                        const debugVerts = new THREE.Group();
-                        mesh.geometry.vertices.forEach( ( v, i ) => {
-
-
-                            const material = this.createMaterial( { color : new THREE.Color( i / mesh.geometry.vertices.length, 1, 1 ) } );
-                            const geo = this.createGeometry( { type: "sphere", size: 0.5, segments: 8 } );
-                            let debugMesh = new THREE.Mesh( geo, material );
-                            //copies the position of this vertice
-                            debugMesh.position.set( v.x, v.y, v.z );
-                            debugVerts.add( debugMesh );
-
-                        } );
-
-                        mesh.add( debugVerts );
+                    
+                    if ( options.forget !== undefined && options.forget ) {
+                        //create this mesh but don't add it to the main scene.
+                        //mainly used for subtracting from another object
+                        
+                        return mesh;
                     }
-                    */
-
+                    
+                    if( options.subtract !== undefined ) {
+                        
+                        let rootMesh = new ThreeBSP( mesh );
+                        console.log( "subtraction is in process" );
+                        if ( options.subtract instanceof Array ) {
+                            
+                            for ( let x = 0; x <= options.subtract.length - 1; x++ ) {
+                                
+                                let tempMesh = this.setupMesh( Object.assign( {}, options.subtract[x], { forget : true } ), sI, group, i, levels );
+                                
+                                let BSPMesh = new ThreeBSP( tempMesh );
+                                rootMesh[ "subtract" ]( BSPMesh );
+                                rootMesh.toMesh( m );
+                                
+                                mesh = rootMesh;
+                            }
+                            
+                        } else if ( options.subtract instanceof Object ) {
+                            
+                            const subMesh = this.setupMesh( Object.assign( {}, options.subtract, { forget : true } ), sI, group, i, levels );
+                            
+                        }else {
+                            throw new Error( "when using subtract property you need to use an array of objects or just one object" );
+                        }
+                        
+                    }
+                    
                     if ( options.animation !== undefined || options.animationType !== undefined ) {
 
                         upgradeMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
