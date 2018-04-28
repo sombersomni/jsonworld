@@ -128,7 +128,7 @@ class World extends Component {
                         mod: "noise",
                         modType: "spikey",
                         modAngles : [ 0, 0, 0 ],
-                        amplify: 2
+                        amplify: 0.5
                     } ,
                     {
                         type : "geometry",

@@ -774,6 +774,7 @@ const framework = {
         //@params sI - the index of the scene
         /*
         @params m - stands for material 
+        @param levels keeps track of the group names current tree route
         const isTypeLoader = options.type.search(/[\.obj]{1}/);
         const isMaterialURL = options.material.search(/(\.mtl){1}/);
         */
@@ -898,21 +899,21 @@ const framework = {
                         return mesh;
                     }
                     
+                    /*
                     if( options.subtract !== undefined ) {
                         
                         let rootMesh = new ThreeBSP( mesh );
-                        console.log( "subtraction is in process" );
+                        console.log( rootMesh, "subtraction is in process" );
                         if ( options.subtract instanceof Array ) {
                             
                             for ( let x = 0; x <= options.subtract.length - 1; x++ ) {
                                 
                                 let tempMesh = this.setupMesh( Object.assign( {}, options.subtract[x], { forget : true } ), sI, group, i, levels );
                                 
-                                let BSPMesh = new ThreeBSP( tempMesh );
-                                rootMesh[ "subtract" ]( BSPMesh );
-                                rootMesh.toMesh( m );
                                 
-                                mesh = rootMesh;
+                                const changedMesh = rootMesh.subtract( new ThreeBSP( tempMesh )ub );
+                                console.log( changedMesh , "bsp subtract operation" );
+                               
                             }
                             
                         } else if ( options.subtract instanceof Object ) {
@@ -923,7 +924,7 @@ const framework = {
                             throw new Error( "when using subtract property you need to use an array of objects or just one object" );
                         }
                         
-                    }
+                    } */
                     
                     if ( options.animation !== undefined || options.animationType !== undefined ) {
 

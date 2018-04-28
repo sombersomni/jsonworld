@@ -1,4 +1,5 @@
 /*jshint esversion: 6 */
+import * as THREE from "three";
 
 const EPSILON = 1e-5,
     COPLANAR = 0,
