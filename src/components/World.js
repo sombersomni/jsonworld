@@ -114,8 +114,7 @@ class World extends Component {
                 position: [ 0, 0, 400 ],
                 texture: "imgs/crate.jpg",
                 material: "standard",
-                children : [ { type: "sphere", size: 50, name: "ball", subtract: true } ],
-                
+                children : [ { type: "sphere", size: 50, name: "ball", subtract: true } ], 
                 segments: 16
             };
             

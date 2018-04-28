@@ -804,13 +804,13 @@ const framework = {
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
         const type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
-        let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract || !child.intersect || !child.union ) : undefined;
+        let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract && !child.intersect && !child.union ) : undefined;
         
-        const csgMeshes = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
+        const excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
         
+        //console.log( excludedChildren, children, "excluded children from filtering" );
         
-        
-        try{
+        try {
                 // @param g stands for geometry
                 // @param sI is the current scene index
             
@@ -822,46 +822,47 @@ const framework = {
                     
                 }
             
-                if ( children !== undefined && children instanceof Array && children.length >= 1 ) {
+                if ( children !== undefined && children instanceof Array ) {
                     let grp, mainMesh;
                     
                     const groupName = options.group !== undefined && !groupNames.has( options.group ) ? options.group : options.name;
 
-                    if ( i === 0 && groupNames.size === 0 ) {
-                        //replaces levels with a new array for each treed group created
-                        levels = [];
-                       if ( type !== undefined ) {
-                           //injects csgMeshes array into options children so it won't run an infinite loop
-                           mainMesh = this.setupMesh( Object.assign( {}, options, { children: csgMeshes, forget: true } ), sI );
-                           console.log( "mainMesh from grouping children together" );
-                       }
-                        
-                       grp = this.mapGroupTree( options );
-                        grp.add( mainMesh );
-                       this.scenes[sI].add( grp );
-                        
-                    }
+                    //replaces levels with a new array for each tree group created
+                    levels = ( i === 0 && groupNames.size === 0 ) ? [] : levels;
+                    grp = this.mapGroupTree( options );
                     
                     if ( !groupNames.has( groupName ) ) {
                         levels[i] = groupName;
                         groupNames.add( groupName );
                     }
                     
+                    if( children.length === 0 ) {
+                        //injects csgMeshes array into options children so it won't run an infinite loop
+                        mainMesh = this.setupMesh( Object.assign( {}, options, { children: excludedChildren, forget: true } ), sI );
+                        console.log( mainMesh, "mainMesh from grouping children together" );
+                        grp.add( mainMesh );
+                        this.scenes[sI].add( grp );
+                       
+                    } else {
+                        this.scenes[sI].add(grp);
                         i++;
                         children.forEach( ( child, x ) => {
 
                             //keeps an array where each index reflects what level an object is within an object
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
-                            this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
+                             this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
 
                         } );
-
+                        
                         //recalls the group so that all the newly added meshes can undergo the parent transforms
                         let newGrp = this.scenes[sI].getObjectByName( groupName );
                         this.setObjectTransforms( newGrp, options );
+                    }
+                       
+                    
 
-                        return;
+                     return;
                 } else {
                     let g;
                    
