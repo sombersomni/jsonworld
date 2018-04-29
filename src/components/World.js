@@ -115,7 +115,7 @@ class World extends Component {
                 texture: "imgs/crate.jpg",
                 material: "standard",
                 children : [ { type: "sphere", size: 50, name: "ball", subtract: true },
-                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "dodecahedron" } ] } ], 
+                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "dodecahedron", position: [50, 0, 0] } ] } ], 
                 segments: 16
             };
             

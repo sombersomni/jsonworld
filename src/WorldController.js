@@ -322,27 +322,7 @@ const framework = {
                    
             }
         
-        
         return mesh;
-    },
-    exploreGroupTree : function ( endIndex, arr, scene, i = 0, obj ) {
-        //takes the arr of children tree to dig through
-        if( i <= endIndex ) {
-            if ( i === 0 ) {
-                obj = scene.getObjectByName( arr[ 0 ] );
-                i++;
-                return this.exploreGroupTree( endIndex, arr, scene, i, obj );
-            } else {
-                let newObj = obj.getObjectByName( arr[ i ] );
-                i++;
-                return this.exploreGroupTree( endIndex, arr, scene, i, newObj );
-            }
-                
-        } else { 
-                
-            return obj;
-        }
-            
     },
     handleMultiGeometries: function ( g, m, isLine ) {
         let mesh;
@@ -797,83 +777,69 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , tree = [], groupNames = new Set() ) {
+    setupMesh: function ( options, sI, group, i = 0 , tree = [], groupNames = new Set() ) {
         let m, mesh, geoModifiers, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         //@params m - stands for material 
         //@param tree keeps track of the group names current tree route
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
-        const type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
-        let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract && !child.intersect && !child.union ) : undefined;
-        
-        const excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
-        
         try {
                 // @param g stands for geometry
                 // @param sI is the current scene index
-            
-                //sorts modifiers before distributing them for use
-                if ( options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0 ) {
-                    
-                    geoModifiers = options.modifiers.filter( mod => mod.type === "geometry" );
-                    console.log( geoModifiers, "you have generated a modifier" );
-                    
-                }
+                const type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
+                let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract && !child.intersect && !child.union ) : undefined;
+
+                const excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
+
+                //MODIFIERS
+                //sort modifiers before distributing them for use
+                const geoModifiers = ( options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0 ) ? options.modifiers.filter( mod => mod.type === "geometry" ) : undefined ;
             
                 if ( children !== undefined && children instanceof Array ) {
-                    let grp, mainMesh, savedMaterial;
+                    let mainMesh;
                     
                     const groupName = options.group !== undefined && !groupNames.has( options.group ) ? options.group : options.name;
 
                 
-                    if ( i === 0 && groupNames.size === 0 ) {
-                        //replaces tree with a new array for each tree group created 
-                        tree = [];
+                    if ( i === 0 && group === undefined ) {
                         //creates a new group with every child mapped initially
-                        grp = this.mapGroupTree( options );
-                    } else {
-                        //dig through tree
-                        const endIndex = tree.findIndex( ( str ) => str === groupName );
-                        grp = this.exploreGroupTree( endIndex, tree, this.scenes[sI] );
+                        const grp = this.mapGroupTree( options );
+                        this.scenes[sI].add( grp );
+                        group = this.scenes[sI].getObjectByName( groupName );
+                        
                     }
-                    
-                    console.log( grp, "this is the group after digging" );
+                    console.log( group, "group after adding to scene" );
                     //if groupNames set doesn't have name, we add it to our tree arr for tree depth tracking
                     if ( !groupNames.has( groupName ) ) {
-                        tree[i] = groupName;
                         groupNames.add( groupName );
                     }
                     
                     if( type !== undefined ) {
                         //injects csgMeshes array into options children so it won't run an infinite loop
-                        mainMesh = this.setupMesh( Object.assign( {}, options, excludedChildren.length > 0 ? { meshWith: excludedChildren } : {}, { forget: true, children: undefined } ), sI );
-                        grp.add( mainMesh ); 
-                    } 
+                        mainMesh = this.setupMesh( Object.assign( {}, options, excludedChildren.length > 0 ? { meshWith: excludedChildren } : {}, { group: groupName, name: options.name+"-root", forget: true, children: undefined } ), sI );
+                        group.add( mainMesh ); 
+                    }  
                     
+                    console.log( group, "before children looped through for grouping" );
                     if( children.length > 0 ) {  
                         i++;
                         children.forEach( child => {
 
                             //keeps an array where each index reflects what level an object is within an object
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
-
-                             const tempMesh = this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName, forget : true } ) , sI, group, i, tree , groupNames );
                             
-                             grp.add( tempMesh );
+                            const newGroup = group.parent !== null ? group.getObjectByName( groupName ) : group;
+
+                             const tempMesh = this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : undefined }, child, { group: groupName, forget : true } ) , sI, newGroup, i, tree , groupNames );
+                            
+                             group.add( tempMesh );
 
                         } );
                     }
-
-                        
-                    //if group doesn't have a parent scene, add group to scene
-                    if ( grp.parent == null ) {
-                        this.scenes[sI].add( grp );
-                    } 
                     //recalls the group so that all the newly added meshes can undergo the parent transforms
-                    this.setObjectTransforms( grp, options );
-                    
-                     return;
+                    this.setObjectTransforms( group, options );
+                    return;
                 } else {           
                     // creates the geometry with its vertices and settings and then modifies it if 
                     let g = this.createGeometry( options );
@@ -895,7 +861,7 @@ const framework = {
                         m = this.createMaterial( options.type !== "line" ? options : Object.assign( {}, options, { material : "line" } ) );
                     }
 
-                    if ( options.children !== undefined && options.children instanceof Array ) {
+                    if ( options.children !== undefined && group !== undefined ) {
                           
                         mesh = group;
                     } else if ( type === "line" ) { 
@@ -950,16 +916,13 @@ const framework = {
                     
                     if( options.scale !== undefined || options.position !== undefined || options.rotation ) {
                         //transforms the mesh using scale rotation or position
-                        const transformedMesh = this.setObjectTransforms( mesh, options );
-                        console.log( transformedMesh, "transformed Mesh" );
-                        mesh = transformedMesh;
+                        mesh = this.setObjectTransforms( mesh, options );
                     }
                     
                     
                     if ( options.animation !== undefined || options.animationType !== undefined ) {
 
-                        let animatedMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
-                        mesh = animatedMesh;
+                        mesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
                     } 
 
                     this.setupWorldClone( sI, mesh, options );
@@ -971,7 +934,6 @@ const framework = {
                         return mesh;
                     }
                     
-
                     if ( options.count !== undefined && options.count > 1 && i < options.count ) {
 
                         if ( group.name.length === 0 ) {
@@ -979,13 +941,14 @@ const framework = {
                         }
                         
                         mesh.name = options.name + i.toString();
-                        group.add( this.gridMeshPosition( mesh, options, i ) );
+                        const gridMesh = this.gridMeshPosition( mesh, options, i );
+                        group.add( gridMesh );
                         i++;
                         this.setupMesh( options, sI, group, i, tree );
 
                     } else {
 
-                        if ( group.children.length > 0 ) {
+                        if ( group !== undefined && group.children.length > 0 ) {
                             
                             this.scenes[sI].add( group );
                         } else {
@@ -1033,7 +996,6 @@ const framework = {
             [ "position", "rotation", "scale" ].forEach( type  => {
                 
                 const transform = this.typeChecker( options, type, defaultOptions );
-                console.log( transform, `you have performed a ${ type } transform` );
                 //maps the set function to each transform and applies the various transform values
                 mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
                 

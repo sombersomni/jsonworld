@@ -64333,7 +64333,7 @@ var World = function (_Component) {
                 position: [0, 0, 300],
                 texture: "imgs/crate.jpg",
                 material: "standard",
-                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "dodecahedron" }] }],
+                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "dodecahedron", position: [50, 0, 0] }] }],
                 segments: 16
             };
 
@@ -65124,26 +65124,6 @@ var framework = {
 
         return mesh;
     },
-    exploreGroupTree: function exploreGroupTree(endIndex, arr, scene) {
-        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-        var obj = arguments[4];
-
-        //takes the arr of children tree to dig through
-        if (i <= endIndex) {
-            if (i === 0) {
-                obj = scene.getObjectByName(arr[0]);
-                i++;
-                return this.exploreGroupTree(endIndex, arr, scene, i, obj);
-            } else {
-                var newObj = obj.getObjectByName(arr[i]);
-                i++;
-                return this.exploreGroupTree(endIndex, arr, scene, i, newObj);
-            }
-        } else {
-
-            return obj;
-        }
-    },
     handleMultiGeometries: function handleMultiGeometries(g, m, isLine) {
         var mesh = void 0;
         if (isLine) {
@@ -65625,8 +65605,7 @@ var framework = {
 
         return mesh;
     },
-    setupMesh: function setupMesh(options, sI) {
-        var group = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : new THREE.Group();
+    setupMesh: function setupMesh(options, sI, group) {
         var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
 
         var _this5 = this;
@@ -65644,61 +65623,48 @@ var framework = {
         //@param tree keeps track of the group names current tree route
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
-        var type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
-        var children = options.children !== undefined && options.children instanceof Array ? options.children.filter(function (child) {
-            return !child.subtract && !child.intersect && !child.union;
-        }) : undefined;
-
-        var excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter(function (child) {
-            return child.subtract || child.intersect || child.union;
-        }) : undefined;
-
         try {
             // @param g stands for geometry
             // @param sI is the current scene index
+            var type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
+            var children = options.children !== undefined && options.children instanceof Array ? options.children.filter(function (child) {
+                return !child.subtract && !child.intersect && !child.union;
+            }) : undefined;
 
-            //sorts modifiers before distributing them for use
-            if (options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0) {
+            var excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter(function (child) {
+                return child.subtract || child.intersect || child.union;
+            }) : undefined;
 
-                geoModifiers = options.modifiers.filter(function (mod) {
-                    return mod.type === "geometry";
-                });
-                console.log(geoModifiers, "you have generated a modifier");
-            }
+            //MODIFIERS
+            //sort modifiers before distributing them for use
+            var _geoModifiers = options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0 ? options.modifiers.filter(function (mod) {
+                return mod.type === "geometry";
+            }) : undefined;
 
             if (children !== undefined && children instanceof Array) {
-                var grp = void 0,
-                    mainMesh = void 0,
-                    savedMaterial = void 0;
+                var mainMesh = void 0;
 
                 var groupName = options.group !== undefined && !groupNames.has(options.group) ? options.group : options.name;
 
-                if (i === 0 && groupNames.size === 0) {
-                    //replaces tree with a new array for each tree group created 
-                    tree = [];
+                if (i === 0 && group === undefined) {
                     //creates a new group with every child mapped initially
-                    grp = this.mapGroupTree(options);
-                } else {
-                    //dig through tree
-                    var endIndex = tree.findIndex(function (str) {
-                        return str === groupName;
-                    });
-                    grp = this.exploreGroupTree(endIndex, tree, this.scenes[sI]);
+                    var grp = this.mapGroupTree(options);
+                    this.scenes[sI].add(grp);
+                    group = this.scenes[sI].getObjectByName(groupName);
                 }
-
-                console.log(grp, "this is the group after digging");
+                console.log(group, "group after adding to scene");
                 //if groupNames set doesn't have name, we add it to our tree arr for tree depth tracking
                 if (!groupNames.has(groupName)) {
-                    tree[i] = groupName;
                     groupNames.add(groupName);
                 }
 
                 if (type !== undefined) {
                     //injects csgMeshes array into options children so it won't run an infinite loop
-                    mainMesh = this.setupMesh(Object.assign({}, options, excludedChildren.length > 0 ? { meshWith: excludedChildren } : {}, { forget: true, children: undefined }), sI);
-                    grp.add(mainMesh);
+                    mainMesh = this.setupMesh(Object.assign({}, options, excludedChildren.length > 0 ? { meshWith: excludedChildren } : {}, { group: groupName, name: options.name + "-root", forget: true, children: undefined }), sI);
+                    group.add(mainMesh);
                 }
 
+                console.log(group, "before children looped through for grouping");
                 if (children.length > 0) {
                     i++;
                     children.forEach(function (child) {
@@ -65706,19 +65672,15 @@ var framework = {
                         //keeps an array where each index reflects what level an object is within an object
                         //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
-                        var tempMesh = _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: 0 }, child, { group: groupName, forget: true }), sI, group, i, tree, groupNames);
+                        var newGroup = group.parent !== null ? group.getObjectByName(groupName) : group;
 
-                        grp.add(tempMesh);
+                        var tempMesh = _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: undefined }, child, { group: groupName, forget: true }), sI, newGroup, i, tree, groupNames);
+
+                        group.add(tempMesh);
                     });
                 }
-
-                //if group doesn't have a parent scene, add group to scene
-                if (grp.parent == null) {
-                    this.scenes[sI].add(grp);
-                }
                 //recalls the group so that all the newly added meshes can undergo the parent transforms
-                this.setObjectTransforms(grp, options);
-
+                this.setObjectTransforms(group, options);
                 return;
             } else {
                 // creates the geometry with its vertices and settings and then modifies it if 
@@ -65737,7 +65699,7 @@ var framework = {
                     m = this.createMaterial(options.type !== "line" ? options : Object.assign({}, options, { material: "line" }));
                 }
 
-                if (options.children !== undefined && options.children instanceof Array) {
+                if (options.children !== undefined && group !== undefined) {
 
                     mesh = group;
                 } else if (type === "line") {
@@ -65754,8 +65716,8 @@ var framework = {
                     mesh = complex;
                 }
 
-                if (geoModifiers !== undefined) {
-                    mesh = this.moldGeometry(mesh.geometry, Object.assign({}, options, { modifiers: geoModifiers }));
+                if (_geoModifiers !== undefined) {
+                    mesh = this.moldGeometry(mesh.geometry, Object.assign({}, options, { modifiers: _geoModifiers }));
                 }
                 //accepts a gradient that is either linear or radial
                 if (/gradient/.test(options.color)) {
@@ -65787,15 +65749,12 @@ var framework = {
 
                 if (options.scale !== undefined || options.position !== undefined || options.rotation) {
                     //transforms the mesh using scale rotation or position
-                    var transformedMesh = this.setObjectTransforms(mesh, options);
-                    console.log(transformedMesh, "transformed Mesh");
-                    mesh = transformedMesh;
+                    mesh = this.setObjectTransforms(mesh, options);
                 }
 
                 if (options.animation !== undefined || options.animationType !== undefined) {
 
-                    var animatedMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
-                    mesh = animatedMesh;
+                    mesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
                 }
 
                 this.setupWorldClone(sI, mesh, options);
@@ -65814,12 +65773,13 @@ var framework = {
                     }
 
                     mesh.name = options.name + i.toString();
-                    group.add(this.gridMeshPosition(mesh, options, i));
+                    var gridMesh = this.gridMeshPosition(mesh, options, i);
+                    group.add(gridMesh);
                     i++;
                     this.setupMesh(options, sI, group, i, tree);
                 } else {
 
-                    if (group.children.length > 0) {
+                    if (group !== undefined && group.children.length > 0) {
 
                         this.scenes[sI].add(group);
                     } else {
@@ -65866,7 +65826,6 @@ var framework = {
         ["position", "rotation", "scale"].forEach(function (type) {
 
             var transform = _this6.typeChecker(options, type, _defaults2.default);
-            console.log(transform, "you have performed a " + type + " transform");
             //maps the set function to each transform and applies the various transform values
             mesh[type]["set"](type === "rotation" ? _this6.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this6.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this6.convertToRadians(transform[2]) : transform[2]);
         });
