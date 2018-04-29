@@ -64333,7 +64333,7 @@ var World = function (_Component) {
                 position: [0, 0, 300],
                 texture: "imgs/crate.jpg",
                 material: "standard",
-                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }],
+                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "dodecahedron" }] }],
                 segments: 16
             };
 
@@ -65681,7 +65681,7 @@ var framework = {
                 } else {
                     //dig through tree
                     var endIndex = tree.findIndex(function (str) {
-                        return str === options.group;
+                        return str === groupName;
                     });
                     grp = this.exploreGroupTree(endIndex, tree, this.scenes[sI]);
                 }
@@ -65778,13 +65778,27 @@ var framework = {
                     }
                 }
 
+                mesh.name = options.name !== undefined ? options.name : "generic" + mesh.id;
                 if (options.hasOwnProperty("shadow") && options.shadow == true && options.type !== "line") {
-
+                    //enable shadows
                     mesh.receiveShadow = true;
                     mesh.castShadow = true;
                 }
 
-                mesh.name = options.name !== undefined ? options.name : "generic" + mesh.id;
+                if (options.scale !== undefined || options.position !== undefined || options.rotation) {
+                    //transforms the mesh using scale rotation or position
+                    var transformedMesh = this.setObjectTransforms(mesh, options);
+                    console.log(transformedMesh, "transformed Mesh");
+                    mesh = transformedMesh;
+                }
+
+                if (options.animation !== undefined || options.animationType !== undefined) {
+
+                    var animatedMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
+                    mesh = animatedMesh;
+                }
+
+                this.setupWorldClone(sI, mesh, options);
 
                 if (options.forget !== undefined && options.forget) {
                     //create this mesh but don't add it to the main scene.
@@ -65793,23 +65807,14 @@ var framework = {
                     return mesh;
                 }
 
-                if (options.animation !== undefined || options.animationType !== undefined) {
-
-                    upgradeMesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
-                } else {
-                    upgradeMesh = this.setObjectTransforms(mesh, options);
-                }
-
-                this.setupWorldClone(sI, upgradeMesh, options);
-
                 if (options.count !== undefined && options.count > 1 && i < options.count) {
 
                     if (group.name.length === 0) {
                         group.name = options.name + "s"; //turns it to a pluralname 
                     }
 
-                    upgradeMesh.name = options.name + i.toString();
-                    group.add(this.gridMeshPosition(upgradeMesh, options, i));
+                    mesh.name = options.name + i.toString();
+                    group.add(this.gridMeshPosition(mesh, options, i));
                     i++;
                     this.setupMesh(options, sI, group, i, tree);
                 } else {
@@ -65818,7 +65823,7 @@ var framework = {
 
                         this.scenes[sI].add(group);
                     } else {
-                        this.scenes[sI].add(upgradeMesh);
+                        this.scenes[sI].add(mesh);
                     }
                 }
             }
@@ -65861,7 +65866,8 @@ var framework = {
         ["position", "rotation", "scale"].forEach(function (type) {
 
             var transform = _this6.typeChecker(options, type, _defaults2.default);
-            console.log(mesh, transform, "you have performed a " + type + " transform");
+            console.log(transform, "you have performed a " + type + " transform");
+            //maps the set function to each transform and applies the various transform values
             mesh[type]["set"](type === "rotation" ? _this6.convertToRadians(transform[0]) : transform[0], type === "rotation" ? _this6.convertToRadians(transform[1]) : transform[1], type === "rotation" ? _this6.convertToRadians(transform[2]) : transform[2]);
         });
 

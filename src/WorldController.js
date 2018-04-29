@@ -834,7 +834,7 @@ const framework = {
                         grp = this.mapGroupTree( options );
                     } else {
                         //dig through tree
-                        const endIndex = tree.findIndex( ( str ) => str === options.group );
+                        const endIndex = tree.findIndex( ( str ) => str === groupName );
                         grp = this.exploreGroupTree( endIndex, tree, this.scenes[sI] );
                     }
                     
@@ -941,13 +941,28 @@ const framework = {
 
                     } 
                     
+                    mesh.name = options.name !== undefined ? options.name : "generic"+mesh.id;
                     if ( options.hasOwnProperty( "shadow" ) && options.shadow == true && options.type !== "line" ) {
-
+                        //enable shadows
                         mesh.receiveShadow = true;
                         mesh.castShadow = true;
                     }
                     
-                    mesh.name = options.name !== undefined ? options.name : "generic"+mesh.id;
+                    if( options.scale !== undefined || options.position !== undefined || options.rotation ) {
+                        //transforms the mesh using scale rotation or position
+                        const transformedMesh = this.setObjectTransforms( mesh, options );
+                        console.log( transformedMesh, "transformed Mesh" );
+                        mesh = transformedMesh;
+                    }
+                    
+                    
+                    if ( options.animation !== undefined || options.animationType !== undefined ) {
+
+                        let animatedMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
+                        mesh = animatedMesh;
+                    } 
+
+                    this.setupWorldClone( sI, mesh, options );
                     
                     if ( options.forget !== undefined && options.forget ) {
                         //create this mesh but don't add it to the main scene.
@@ -956,16 +971,6 @@ const framework = {
                         return mesh;
                     }
                     
-                    
-                    if ( options.animation !== undefined || options.animationType !== undefined ) {
-
-                        upgradeMesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
-                    } else {
-                        upgradeMesh =  this.setObjectTransforms( mesh, options );
-
-                    }
-
-                    this.setupWorldClone( sI, upgradeMesh, options );
 
                     if ( options.count !== undefined && options.count > 1 && i < options.count ) {
 
@@ -973,8 +978,8 @@ const framework = {
                             group.name = options.name + "s"; //turns it to a pluralname 
                         }
                         
-                        upgradeMesh.name = options.name + i.toString();
-                        group.add( this.gridMeshPosition( upgradeMesh, options, i ) );
+                        mesh.name = options.name + i.toString();
+                        group.add( this.gridMeshPosition( mesh, options, i ) );
                         i++;
                         this.setupMesh( options, sI, group, i, tree );
 
@@ -984,7 +989,7 @@ const framework = {
                             
                             this.scenes[sI].add( group );
                         } else {
-                            this.scenes[sI].add( upgradeMesh ); 
+                            this.scenes[sI].add( mesh ); 
                         }
                     }
                 
@@ -1028,7 +1033,8 @@ const framework = {
             [ "position", "rotation", "scale" ].forEach( type  => {
                 
                 const transform = this.typeChecker( options, type, defaultOptions );
-                console.log( mesh, transform, `you have performed a ${ type } transform` );
+                console.log( transform, `you have performed a ${ type } transform` );
+                //maps the set function to each transform and applies the various transform values
                 mesh[ type ][ "set" ]( type === "rotation" ? this.convertToRadians( transform[ 0 ] ) : transform[ 0 ], type === "rotation" ? this.convertToRadians( transform[ 1 ] ) : transform[ 1 ], type === "rotation" ? this.convertToRadians( transform[ 2 ] ) : transform[ 2 ] );
                 
             } );

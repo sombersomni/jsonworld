@@ -1,5 +1,4 @@
 import * as THREE from "three";
-
 import defaultOptions from "./json/defaults.json";
 
 //UTILS
