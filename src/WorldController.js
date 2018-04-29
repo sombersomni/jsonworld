@@ -78,6 +78,7 @@ const framework = {
       let marginLeft = this.divWrapper.style.left !== "" ? this.divWrapper.style.left : ( this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0 ), 
             marginTop = this.divWrapper.style.top !== "" ? this.divWrapper.style.top : ( this.divWrapper.style.marginTop ? this.divWrapper.style.marginTop : 0 );
       
+      // finds suffixes px and em
       const regSearch = /[px|em]{1}/;
       marginLeft = typeof marginLeft === "string" ? parseInt(marginLeft.replace(regSearch, ""), 10) : marginLeft;
       marginTop = typeof marginTop === "string" ?  parseInt(marginTop.replace(regSearch, ""), 10) : marginTop;
@@ -325,7 +326,7 @@ const framework = {
         return mesh;
     },
     exploreGroupTree : function ( endIndex, arr, scene, i = 0, obj ) {
-        //takes the arr of children levels to dig through
+        //takes the arr of children tree to dig through
         if( i <= endIndex ) {
             if ( i === 0 ) {
                 obj = scene.getObjectByName( arr[ 0 ] );
@@ -796,19 +797,17 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , levels = [], groupNames = new Set() ) {
+    setupMesh: function ( options, sI, group = new THREE.Group(), i = 0 , tree = [], groupNames = new Set() ) {
         let m, mesh, geoModifiers, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         //@params m - stands for material 
-        //@param levels keeps track of the group names current tree route
+        //@param tree keeps track of the group names current tree route
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
         const type = options.type !== undefined && typeof options.type === "string" ? options.type : undefined;
         let children = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => !child.subtract && !child.intersect && !child.union ) : undefined;
         
         const excludedChildren = options.children !== undefined && options.children instanceof Array ? options.children.filter( child => child.subtract || child.intersect || child.union ) : undefined;
-        
-        //console.log( excludedChildren, children, "excluded children from filtering" );
         
         try {
                 // @param g stands for geometry
@@ -823,55 +822,63 @@ const framework = {
                 }
             
                 if ( children !== undefined && children instanceof Array ) {
-                    let grp, mainMesh;
+                    let grp, mainMesh, savedMaterial;
                     
                     const groupName = options.group !== undefined && !groupNames.has( options.group ) ? options.group : options.name;
 
-                    //replaces levels with a new array for each tree group created
-                    levels = ( i === 0 && groupNames.size === 0 ) ? [] : levels;
-                    grp = this.mapGroupTree( options );
+                
+                    if ( i === 0 && groupNames.size === 0 ) {
+                        //replaces tree with a new array for each tree group created 
+                        tree = [];
+                        //creates a new group with every child mapped initially
+                        grp = this.mapGroupTree( options );
+                    } else {
+                        //dig through tree
+                        const endIndex = tree.findIndex( ( str ) => str === options.group );
+                        grp = this.exploreGroupTree( endIndex, tree, this.scenes[sI] );
+                    }
                     
+                    console.log( grp, "this is the group after digging" );
+                    //if groupNames set doesn't have name, we add it to our tree arr for tree depth tracking
                     if ( !groupNames.has( groupName ) ) {
-                        levels[i] = groupName;
+                        tree[i] = groupName;
                         groupNames.add( groupName );
                     }
                     
-                    if( children.length === 0 ) {
+                    if( type !== undefined ) {
                         //injects csgMeshes array into options children so it won't run an infinite loop
-                        mainMesh = this.setupMesh( Object.assign( {}, options, { children: excludedChildren, forget: true } ), sI );
-                        console.log( mainMesh, "mainMesh from grouping children together" );
-                        grp.add( mainMesh );
-                        this.scenes[sI].add( grp );
-                       
-                    } else {
-                        this.scenes[sI].add(grp);
+                        mainMesh = this.setupMesh( Object.assign( {}, options, excludedChildren.length > 0 ? { meshWith: excludedChildren } : {}, { forget: true, children: undefined } ), sI );
+                        grp.add( mainMesh ); 
+                    } 
+                    
+                    if( children.length > 0 ) {  
                         i++;
-                        children.forEach( ( child, x ) => {
+                        children.forEach( child => {
 
                             //keeps an array where each index reflects what level an object is within an object
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
-                             this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName } ) , sI, group, i, levels , groupNames );
+                             const tempMesh = this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : 0 }, child, { group: groupName, forget : true } ) , sI, group, i, tree , groupNames );
+                            
+                             grp.add( tempMesh );
 
                         } );
-                        
-                        //recalls the group so that all the newly added meshes can undergo the parent transforms
-                        let newGrp = this.scenes[sI].getObjectByName( groupName );
-                        this.setObjectTransforms( newGrp, options );
                     }
-                       
-                    
 
-                     return;
-                } else {
-                    let g;
-                   
-                    // creates the geometry with its vertices and settings and then modifies it if 
-                    const geometry = this.createGeometry( options );
+                        
+                    //if group doesn't have a parent scene, add group to scene
+                    if ( grp.parent == null ) {
+                        this.scenes[sI].add( grp );
+                    } 
+                    //recalls the group so that all the newly added meshes can undergo the parent transforms
+                    this.setObjectTransforms( grp, options );
                     
-                    if ( geoModifiers !== undefined ) {
-                        g = this.moldGeometry( geometry, Object.assign( {}, options, { modifiers: geoModifiers } ) );
-                    } else g = geometry;
+                     return;
+                } else {           
+                    // creates the geometry with its vertices and settings and then modifies it if 
+                    let g = this.createGeometry( options );
+                    
+                    
                     
          
                     if ( options.texture instanceof Array ) {
@@ -891,14 +898,24 @@ const framework = {
                     if ( options.children !== undefined && options.children instanceof Array ) {
                           
                         mesh = group;
-                    } else if ( options.type === "line" ) { 
+                    } else if ( type === "line" ) { 
                         
                         mesh = new THREE.Line( g, m );
                         
                     } else {
                          mesh = new THREE.Mesh( g, m );
                     }
-
+                    
+                    if ( type !== "line" && options.meshWith !== undefined && options.meshWith instanceof Array ) {
+                        
+                        let complex = this.applyCSG( mesh, options );
+                        complex.material = m;
+                        mesh = complex;
+                    }
+                    
+                    if ( geoModifiers !== undefined ) {
+                        mesh = this.moldGeometry( mesh.geometry, Object.assign( {}, options, { modifiers: geoModifiers } ) );
+                    } 
                     //accepts a gradient that is either linear or radial
                     if ( /gradient/.test( options.color ) ) {
 
@@ -914,9 +931,7 @@ const framework = {
                                 for ( var i = 0; i <= faceIndices.length - 1; i++ ) {
                                     let vertexIndex = f[ faceIndices[ i ] ];
                                     const p = mesh.geometry.vertices[vertexIndex];
-                                    console.log( vertexIndex );
                                     let color = new THREE.Color( 0xffffff );
-                                    console.log( p );
                                     mesh.geometry.faces[a].vertexColors[i] = color.setRGB( a / mesh.geometry.faces.length, 1, 1 );
 
                                 }
@@ -961,20 +976,7 @@ const framework = {
                         upgradeMesh.name = options.name + i.toString();
                         group.add( this.gridMeshPosition( upgradeMesh, options, i ) );
                         i++;
-                        this.setupMesh( options, sI, group, i, levels );
-
-                    }
-                    
-                    if( options.group !== undefined && typeof options.group === "string" ) {
-                        let grp;
-                    
-                                console.log( levels, "levels", options.group );
-                               //dig through tree
-                                const endIndex = levels.findIndex( ( str ) => str === options.group );
-                                let prevGrp = this.exploreGroupTree( endIndex, levels, this.scenes[sI] );
-                        
-                                console.log( prevGrp, "previous group near ending" );
-                                prevGrp.add( upgradeMesh );
+                        this.setupMesh( options, sI, group, i, tree );
 
                     } else {
 

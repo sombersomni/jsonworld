@@ -111,7 +111,7 @@ class World extends Component {
                 color: "#ffffff",
                 size: "100 100 10",
                 scale: [ 1, 1, 1 ],
-                position: [ 0, 0, 400 ],
+                position: [ 0, 0, 300 ],
                 texture: "imgs/crate.jpg",
                 material: "standard",
                 children : [ { type: "sphere", size: 50, name: "ball", subtract: true } ], 

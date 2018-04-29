@@ -23,7 +23,7 @@ var authOptions = {
 
 
 const promise = new Promise( ( resolve, reject ) => {
-    request.post(authOptions, function(error, response, body) {
+    request.post( authOptions, function(error, response, body) {
       if (!error && response.statusCode === 200) {
 
         // use the access token to access the Spotify Web API
@@ -36,8 +36,7 @@ const promise = new Promise( ( resolve, reject ) => {
           json: true
         };
         request.get(options, function(error, response, body) {
-          
-            console.log( body );
+            
             resolve( body );
             
             if ( error ) {
@@ -45,7 +44,7 @@ const promise = new Promise( ( resolve, reject ) => {
             }
         });
       }
-});
+    });
 })
 
 

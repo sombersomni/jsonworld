@@ -6,11 +6,11 @@ const chooseSide = ( side ) => {
     switch( side ) {
             
         case "front":
-            return THREE.FrontSide
+            return THREE.FrontSide;
         case "back":
-            return THREE.BackSide
+            return THREE.BackSide;
         default:
-            return THREE.DoubleSide
+            return THREE.DoubleSide;
     }
 }
 
