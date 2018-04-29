@@ -838,7 +838,9 @@ const framework = {
                         } );
                     }
                     //recalls the group so that all the newly added meshes can undergo the parent transforms
-                    this.setObjectTransforms( group, options );
+                    if ( i == 0 ) {
+                       this.setObjectTransforms( group, options ); 
+                    }
                     return;
                 } else {           
                     // creates the geometry with its vertices and settings and then modifies it if 
