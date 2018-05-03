@@ -296,7 +296,7 @@ export default function ( mesh, options = {} ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin-basic" :
-            console.log(" spin basic workking" );
+            console.log(" spin basic working" );
             newOptions.animTarget = "rotation";
             
             if ( newOptions.keyframes === undefined ) {

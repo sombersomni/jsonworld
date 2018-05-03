@@ -207,7 +207,7 @@ const framework = {
             this.applyCSG( alteredMesh, options, i );
         } else return alteredMesh.toMesh();
     },
-    decideTimelineOrder : function (id, animation, mesh, options = {} ) {
+    decideTimelineOrder : function ( id, animation, mesh, options = {} ) {
         //decides how the animation is saved and distributed amongst objects
         try {
             if ( mesh.id !== undefined ) {
@@ -227,14 +227,11 @@ const framework = {
                     this.animationManager.all[ hashID( mesh.id, id ) ] = animation;
                     
                 } else {
-        
-                       this.objManager.all[ hashID( mesh.id, id ) ].animeTimeline.add( animation );
+                        
+                        console.log( obj, "obj from objmanager before adding animation" );
+                       obj.animeTimeline.add( animation );
+                        console.log( obj, "obj from objmanager after adding animation" );
                      
-                }
-                
-                if ( obj.animeTimeline.children !== undefined ) {
-                    console.log( "anime timeline has children" );
-                    obj.animeTimeline.children[ 0 ].play();
                 }
                 
             } else throw new Error( "you need a mesh id to create animation timelines " );
@@ -518,7 +515,7 @@ const framework = {
         return camera;
     },
     squeezeGeometry: function ( g, modifier, calc, options, i = 0 ) {
-        // treeats the geometry almost like its super elastic
+        // treats the geometry almost like its super elastic
         
         console.log( options, "inside squeeze Geometry" );
         const radius = calc.radius,
@@ -753,10 +750,10 @@ const framework = {
                 if ( options.hasOwnProperty( "animation" ) && options.animation !== undefined && typeof options.animation === "string" ) {
 
                     if ( /\,/.test( options.animation ) ) {
-             
+                    //checks for multiple animation options
                         const seperateAnimations = options.animation.slice().split(",");
                         for ( let x = 0 ; x <= seperateAnimations.length - 1; x++ ) {
-                        
+                            //parses the animation string and turns it into options object to assign animations
                             const opts = this.optionParser( seperateAnimations[ x ].trim() , animationOptions, "animation" );
                             if ( opts !== undefined ) {
                                this.decideTimelineOrder( id, this.createAnime( mesh, opts ), mesh, opts );
@@ -777,11 +774,10 @@ const framework = {
                 
                 return mesh;
     },
-    setupMesh: function ( options, sI, group, i = 0 , tree = [], groupNames = new Set() ) {
+    setupMesh: function ( options, sI, group, i = 0, groupNames = new Set() ) {
         let m, mesh, geoModifiers, upgradeMesh, multiMaterials = [];
         //@params sI - the index of the scene
         //@params m - stands for material 
-        //@param tree keeps track of the group names current tree route
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
         try {
@@ -824,31 +820,27 @@ const framework = {
                     console.log( group, "before children looped through for grouping" );
                     if( children.length > 0 ) {  
                         i++;
+                        const newGroup = group.parent !== null ? group.getObjectByName( groupName ) : group;
+
                         children.forEach( child => {
 
                             //keeps an array where each index reflects what level an object is within an object
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
                             
-                            const newGroup = group.parent !== null ? group.getObjectByName( groupName ) : group;
-
-                             const tempMesh = this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : undefined }, child, { group: groupName, forget : true } ) , sI, newGroup, i, tree , groupNames );
-                            
-                             group.add( tempMesh );
+                            console.log( newGroup, child, "this group is being added to mesh" );
+                             this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : undefined }, child, { group: groupName } ), sI, newGroup, i, groupNames );
 
                         } );
+                        
                     }
-                    //recalls the group so that all the newly added meshes can undergo the parent transforms
-                    if ( i == 0 ) {
-                       this.setObjectTransforms( group, options ); 
-                    }
+                    
+                    console.log( group, "group before its returned" );
                     return;
+                    
                 } else {           
                     // creates the geometry with its vertices and settings and then modifies it if 
                     let g = this.createGeometry( options );
                     
-                    
-                    
-         
                     if ( options.texture instanceof Array ) {
                         //if you get an array of textuers back, then we can pack them here
                         for ( let f = 0; f <= g.faces.length - 1; f++ ) {
@@ -921,13 +913,14 @@ const framework = {
                         mesh = this.setObjectTransforms( mesh, options );
                     }
                     
+                    //sets up a clone so we don't tamper with the Mesh Object supplied by Three.js
+                    this.setupWorldClone( sI, mesh, options );
+                    
                     
                     if ( options.animation !== undefined || options.animationType !== undefined ) {
 
-                        mesh = this.setupAnimationForMesh( sI, this.setObjectTransforms( mesh, options ), options );
+                        mesh = this.setupAnimationForMesh( sI, mesh, options );
                     } 
-
-                    this.setupWorldClone( sI, mesh, options );
                     
                     if ( options.forget !== undefined && options.forget ) {
                         //create this mesh but don't add it to the main scene.
@@ -946,13 +939,20 @@ const framework = {
                         const gridMesh = this.gridMeshPosition( mesh, options, i );
                         group.add( gridMesh );
                         i++;
-                        this.setupMesh( options, sI, group, i, tree );
+                        this.setupMesh( options, sI, group, i );
 
                     } else {
 
                         if ( group !== undefined && group.children.length > 0 ) {
                             
-                            this.scenes[sI].add( group );
+                            if ( group.parent !== null && group.parent.type !== "Scene" ) {
+                                //if group is already a part of the scene then we don't need to add it again
+                                group.add( mesh );
+                                 
+                            } else {
+                                //else add the group to the scene
+                                this.scenes[sI].add( group );
+                            }
                         } else {
                             this.scenes[sI].add( mesh ); 
                         }

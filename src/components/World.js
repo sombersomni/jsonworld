@@ -58,17 +58,6 @@ class World extends Component {
                 albums.push( album );
             }
             */
-           
-            
-            
-            const squareTwo = {
-                "type": "plane",
-                "name" : "square",
-                "color" : "pink",
-                "size" : 100,
-                "position" : [ 0, 200, 200 ]
-            }
-            
             const floor = {
                 "type" : "plane",
                 "name" : "floor",
@@ -115,7 +104,7 @@ class World extends Component {
                 texture: "imgs/crate.jpg",
                 material: "standard",
                 children : [ { type: "sphere", size: 50, name: "ball", subtract: true },
-                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "dodecahedron", position: [50, 0, 0] } ] } ], 
+                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "tetrahedron", name: "tetra", position: [50, 0, 0] } ] } ], 
                 segments: 16
             };
             
@@ -127,7 +116,7 @@ class World extends Component {
                 path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
             }
 
-this.world = new WorldController( Object.assign( { }, { worldObjects: [ floor, board ] } ) );
+this.world = new WorldController( Object.assign( { }, { worldObjects: [ floor, board, line ] } ) );
             
             this.world.start();
             

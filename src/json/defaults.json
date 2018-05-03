@@ -39,6 +39,7 @@
         "type": "dodecahedron",
         "position": "0 100 100",
         "material": "normal",
+        "animation" : "spin-basic 2s",
         "message" : "welcome to jsonworld"
     },
     "objectPosition" : "0 0 0",

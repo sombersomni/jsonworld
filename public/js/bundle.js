@@ -45807,7 +45807,7 @@ module.exports = emptyObject;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","animation":"spin-basic 2s","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 8 */
@@ -64283,15 +64283,6 @@ var World = function (_Component) {
                   albums.push( album );
             }
             */
-
-            var squareTwo = {
-                "type": "plane",
-                "name": "square",
-                "color": "pink",
-                "size": 100,
-                "position": [0, 200, 200]
-            };
-
             var floor = {
                 "type": "plane",
                 "name": "floor",
@@ -64333,7 +64324,7 @@ var World = function (_Component) {
                 position: [0, 0, 300],
                 texture: "imgs/crate.jpg",
                 material: "standard",
-                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "dodecahedron", position: [50, 0, 0] }] }],
+                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", name: "tetra", position: [50, 0, 0] }] }],
                 segments: 16
             };
 
@@ -64345,7 +64336,7 @@ var World = function (_Component) {
                 path: [{ x: 0, y: 0, z: 0 }, { x: 400, y: 300, z: 0 }]
             };
 
-            this.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, board] }));
+            this.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, board, line] }));
 
             this.world.start();
 
@@ -65026,12 +65017,9 @@ var framework = {
                     this.animationManager.all[(0, _hashID2.default)(mesh.id, id)] = animation;
                 } else {
 
-                    this.objManager.all[(0, _hashID2.default)(mesh.id, id)].animeTimeline.add(animation);
-                }
-
-                if (obj.animeTimeline.children !== undefined) {
-                    console.log("anime timeline has children");
-                    obj.animeTimeline.children[0].play();
+                    console.log(obj, "obj from objmanager before adding animation");
+                    obj.animeTimeline.add(animation);
+                    console.log(obj, "obj from objmanager after adding animation");
                 }
             } else throw new Error("you need a mesh id to create animation timelines ");
         } catch (err) {
@@ -65331,7 +65319,7 @@ var framework = {
     squeezeGeometry: function squeezeGeometry(g, modifier, calc, options) {
         var i = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
 
-        // treeats the geometry almost like its super elastic
+        // treats the geometry almost like its super elastic
 
         console.log(options, "inside squeeze Geometry");
         var radius = calc.radius,
@@ -65582,10 +65570,10 @@ var framework = {
         if (options.hasOwnProperty("animation") && options.animation !== undefined && typeof options.animation === "string") {
 
             if (/\,/.test(options.animation)) {
-
+                //checks for multiple animation options
                 var seperateAnimations = options.animation.slice().split(",");
                 for (var x = 0; x <= seperateAnimations.length - 1; x++) {
-
+                    //parses the animation string and turns it into options object to assign animations
                     var opts = this.optionParser(seperateAnimations[x].trim(), animationOptions, "animation");
                     if (opts !== undefined) {
                         this.decideTimelineOrder(id, this.createAnime(mesh, opts), mesh, opts);
@@ -65606,12 +65594,10 @@ var framework = {
         return mesh;
     },
     setupMesh: function setupMesh(options, sI, group) {
-        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-
         var _this5 = this;
 
-        var tree = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : [];
-        var groupNames = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : new Set();
+        var i = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+        var groupNames = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : new Set();
 
         var m = void 0,
             mesh = void 0,
@@ -65620,7 +65606,6 @@ var framework = {
             multiMaterials = [];
         //@params sI - the index of the scene
         //@params m - stands for material 
-        //@param tree keeps track of the group names current tree route
         //const isTypeLoader = options.type.search(/[\.obj]{1}/);
         //const isMaterialURL = options.material.search(/(\.mtl){1}/);
         try {
@@ -65667,22 +65652,19 @@ var framework = {
                 console.log(group, "before children looped through for grouping");
                 if (children.length > 0) {
                     i++;
+                    var newGroup = group.parent !== null ? group.getObjectByName(groupName) : group;
+
                     children.forEach(function (child) {
 
                         //keeps an array where each index reflects what level an object is within an object
                         //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
-                        var newGroup = group.parent !== null ? group.getObjectByName(groupName) : group;
-
-                        var tempMesh = _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: undefined }, child, { group: groupName, forget: true }), sI, newGroup, i, tree, groupNames);
-
-                        group.add(tempMesh);
+                        console.log(newGroup, child, "this group is being added to mesh");
+                        _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: undefined }, child, { group: groupName }), sI, newGroup, i, groupNames);
                     });
                 }
-                //recalls the group so that all the newly added meshes can undergo the parent transforms
-                if (i == 0) {
-                    this.setObjectTransforms(group, options);
-                }
+
+                console.log(group, "group before its returned");
                 return;
             } else {
                 // creates the geometry with its vertices and settings and then modifies it if 
@@ -65754,12 +65736,13 @@ var framework = {
                     mesh = this.setObjectTransforms(mesh, options);
                 }
 
+                //sets up a clone so we don't tamper with the Mesh Object supplied by Three.js
+                this.setupWorldClone(sI, mesh, options);
+
                 if (options.animation !== undefined || options.animationType !== undefined) {
 
-                    mesh = this.setupAnimationForMesh(sI, this.setObjectTransforms(mesh, options), options);
+                    mesh = this.setupAnimationForMesh(sI, mesh, options);
                 }
-
-                this.setupWorldClone(sI, mesh, options);
 
                 if (options.forget !== undefined && options.forget) {
                     //create this mesh but don't add it to the main scene.
@@ -65778,12 +65761,18 @@ var framework = {
                     var gridMesh = this.gridMeshPosition(mesh, options, i);
                     group.add(gridMesh);
                     i++;
-                    this.setupMesh(options, sI, group, i, tree);
+                    this.setupMesh(options, sI, group, i);
                 } else {
 
                     if (group !== undefined && group.children.length > 0) {
 
-                        this.scenes[sI].add(group);
+                        if (group.parent !== null && group.parent.type !== "Scene") {
+                            //if group is already a part of the scene then we don't need to add it again
+                            group.add(mesh);
+                        } else {
+                            //else add the group to the scene
+                            this.scenes[sI].add(group);
+                        }
                     } else {
                         this.scenes[sI].add(mesh);
                     }
@@ -66799,7 +66788,7 @@ exports.default = function (mesh) {
                 mesh.geometry.verticesNeedUpdate = true;
             };
         case "spin-basic":
-            console.log(" spin basic workking");
+            console.log(" spin basic working");
             newOptions.animTarget = "rotation";
 
             if (newOptions.keyframes === undefined) {
