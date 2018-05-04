@@ -569,8 +569,8 @@ const framework = {
             switch( type ) {
                 case "spikey" :
                     //vert.x += noise * amplify;
-                    vert.y += ( noise * amplify ) + 1;
-                    //vert.z += noise * amplify;
+                    //vert.y += noise * amplify;
+                    vert.z += noise * amplify;
                     break;
                 default:
                     

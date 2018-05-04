@@ -77,7 +77,7 @@ class World extends Component {
                         mod: "noise",
                         modType: "spikey",
                         modAngles : [ 0, 0, 0 ],
-                        amplify: 40
+                        amplify: 100
                     } ],
                 "material" : "phong",
                 "color" : "yellow",
@@ -114,7 +114,7 @@ class World extends Component {
                 path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
             }
 
-this.world = new WorldController( Object.assign( {} , { worldObjects: [ floor, board, line ] } ) );
+this.world = new WorldController( Object.assign( { debug: true } , { worldObjects: [ floor, board, line ] } ) );
             
             this.world.start();
             
