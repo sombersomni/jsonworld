@@ -102,6 +102,7 @@ class World extends Component {
                 scale: [ 1, 1, 1 ],
                 position: [ 0, 0, 300 ],
                 texture: "imgs/crate.jpg",
+                modifiers: mods,
                 material: "standard",
                 children : [ { type: "sphere", size: 50, name: "ball", subtract: true },
                             { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "tetrahedron", name: "tetra", position: [50, 0, 0] } ] } ], 
@@ -116,7 +117,7 @@ class World extends Component {
                 path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
             }
 
-this.world = new WorldController( Object.assign( { debug: true }, { worldObjects: [ floor, board, line ] } ) );
+this.world = new WorldController( Object.assign( { debug : true }, { worldObjects: [ floor, board, line ] } ) );
             
             this.world.start();
             

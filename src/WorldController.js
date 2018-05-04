@@ -183,7 +183,6 @@ const framework = {
         //@params temp is for the mesh that will effect the root
         let alteredMesh, newOptions, rootBSP, tempBSP;
         const meshes = options.meshWith.slice();
-        console.log( meshes, "shallow copy of meshWith" );
         const temp = meshes[i];
         //transform root and temp object for bsp transition
         rootBSP = i === 0  ? new ThreeBSP( mesh ) : mesh ;
@@ -432,7 +431,7 @@ const framework = {
         } 
     },
     moldGeometry: function ( g, options = {}, state = { "calc": { } , "calculated": false,  "folded" : false, "squeezed" : false, "didNoise" : false } ) {
-        console.log( options, "mold geometry has started" );
+        console.log( g, options, "mold geometry has started" );
         // the order of geometry manipulation is extremely important, if you move out of sequence it could mess up the resulting shape's appearance
         //@params g for geometry
         //@params opts for options
@@ -830,7 +829,7 @@ const framework = {
                             //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
                             
                             console.log( newGroup, child, "this group is being added to mesh" );
-                             this.setupMesh( Object.assign( {}, options, { children : undefined, position : [], rotation: [], scale : [], count : undefined }, child, { group: groupName } ), sI, newGroup, i, groupNames );
+                             this.setupMesh( Object.assign( {}, options, { children : undefined, modifiers: undefined, position : undefined, rotation: undefined, scale : undefined, count : undefined }, child, { group: groupName } ), sI, newGroup, i, groupNames );
 
                         } );
                         
@@ -876,7 +875,7 @@ const framework = {
                     }
                     
                     if ( geoModifiers !== undefined ) {
-                        mesh = this.moldGeometry( mesh.geometry, Object.assign( {}, options, { modifiers: geoModifiers } ) );
+                        mesh.geometry = this.moldGeometry( mesh.geometry, Object.assign( {}, options, { modifiers: geoModifiers } ) );
                     } 
                     //accepts a gradient that is either linear or radial
                     if ( /gradient/.test( options.color ) ) {

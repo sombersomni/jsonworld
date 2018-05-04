@@ -64323,6 +64323,7 @@ var World = function (_Component) {
                 scale: [1, 1, 1],
                 position: [0, 0, 300],
                 texture: "imgs/crate.jpg",
+                modifiers: mods,
                 material: "standard",
                 children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", name: "tetra", position: [50, 0, 0] }] }],
                 segments: 16
@@ -64974,7 +64975,6 @@ var framework = {
             rootBSP = void 0,
             tempBSP = void 0;
         var meshes = options.meshWith.slice();
-        console.log(meshes, "shallow copy of meshWith");
         var temp = meshes[i];
         //transform root and temp object for bsp transition
         rootBSP = i === 0 ? new ThreeBSP(mesh) : mesh;
@@ -65227,7 +65227,7 @@ var framework = {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
         var state = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : { "calc": {}, "calculated": false, "folded": false, "squeezed": false, "didNoise": false };
 
-        console.log(options, "mold geometry has started");
+        console.log(g, options, "mold geometry has started");
         // the order of geometry manipulation is extremely important, if you move out of sequence it could mess up the resulting shape's appearance
         //@params g for geometry
         //@params opts for options
@@ -65662,7 +65662,7 @@ var framework = {
                         //if index is 0, it is the root objects. The higher it gets, the deeper the tree goes
 
                         console.log(newGroup, child, "this group is being added to mesh");
-                        _this5.setupMesh(Object.assign({}, options, { children: undefined, position: [], rotation: [], scale: [], count: undefined }, child, { group: groupName }), sI, newGroup, i, groupNames);
+                        _this5.setupMesh(Object.assign({}, options, { children: undefined, modifiers: undefined, position: undefined, rotation: undefined, scale: undefined, count: undefined }, child, { group: groupName }), sI, newGroup, i, groupNames);
                     });
                 }
 
@@ -65703,7 +65703,7 @@ var framework = {
                 }
 
                 if (_geoModifiers !== undefined) {
-                    mesh = this.moldGeometry(mesh.geometry, Object.assign({}, options, { modifiers: _geoModifiers }));
+                    mesh.geometry = this.moldGeometry(mesh.geometry, Object.assign({}, options, { modifiers: _geoModifiers }));
                 }
                 //accepts a gradient that is either linear or radial
                 if (/gradient/.test(options.color)) {
