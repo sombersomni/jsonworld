@@ -58,37 +58,33 @@ class World extends Component {
                 albums.push( album );
             }
             */
-            const floor = {
-                "type" : "plane",
-                "name" : "floor",
-                "size" : [ 10000, 10000 ],
-                "material" : "phong",
-                "color" : "yellow",
-                "position" : "0 -500 1000",
-                "rotation" : [ 90, 0, 0 ]
-            }
-            
             const mods = [
                     {
                         type : "geometry",
                         mod: "squeeze",
                         modType: "pinch-down",
                         modAngles : [ 10, 0, 0 ]   
-                    },
-                    {
+                    }
+            ];
+            
+            const floor = {
+                "type" : "plane",
+                "name" : "floor",
+                "side" : "back",
+                "size" : [ 10000, 10000 ],
+                "modifiers" : [ {
                         type: "geometry",
                         mod: "noise",
                         modType: "spikey",
                         modAngles : [ 0, 0, 0 ],
-                        amplify: 0.5
-                    } ,
-                    {
-                        type : "geometry",
-                        mod: "fold",
-                        modType: "angular",
-                        modAngles : [ 90, 0, 0 ]  
-                    }
-            ];
+                        amplify: 40
+                    } ],
+                "material" : "phong",
+                "color" : "yellow",
+                "position" : "0 -500 1000",
+                "rotation" : [ 90, 0, 0 ]
+            }
+            
             
             const bodySize = 80;
             const bodyWidth = 75;
@@ -98,13 +94,14 @@ class World extends Component {
                type: "box",
                 name: "board",
                 color: "#ffffff",
+                layout: "basic",
                 size: "100 100 10",
                 scale: [ 1, 1, 1 ],
                 position: [ 0, 0, 300 ],
                 texture: "imgs/crate.jpg",
                 modifiers: mods,
                 material: "standard",
-                children : [ { type: "sphere", size: 50, name: "ball", subtract: true },
+                children : [ { type: "sphere", count: 10, size: 50, name: "ball", subtract: true },
                             { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "tetrahedron", name: "tetra", position: [50, 0, 0] } ] } ], 
                 segments: 16
             };
@@ -117,7 +114,7 @@ class World extends Component {
                 path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
             }
 
-this.world = new WorldController( Object.assign( { debug : true }, { worldObjects: [ floor, board, line ] } ) );
+this.world = new WorldController( Object.assign( {} , { worldObjects: [ floor, board, line ] } ) );
             
             this.world.start();
             

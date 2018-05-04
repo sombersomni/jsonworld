@@ -566,12 +566,11 @@ const framework = {
         g.vertices.forEach( vert => {
             
             const noise = simplex.noise3D( vert.x, vert.y, vert.z );
-            
             switch( type ) {
                 case "spikey" :
-                    vert.x += noise * amplify;
-                    vert.y += noise * amplify;
-                    vert.z += noise * amplify;
+                    //vert.x += noise * amplify;
+                    vert.y += ( noise * amplify ) + 1;
+                    //vert.z += noise * amplify;
                     break;
                 default:
                     
@@ -931,7 +930,7 @@ const framework = {
                     }
                     
                     if ( options.count !== undefined && options.count > 1 && i < options.count ) {
-
+                        ( "trying to do the count function for multiple objects" );
                         if ( group.name.length === 0 ) {
                             group = new THREE.Group();
                             group.name = options.name + "s"; //turns it to a pluralname 

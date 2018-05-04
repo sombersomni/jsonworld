@@ -45807,7 +45807,7 @@ module.exports = emptyObject;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#ff22ff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0003,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","animation":"spin-basic 2s","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#00aaff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0005,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","animation":"spin-basic 2s","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 8 */
@@ -64283,33 +64283,30 @@ var World = function (_Component) {
                   albums.push( album );
             }
             */
-            var floor = {
-                "type": "plane",
-                "name": "floor",
-                "size": [10000, 10000],
-                "material": "phong",
-                "color": "yellow",
-                "position": "0 -500 1000",
-                "rotation": [90, 0, 0]
-            };
-
             var mods = [{
                 type: "geometry",
                 mod: "squeeze",
                 modType: "pinch-down",
                 modAngles: [10, 0, 0]
-            }, {
-                type: "geometry",
-                mod: "noise",
-                modType: "spikey",
-                modAngles: [0, 0, 0],
-                amplify: 0.5
-            }, {
-                type: "geometry",
-                mod: "fold",
-                modType: "angular",
-                modAngles: [90, 0, 0]
             }];
+
+            var floor = {
+                "type": "plane",
+                "name": "floor",
+                "side": "back",
+                "size": [10000, 10000],
+                "modifiers": [{
+                    type: "geometry",
+                    mod: "noise",
+                    modType: "spikey",
+                    modAngles: [0, 0, 0],
+                    amplify: 40
+                }],
+                "material": "phong",
+                "color": "yellow",
+                "position": "0 -500 1000",
+                "rotation": [90, 0, 0]
+            };
 
             var bodySize = 80;
             var bodyWidth = 75;
@@ -64319,13 +64316,14 @@ var World = function (_Component) {
                 type: "box",
                 name: "board",
                 color: "#ffffff",
+                layout: "basic",
                 size: "100 100 10",
                 scale: [1, 1, 1],
                 position: [0, 0, 300],
                 texture: "imgs/crate.jpg",
                 modifiers: mods,
                 material: "standard",
-                children: [{ type: "sphere", size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", name: "tetra", position: [50, 0, 0] }] }],
+                children: [{ type: "sphere", count: 10, size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", name: "tetra", position: [50, 0, 0] }] }],
                 segments: 16
             };
 
@@ -64337,7 +64335,7 @@ var World = function (_Component) {
                 path: [{ x: 0, y: 0, z: 0 }, { x: 400, y: 300, z: 0 }]
             };
 
-            this.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [floor, board, line] }));
+            this.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, board, line] }));
 
             this.world.start();
 
@@ -65373,12 +65371,11 @@ var framework = {
         g.vertices.forEach(function (vert) {
 
             var noise = simplex.noise3D(vert.x, vert.y, vert.z);
-
             switch (type) {
                 case "spikey":
-                    vert.x += noise * amplify;
-                    vert.y += noise * amplify;
-                    vert.z += noise * amplify;
+                    //vert.x += noise * amplify;
+                    vert.y += noise * amplify + 1;
+                    //vert.z += noise * amplify;
                     break;
                 default:
 
@@ -65754,7 +65751,7 @@ var framework = {
                 }
 
                 if (options.count !== undefined && options.count > 1 && i < options.count) {
-
+                    "trying to do the count function for multiple objects";
                     if (group.name.length === 0) {
                         group = new THREE.Group();
                         group.name = options.name + "s"; //turns it to a pluralname 
