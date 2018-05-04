@@ -433,7 +433,7 @@ export default function ( options = {} ) {
             return new THREE.PlaneGeometry( size[0], size[1], segments, segments );
          
         case "shape" :
-            
+            //create a custom geometry based on 2d path
             let customShape = determineShape( path );
             console.log( customShape, "shape created" );
             if ( extrude !== undefined ) {
@@ -445,10 +445,14 @@ export default function ( options = {} ) {
             }
             break;
             
-        case "sphere":
+        case "sphere" :
             //creates a sphere geometry
             return new THREE.SphereGeometry( size[0] / 2, segments, segments );
-
+            
+        case "tetrahedron" :
+            //creates a tetrahedron geometry
+            return new THREE.TetrahedronGeometry( size[ 0 ] / 2 );
+            
         default:
             return new THREE.BoxGeometry( size, size, size );
     }

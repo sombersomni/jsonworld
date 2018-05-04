@@ -62,7 +62,7 @@ export default function ( options = {} ) {
         transparent
     };
     
-    if( this.options.hasOwnProperty( "debug" ) && this.options.debug ) {
+    if( this.options.hasOwnProperty( "debug" ) && this.options.debug && options.type !== "line" ) {
         material = "wireframe";
     }
     

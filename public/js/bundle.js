@@ -64336,7 +64336,7 @@ var World = function (_Component) {
                 path: [{ x: 0, y: 0, z: 0 }, { x: 400, y: 300, z: 0 }]
             };
 
-            this.world = new _WorldController2.default(Object.assign({}, { worldObjects: [floor, board, line] }));
+            this.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [floor, board, line] }));
 
             this.world.start();
 
@@ -65626,6 +65626,8 @@ var framework = {
                 return mod.type === "geometry";
             }) : undefined;
 
+            console.log(options, group, "starting the mesh setup from top");
+
             if (children !== undefined && children instanceof Array) {
                 var mainMesh = void 0;
 
@@ -65754,6 +65756,7 @@ var framework = {
                 if (options.count !== undefined && options.count > 1 && i < options.count) {
 
                     if (group.name.length === 0) {
+                        group = new THREE.Group();
                         group.name = options.name + "s"; //turns it to a pluralname 
                     }
 
@@ -65764,9 +65767,9 @@ var framework = {
                     this.setupMesh(options, sI, group, i);
                 } else {
 
-                    if (group !== undefined && group.children.length > 0) {
+                    if (group !== undefined && group instanceof THREE.Group) {
 
-                        if (group.parent !== null && group.parent.type !== "Scene") {
+                        if (group.parent !== null && group.parent instanceof Object) {
                             //if group is already a part of the scene then we don't need to add it again
                             group.add(mesh);
                         } else {
@@ -67191,7 +67194,7 @@ exports.default = function () {
             return new THREE.PlaneGeometry(size[0], size[1], segments, segments);
 
         case "shape":
-
+            //create a custom geometry based on 2d path
             var customShape = determineShape(path);
             console.log(customShape, "shape created");
             if (extrude !== undefined) {
@@ -67206,6 +67209,10 @@ exports.default = function () {
         case "sphere":
             //creates a sphere geometry
             return new THREE.SphereGeometry(size[0] / 2, segments, segments);
+
+        case "tetrahedron":
+            //creates a tetrahedron geometry
+            return new THREE.TetrahedronGeometry(size[0] / 2);
 
         default:
             return new THREE.BoxGeometry(size, size, size);
@@ -67691,7 +67698,7 @@ exports.default = function () {
         transparent: transparent
     };
 
-    if (this.options.hasOwnProperty("debug") && this.options.debug) {
+    if (this.options.hasOwnProperty("debug") && this.options.debug && options.type !== "line") {
         material = "wireframe";
     }
 

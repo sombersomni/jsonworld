@@ -792,6 +792,8 @@ const framework = {
                 //sort modifiers before distributing them for use
                 const geoModifiers = ( options.modifiers !== undefined && options.modifiers instanceof Array && options.modifiers.length > 0 ) ? options.modifiers.filter( mod => mod.type === "geometry" ) : undefined ;
             
+                console.log( options, group, "starting the mesh setup from top" );
+            
                 if ( children !== undefined && children instanceof Array ) {
                     let mainMesh;
                     
@@ -932,6 +934,7 @@ const framework = {
                     if ( options.count !== undefined && options.count > 1 && i < options.count ) {
 
                         if ( group.name.length === 0 ) {
+                            group = new THREE.Group();
                             group.name = options.name + "s"; //turns it to a pluralname 
                         }
                         
@@ -943,9 +946,9 @@ const framework = {
 
                     } else {
 
-                        if ( group !== undefined && group.children.length > 0 ) {
+                        if ( group !== undefined && group instanceof THREE.Group ) {
                             
-                            if ( group.parent !== null && group.parent.type !== "Scene" ) {
+                            if ( group.parent !== null && group.parent instanceof Object ) {
                                 //if group is already a part of the scene then we don't need to add it again
                                 group.add( mesh );
                                  
