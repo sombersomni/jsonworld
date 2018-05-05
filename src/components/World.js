@@ -69,6 +69,7 @@ class World extends Component {
             
             const floor = {
                 "type" : "plane",
+                "shadow" : true,
                 "name" : "floor",
                 "side" : "back",
                 "size" : [ 10000, 10000 ],
@@ -102,7 +103,36 @@ class World extends Component {
                 modifiers: mods,
                 material: "standard",
                 children : [ { type: "sphere", count: 10, size: 50, name: "ball", subtract: true },
-                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "tetrahedron", name: "tetra", position: [50, 0, 0] } ] } ], 
+                            { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children : [ { type: "tetrahedron", animation: "spin-basic 2s", name: "tetra", position: [50, 0, 0] } ] } ], 
+                segments: 16
+            };
+            
+            const test = {
+                type: "cylinder",
+                color: "#bf002a",
+                material : "toon",
+                size: [100, 200, 10 ],
+                animation: "space 1s",
+                animationKeyframes: { 
+                    space: [ { rotateX : 360 , rotateX : 90 } ]
+                },
+                position: [ 0, 0, 0 ]
+                
+            };
+            
+            const boardTwo = {
+               type: "box",
+                name: "board",
+                color: "#ffffff",
+                layout: "basic",
+                size: "100 100 10",
+                scale: [ 1, 1, 1 ],
+                position: [ 0, 200, 300 ],
+                texture: "imgs/crate.jpg",
+                modifiers: mods,
+                material: "standard",
+                children : [ { type: "sphere", count: 10, size: 50, name: "ballTwo", subtract: true },
+                            { type: "box", size: 10, name: "boxTwo", position: "0, 200, 0", color: " red", children : [ { type: "tetrahedron", name: "tetraTwo", position: [50, 0, 0] } ] } ], 
                 segments: 16
             };
             
@@ -114,7 +144,7 @@ class World extends Component {
                 path: [ { x: 0, y:0, z: 0 }, { x: 400, y:300, z: 0 } ]
             }
 
-this.world = new WorldController( Object.assign( { debug: true } , { worldObjects: [ floor, board, line ] } ) );
+this.world = new WorldController( Object.assign( { debug : true } , { worldObjects: [ test ] } ) );
             
             this.world.start();
             

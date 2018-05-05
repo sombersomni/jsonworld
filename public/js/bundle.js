@@ -45807,7 +45807,7 @@ module.exports = emptyObject;
 /* 7 */
 /***/ (function(module, exports) {
 
-module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#00aaff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0005,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","animation":"spin-basic 2s","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
+module.exports = {"angleStart":0,"arcLength":360,"animationAsymmetry":false,"animationType":"spin-basic","animationDuration":1000,"animationEasing":"easeInSine","animationElasticity":100,"animationDirection":"normal","animationDelay":0,"animationGrid":"basic","animationOffset":100,"animTarget":"position","animProp":"x","backgroundColor":"#00aaff","cameraPosition":[0,0,100],"cameraFar":10000,"cameraFov":60,"cameraType":"perspective","cameraNear":0.001,"layoutLimit":[50,50,50],"emissiveColor":"yellow","fogDensity":0.0005,"fogType":"heavy","foldType":"basic","fold":[1,1,1],"layout":[5,5,5],"layoutType":"basic","rotation":360,"position":0,"sunColor":"#FFFFCC","sunIntensity":1.5,"scale":1,"loop":true,"margin":50,"parametricHandler":"radialWave","latheHandler":45,"preloader":{"type":"dodecahedron","position":"0 100 100","material":"normal","message":"welcome to jsonworld"},"objectPosition":"0 0 0","overdraw":0.5,"padding":10,"positionRelativeTo":"world","radius":50,"roughness":10,"sceneTransition":"fade-out 1s ease-out-quart 1s","segments":32,"size":100,"shininess":10,"wireframeLinecap":"round","wireframeLinewidth":2,"wireframeLinejoin":"round"}
 
 /***/ }),
 /* 8 */
@@ -64201,6 +64201,8 @@ function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
@@ -64292,6 +64294,7 @@ var World = function (_Component) {
 
             var floor = {
                 "type": "plane",
+                "shadow": true,
                 "name": "floor",
                 "side": "back",
                 "size": [10000, 10000],
@@ -64323,7 +64326,35 @@ var World = function (_Component) {
                 texture: "imgs/crate.jpg",
                 modifiers: mods,
                 material: "standard",
-                children: [{ type: "sphere", count: 10, size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", name: "tetra", position: [50, 0, 0] }] }],
+                children: [{ type: "sphere", count: 10, size: 50, name: "ball", subtract: true }, { type: "box", size: 10, name: "box", position: "0, 0, 0", color: " red", children: [{ type: "tetrahedron", animation: "spin-basic 2s", name: "tetra", position: [50, 0, 0] }] }],
+                segments: 16
+            };
+
+            var test = {
+                type: "cylinder",
+                color: "#bf002a",
+                material: "toon",
+                size: [100, 200, 10],
+                animation: "space 1s",
+                animationKeyframes: {
+                    space: [_defineProperty({ rotateX: 360 }, "rotateX", 90)]
+                },
+                position: [0, 0, 0]
+
+            };
+
+            var boardTwo = {
+                type: "box",
+                name: "board",
+                color: "#ffffff",
+                layout: "basic",
+                size: "100 100 10",
+                scale: [1, 1, 1],
+                position: [0, 200, 300],
+                texture: "imgs/crate.jpg",
+                modifiers: mods,
+                material: "standard",
+                children: [{ type: "sphere", count: 10, size: 50, name: "ballTwo", subtract: true }, { type: "box", size: 10, name: "boxTwo", position: "0, 200, 0", color: " red", children: [{ type: "tetrahedron", name: "tetraTwo", position: [50, 0, 0] }] }],
                 segments: 16
             };
 
@@ -64335,7 +64366,7 @@ var World = function (_Component) {
                 path: [{ x: 0, y: 0, z: 0 }, { x: 400, y: 300, z: 0 }]
             };
 
-            this.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [floor, board, line] }));
+            this.world = new _WorldController2.default(Object.assign({ debug: true }, { worldObjects: [test] }));
 
             this.world.start();
 
@@ -65001,7 +65032,10 @@ var framework = {
         try {
             if (mesh.id !== undefined) {
                 var hash = (0, _hashID2.default)(mesh.id, id);
+                //the objManager handles every object clone of the mesh that was created
                 var obj = this.objManager.all[hash];
+                //the animation manager handles seperate animations that aren't using animejs logic
+                var manager = this.animationManager.all[hash];
                 console.log(obj, "this is the obj manager clone");
                 console.log(hash, "hash value for clone");
                 //takes the mesh and adds a animation timeline to the root object
@@ -65012,18 +65046,22 @@ var framework = {
                     }
                 } else if (animation instanceof Function) {
 
-                    this.animationManager.all[(0, _hashID2.default)(mesh.id, id)] = animation;
+                    manager = animation;
                 } else {
 
-                    console.log(obj, "obj from objmanager before adding animation");
+                    console.log(animation, "animaiton obj before adding animation");
                     obj.animeTimeline.add(animation);
                     console.log(obj, "obj from objmanager after adding animation");
                 }
+
+                console.log(obj.animeTimeline, "looking at the timeline children seperately");
             } else throw new Error("you need a mesh id to create animation timelines ");
         } catch (err) {
 
             console.warn(err.message);
         }
+
+        return;
     },
     getCanvas: function getCanvas() {
         var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "world";
@@ -65545,6 +65583,7 @@ var framework = {
     },
     setupAnimationForMesh: function setupAnimationForMesh(id, mesh, options) {
         //set up animation for this mesh
+        //id variable still relates to scene id
         var animationOptions = {
             animationType: options.animationType,
             animationDelay: options.animationDelay,
@@ -65751,7 +65790,7 @@ var framework = {
                 }
 
                 if (options.count !== undefined && options.count > 1 && i < options.count) {
-                    "trying to do the count function for multiple objects";
+                    console.log(i, "trying to do the count function for multiple objects");
                     if (group.name.length === 0) {
                         group = new THREE.Group();
                         group.name = options.name + "s"; //turns it to a pluralname 
@@ -66028,7 +66067,7 @@ var framework = {
     setupWorldClone: function setupWorldClone(id, mesh) {
         var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
-
+        //a duplicate object so we don't touch THREEJS Mesh properties directly unless needed.
         if (mesh.type === "Mesh") {
 
             var mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
@@ -66044,7 +66083,7 @@ var framework = {
                 z: mesh.position.z,
                 id: newID,
                 animeTimeline: _animejs2.default.timeline({ autoplay: true, loop: true }),
-                originalOptions: options,
+                options: options,
                 transitions: {
                     opacity: undefined,
                     color: undefined,
@@ -66078,10 +66117,9 @@ var framework = {
 
                 console.warn("you are not using an acceptable data type for " + type);
             }
-        } else {
-
-            console.log("using default options. type is " + type);
         }
+
+        // if the type is not defined, we will use the default type
 
         if (defaults[type] !== undefined && arr.length === 0) {
             return this.typeChecker(defaults, type, defaults);
@@ -66234,11 +66272,6 @@ var framework = {
     runAnimations: function runAnimations(time) {
         this.scene.children.forEach(function (obj) {
             var name = obj.name.trim().toLowerCase();
-
-            if (name !== "floor") {
-
-                obj.rotation.y += 0.010;
-            }
         });
     },
     runScene: function runScene() {
@@ -66252,10 +66285,10 @@ var framework = {
     find: function find(query) {
         var _this11 = this;
 
-        //sceneLoaded his a promise that keeps recycling itself after each initiation
+        //sceneLoaded is a promise that keeps recycling itself after each initiation
         //this makes sure everything is loaded before we mess with the object
         return this.sceneLoaded.then(function (completed) {
-            //read only
+            //completed is a read only obj
 
             var mesh = _this11.scenes[completed.id].getObjectByName(query);
             var clone = _this11.objManager.all[(0, _hashID2.default)(mesh.id, completed.id)];
@@ -66271,9 +66304,6 @@ var framework = {
                 update: function update(config) {
                     return _this11.update.call(_this11, mesh, config);
                 }
-
-                //this.objManager.all[ mesh.id * completed.id ] = item;
-
 
             };
         }).catch(function (err) {
@@ -66372,7 +66402,6 @@ var framework = {
                         //changes the color, but if transition is in place, color will smoothly change to next one
                         var _type = "position";
 
-                        console.log(_type);
                         var _originalOptions = {
                             animationDuration: clone.transitions[_type].duration,
                             animationDelay: clone.transitions[_type].delay,
@@ -66640,7 +66669,7 @@ exports.default = function (mesh) {
                                      we go through each property in the animation
                                 frame object in order to assign multiple changes in one keyframe
                                   */
-                                console.log(key);
+                                console.log(key, "each keyframe is explored");
                                 var decision = determineTarget(key, mesh);
                                 console.log(decision);
                                 if (decision !== undefined) {
@@ -66788,7 +66817,7 @@ exports.default = function (mesh) {
                 mesh.geometry.verticesNeedUpdate = true;
             };
         case "spin-basic":
-            console.log(" spin basic working");
+
             newOptions.animTarget = "rotation";
 
             if (newOptions.keyframes === undefined) {

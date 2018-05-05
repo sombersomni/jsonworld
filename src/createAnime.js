@@ -140,7 +140,7 @@ export default function ( mesh, options = {} ) {
                                    frame object in order to assign multiple changes in one keyframe
 
                                    */
-                                   console.log( key );
+                                   console.log( key, "each keyframe is explored" );
                                    const decision = determineTarget( key , mesh );
                                         console.log( decision );
                                       if ( decision !== undefined ) {
@@ -296,7 +296,7 @@ export default function ( mesh, options = {} ) {
                 mesh.geometry.verticesNeedUpdate = true;
             }
         case "spin-basic" :
-            console.log(" spin basic working" );
+            
             newOptions.animTarget = "rotation";
             
             if ( newOptions.keyframes === undefined ) {

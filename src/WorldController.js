@@ -211,7 +211,10 @@ const framework = {
         try {
             if ( mesh.id !== undefined ) {
                 const hash = hashID( mesh.id,  id );
+                //the objManager handles every object clone of the mesh that was created
                 let obj = this.objManager.all[ hash ];
+                //the animation manager handles seperate animations that aren't using animejs logic
+                let manager = this.animationManager.all[ hash ];
                 console.log( obj, "this is the obj manager clone" );
                 console.log( hash, "hash value for clone" );
                 //takes the mesh and adds a animation timeline to the root object
@@ -222,22 +225,26 @@ const framework = {
                     }
 
                 } else if ( animation instanceof Function ) {
-
-                    this.animationManager.all[ hashID( mesh.id, id ) ] = animation;
+                    
+                    manager = animation;
                     
                 } else {
                         
-                        console.log( obj, "obj from objmanager before adding animation" );
+                        console.log( animation, "animaiton obj before adding animation" );
                        obj.animeTimeline.add( animation );
                         console.log( obj, "obj from objmanager after adding animation" );
                      
                 }
+                
+                console.log( obj.animeTimeline, "looking at the timeline children seperately" );
                 
             } else throw new Error( "you need a mesh id to create animation timelines " );
         } catch( err ) {
             
             console.warn( err.message );
         }
+        
+        return;
         
     },
     getCanvas: function ( id = "world" ) {
@@ -726,6 +733,7 @@ const framework = {
     },
     setupAnimationForMesh: function ( id, mesh, options ) {
         //set up animation for this mesh
+        //id variable still relates to scene id
                 let animationOptions = {
                     animationType: options.animationType,
                     animationDelay: options.animationDelay,
@@ -930,7 +938,7 @@ const framework = {
                     }
                     
                     if ( options.count !== undefined && options.count > 1 && i < options.count ) {
-                        ( "trying to do the count function for multiple objects" );
+                        console.log( i, "trying to do the count function for multiple objects" );
                         if ( group.name.length === 0 ) {
                             group = new THREE.Group();
                             group.name = options.name + "s"; //turns it to a pluralname 
@@ -952,10 +960,10 @@ const framework = {
                                  
                             } else {
                                 //else add the group to the scene
-                                this.scenes[sI].add( group );
+                                this.scenes[ sI ].add( group );
                             }
                         } else {
-                            this.scenes[sI].add( mesh ); 
+                            this.scenes[ sI ].add( mesh ); 
                         }
                     }
                 
@@ -1202,10 +1210,10 @@ const framework = {
         
     },
     setupWorldClone : function ( id, mesh, options = {} ) {
-        
+        //a duplicate object so we don't touch THREEJS Mesh properties directly unless needed.
         if ( mesh.type === "Mesh" ) {
             
-            let mat = mesh.material instanceof Array ? mesh.material[0] : mesh.material;
+            let mat = mesh.material instanceof Array ? mesh.material[ 0 ] : mesh.material;
             console.log( mat.color, "material in world clone for " + mesh.name );
             console.log( mesh, id, "mesh.id and id in clone construction" );
             const newID = hashID( mesh.id, id );
@@ -1217,8 +1225,8 @@ const framework = {
                 y: mesh.position.y,
                 z: mesh.position.z,
                 id: newID,
-                animeTimeline : anime.timeline( { autoplay: true, loop : true } ),
-                originalOptions: options,
+                animeTimeline : anime.timeline( { autoplay: true, loop: true } ),
+                options: options,
                 transitions : {
                     opacity: undefined,
                     color: undefined,
@@ -1257,10 +1265,9 @@ const framework = {
                 console.warn( "you are not using an acceptable data type for " + type );
             }
         
-        } else {
-            
-            console.log( "using default options. type is "+ type );
-        }
+        } 
+        
+        // if the type is not defined, we will use the default type
         
         if ( defaults[ type ] !== undefined && arr.length === 0 ) {
                 return this.typeChecker( defaults, type, defaults );
@@ -1422,10 +1429,6 @@ const framework = {
         this.scene.children.forEach( obj => {
             const name = obj.name.trim().toLowerCase();
             
-            if ( name !== "floor" ) {
-                
-                obj.rotation.y += 0.010;
-            }
         } );
     },
     runScene: function () {
@@ -1438,10 +1441,10 @@ const framework = {
         
     },
     find: function ( query ) {
-        //sceneLoaded his a promise that keeps recycling itself after each initiation
+        //sceneLoaded is a promise that keeps recycling itself after each initiation
         //this makes sure everything is loaded before we mess with the object
             return this.sceneLoaded.then( completed => {
-                //read only
+                //completed is a read only obj
                 
                 const mesh = this.scenes[ completed.id ].getObjectByName( query );
                 const clone = this.objManager.all[ hashID( mesh.id, completed.id ) ];
@@ -1457,9 +1460,6 @@ const framework = {
                     update: ( config ) => this.update.call( this, mesh, config )
                     
                 }
-                
-                //this.objManager.all[ mesh.id * completed.id ] = item;
-
 
             } ).catch( err => { console.warn( err.message ) } );
         
@@ -1560,7 +1560,6 @@ const framework = {
                             //changes the color, but if transition is in place, color will smoothly change to next one
                             const type = "position";
                             
-                            console.log( type );
                             const originalOptions = {
                                 animationDuration: clone.transitions[ type ].duration,
                                 animationDelay: clone.transitions[ type ].delay,
